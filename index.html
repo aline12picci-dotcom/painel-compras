@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel SC Compras — Grupo Emede</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* ── Saving 2026 palette — idêntico ── */
+  --navy:#0B1F3A;--navy2:#132946;--navy3:#1A3A5C;
+  --blue:#1E5FA8;--blue2:#2979C9;--blue3:#4A9EE0;
+  --teal:#0D8A8A;--teal2:#13BFBF;
+  --green:#0C7C5B;--green2:#10A87A;--green3:#16D49A;
+  --red:#C0392B;--red2:#E74C3C;
+  --amber:#D68B1A;--amber2:#F39C12;
+  --gold:#B8892C;--gold2:#F0B429;
+  --bg:#EDF0F5;--surface:#FFFFFF;--surface2:#F4F6FB;--surface3:#EBF0FA;
+  --border:#D9DFF0;--border2:#C5CDE5;
+  --text1:#0D1B2E;--text2:#3B4A6B;--text3:#6B7A99;--text4:#9AA3BF;
+  --shadow1:0 1px 3px rgba(11,31,58,.07),0 1px 2px rgba(11,31,58,.05);
+  --shadow2:0 4px 16px rgba(11,31,58,.10),0 2px 6px rgba(11,31,58,.06);
+  --r:14px;--r2:10px;--r3:7px;
+  /* empresa */
+  --farmot:#C41E1E;--farmot-l:#FEF2F2;--farmot-b:#FECACA;
+  --nutri:#1A3A6B;--nutri-l:#EFF4FB;--nutri-b:#BFDBFE;
+  --clinu:#0F7A4A;--clinu-l:#ECFDF5;--clinu-b:#A7F3D0;
+  --pharma:#1558B0;--pharma-l:#EFF6FF;--pharma-b:#93C5FD;
+  /* status */
+  --ag-c:#92400E;--ag-bg:#FFFBEB;--ag-br:#FDE68A;
+  --cot-c:#1558B0;--cot-bg:#EFF6FF;--cot-br:#93C5FD;
+  --fin-c:#0F7A4A;--fin-bg:#ECFDF5;--fin-br:#A7F3D0;
+  --rej-c:#C41E1E;--rej-bg:#FEF2F2;--rej-br:#FECACA;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--text1);font-size:13px;line-height:1.55;-webkit-font-smoothing:antialiased;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* ─── TOAST DE FEEDBACK ─── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-item{background:var(--navy);color:#fff;border-radius:var(--r3);padding:10px 16px;font-size:11.5px;font-family:'Sora',sans-serif;font-weight:500;box-shadow:0 4px 20px rgba(11,31,58,.25);display:flex;align-items:center;gap:8px;animation:toast-in .2s ease;min-width:220px}
+.toast-item.ok{border-left:3px solid var(--green2)}
+.toast-item.err{border-left:3px solid var(--red)}
+.toast-item.info{border-left:3px solid var(--blue3)}
+@keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toast-out{from{opacity:1}to{opacity:0;transform:translateY(4px)}}
+
+/* ─── HEADER — idêntico ao Saving 2026 ─── */
+header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 45%,var(--navy3) 75%,#214E82 100%);position:sticky;top:0;z-index:200;border-bottom:2px solid rgba(255,255,255,.06);box-shadow:0 2px 20px rgba(11,31,58,.3)}
+.hdr-inner{display:flex;align-items:center;justify-content:space-between;padding:20px 40px 16px;flex-wrap:wrap;gap:14px}
+.hdr-left{display:flex;align-items:center;gap:16px}
+.hdr-logo{display:flex;align-items:center;gap:9px}
+.hdr-logo-name{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:-.01em;white-space:nowrap}
+.hdr-sep{width:1px;height:30px;background:rgba(255,255,255,.2)}
+.hdr-meta{}
+.hdr-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:3px 13px 3px 7px;margin-bottom:6px}
+.hdr-badge .pulse{width:7px;height:7px;border-radius:50%;background:#3DE8A0;box-shadow:0 0 8px #3DE8A0;animation:pulse-anim 2s infinite;flex-shrink:0}
+@keyframes pulse-anim{0%,100%{opacity:1}50%{opacity:.4}}
+.hdr-badge span{font-size:9.5px;color:rgba(255,255,255,.82);letter-spacing:.6px;font-weight:500;text-transform:uppercase}
+.hdr-title{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.4px;line-height:1.1}
+.hdr-title em{color:#7DD3FC;font-style:normal}
+.hdr-subtitle{font-size:11.5px;color:rgba(255,255,255,.5);margin-top:4px;font-weight:400}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.hdr-kpis{display:flex;gap:7px;flex-wrap:wrap}
+.hdr-kpi{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:var(--r3);padding:6px 14px;text-align:center;min-width:68px}
+.hdr-kpi .n{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;color:#fff;line-height:1}
+.hdr-kpi .l{font-size:8.5px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.6px;margin-top:2px;font-weight:600}
+.kpi-t .n{color:#93C5FD}.kpi-c .n{color:#6EE7B7}.kpi-a .n{color:#FCD34D}
+.sync-chip{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'JetBrains Mono',monospace;border-radius:20px;padding:4px 12px;font-weight:600;transition:all .3s;cursor:pointer;border:1px solid transparent}
+.sync-chip.ok{background:rgba(61,232,160,.12);border-color:rgba(61,232,160,.3);color:#3DE8A0}
+.sync-chip.warn{background:rgba(253,196,68,.12);border-color:rgba(253,196,68,.3);color:#FDC444}
+.sync-chip.err{background:rgba(231,76,60,.12);border-color:rgba(231,76,60,.3);color:#E74C3C}
+.sync-chip.loading{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.45)}
+.sync-chip .sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.sync-chip.ok .sdot{background:#3DE8A0;box-shadow:0 0 6px #3DE8A0}
+.sync-chip.warn .sdot{background:#FDC444;box-shadow:0 0 6px #FDC444}
+.sync-chip.err .sdot{background:#E74C3C;box-shadow:0 0 6px #E74C3C}
+.sync-chip.loading .sdot{background:rgba(255,255,255,.3)}
+
+/* ─── NAVIGATION STRIP ─── */
+.emp-strip{display:flex;background:rgba(0,0,0,.22);border-top:1px solid rgba(255,255,255,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.es-btn{flex:1;min-width:140px;padding:10px 12px;border:none;background:none;cursor:pointer;font-family:'Sora',sans-serif;font-size:10px;font-weight:600;color:rgba(255,255,255,.42);letter-spacing:.3px;text-transform:uppercase;transition:.15s;border-bottom:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.es-btn:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.04)}
+.es-btn .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.es-btn.al{color:#CBD5E1;border-bottom-color:#60A5FA;background:rgba(96,165,250,.08)}
+.es-btn.af{color:#FCA5A5;border-bottom-color:var(--farmot);background:rgba(196,30,30,.1)}
+.es-btn.an{color:#93C5FD;border-bottom-color:var(--nutri);background:rgba(26,58,107,.14)}
+.es-btn.ac{color:#6EE7B7;border-bottom-color:var(--clinu);background:rgba(15,122,74,.12)}
+.es-btn.ap{color:#7DD3FC;border-bottom-color:var(--pharma);background:rgba(21,88,176,.14)}
+.es-btn.ad{color:#C4B5FD;border-bottom-color:#7C3AED;background:rgba(124,58,237,.1)}
+
+/* ─── MAIN ─── */
+main{padding:26px 40px;max-width:1800px;margin:0 auto}
+.section{display:none}.section.active{display:block}
+
+/* ─── SECTION HEADER — idêntico ao Saving 2026 ─── */
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;margin-top:6px}
+.sec-head::after{content:'';flex:1;height:1px;background:var(--border)}
+.sec-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.sec-label{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--text3);white-space:nowrap}
+
+/* ─── IMPORT BAR — idêntico ao Saving 2026 ─── */
+.import-bar{background:linear-gradient(90deg,#EBF3FF,#F0FBF7);border:1px solid #C3DFFF;border-radius:var(--r2);padding:11px 20px;margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.import-bar .ib-title{font-size:12px;color:var(--navy2);font-weight:600}
+.import-bar .ib-title strong{color:var(--blue)}
+.imp-btn{display:inline-flex;align-items:center;gap:6px;font-family:'Sora',sans-serif;font-size:11.5px;font-weight:600;padding:7px 16px;border-radius:6px;border:none;cursor:pointer;transition:.15s}
+.imp-btn.primary{background:var(--blue);color:#fff}.imp-btn.primary:hover{background:var(--blue2);transform:translateY(-1px)}
+.imp-btn.secondary{background:transparent;color:var(--text3);border:1px solid var(--border2)}.imp-btn.secondary:hover{background:var(--surface3);color:var(--text1)}
+#file-input{display:none}
+
+/* ─── SYNC BANNER ─── */
+.sync-banner{border-radius:var(--r2);padding:10px 18px;display:flex;align-items:center;gap:11px;margin-bottom:14px;flex-wrap:wrap;transition:all .3s}
+.sync-banner.ok{background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:1px solid #BBF7D0}
+.sync-banner.ok #sync-banner-title{color:#15803D}
+.sync-banner.ok #sync-retest-btn{border-color:#BBF7D0;color:#15803D}
+.sync-banner.warn{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:1px solid #FDE68A}
+.sync-banner.warn #sync-banner-title{color:#92400E}
+.sync-banner.warn #sync-retest-btn{border-color:#FDE68A;color:#92400E}
+.sync-banner.err{background:linear-gradient(135deg,#FEF2F2,#FEE2E2);border:1px solid #FECACA}
+.sync-banner.err #sync-banner-title{color:#991B1B}
+.sync-banner.err #sync-retest-btn{border-color:#FECACA;color:#991B1B}
+.sync-banner.loading{background:var(--surface2);border:1px solid var(--border)}
+.sync-banner .sb-text strong{font-size:11px;font-weight:700}
+.sync-banner .sb-text p{font-size:10.5px;color:var(--text3);margin-top:1px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block;margin-right:5px;box-shadow:0 0 0 2px #BBF7D0;animation:pulse-green 2s infinite}
+@keyframes pulse-green{0%,100%{box-shadow:0 0 0 2px #BBF7D0}50%{box-shadow:0 0 0 5px rgba(34,197,94,.18)}}
+
+/* ─── FILTER BAR ─── */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.sec-title{font-size:14px;font-weight:700;color:var(--text1);letter-spacing:-.01em}
+.sec-title span{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;font-weight:400;margin-left:8px}
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-bar input,.filter-bar select{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:8px 12px;font-size:12px;color:var(--text1);font-family:'Sora',sans-serif;outline:none;box-shadow:var(--shadow1);transition:.15s}
+.filter-bar input{min-width:280px}
+.filter-bar select{min-width:160px}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,95,168,.1)}
+.filter-bar input::placeholder{color:var(--text4)}
+.filter-count{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-left:auto}
+
+/* ─── TABLE ─── */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r2);box-shadow:var(--shadow2);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:1350px;background:var(--surface)}
+thead tr{background:linear-gradient(90deg,var(--navy),var(--navy3));position:sticky;top:0;z-index:10}
+th{padding:10px 12px;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.62);text-align:left;white-space:nowrap;cursor:pointer;user-select:none;font-family:'Sora',sans-serif}
+th:hover{color:#fff;background:rgba(255,255,255,.07)}
+th .si{margin-left:3px;opacity:.35;font-size:8px}
+th.sorted .si{opacity:1}
+tbody tr{border-bottom:1px solid var(--border);transition:.1s}
+tbody tr:nth-child(even){background:var(--surface2)}
+tbody tr:hover{background:var(--surface3)}
+td{padding:9px 12px;font-size:12px;color:var(--text1);vertical-align:middle}
+td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:var(--text2)}
+.sc-num{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700}
+.emp-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:9.5px;font-weight:700;font-family:'Sora',sans-serif;white-space:nowrap;letter-spacing:.01em}
+.emp-tag .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.et-f{background:var(--farmot-l);color:var(--farmot);border:1px solid var(--farmot-b)}.et-f .dot{background:var(--farmot)}
+.et-n{background:var(--nutri-l);color:var(--nutri);border:1px solid var(--nutri-b)}.et-n .dot{background:var(--nutri)}
+.et-c{background:var(--clinu-l);color:var(--clinu);border:1px solid var(--clinu-b)}.et-c .dot{background:var(--clinu)}
+.et-p{background:var(--pharma-l);color:var(--pharma);border:1px solid var(--pharma-b)}.et-p .dot{background:var(--pharma)}
+
+/* ─── STATUS SELECT ─── */
+.ssel{border-radius:20px;font-size:9.5px;font-weight:700;font-family:'Sora',sans-serif;padding:4px 6px;cursor:pointer;outline:none;border:1px solid;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%236B7A99' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 5px center;padding-right:18px}
+.ss-ag{background:var(--ag-bg);color:var(--ag-c);border-color:var(--ag-br)}
+.ss-cot{background:var(--cot-bg);color:var(--cot-c);border-color:var(--cot-br)}
+.ss-fin{background:var(--fin-bg);color:var(--fin-c);border-color:var(--fin-br)}
+.ss-rej{background:var(--rej-bg);color:var(--rej-c);border-color:var(--rej-br)}
+.dc{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);white-space:nowrap}
+.days-b{display:inline-block;padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;white-space:nowrap}
+.db-o{background:var(--rej-bg);color:var(--rej-c)}
+.db-m{background:var(--ag-bg);color:var(--ag-c)}
+.db-n{background:var(--fin-bg);color:var(--fin-c)}
+.forn-c{background:transparent;border:1px dashed var(--border2);border-radius:var(--r3);padding:4px 7px;font-size:11px;color:var(--text1);font-family:'Sora',sans-serif;width:120px;transition:.15s}
+.forn-c:hover{border-color:var(--blue);background:var(--surface3)}
+.forn-c:focus{border-color:var(--blue);background:var(--surface);outline:none;box-shadow:0 0 0 2px rgba(30,95,168,.1);border-style:solid}
+.forn-c::placeholder{color:var(--text4);font-style:italic;font-size:10px}
+.sol-nm{font-size:11px;font-weight:600;white-space:nowrap;color:var(--text1)}
+.resp-sel{border-radius:var(--r3);font-size:11px;font-weight:500;font-family:'Sora',sans-serif;padding:5px 8px;cursor:pointer;outline:none;border:1px solid var(--border);background:var(--surface2);color:var(--text1);transition:.15s;width:148px}
+.resp-sel:hover{border-color:var(--blue);background:var(--surface3)}
+.resp-sel:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(30,95,168,.1);outline:none}
+
+/* ─── KPI CARDS — idêntico ao Saving 2026 ─── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--shadow1);padding:16px 18px;position:relative;overflow:hidden;transition:box-shadow .2s}
+.kpi:hover{box-shadow:var(--shadow2)}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r2) var(--r2) 0 0}
+.kpi.c-blue::after{background:linear-gradient(90deg,var(--navy),var(--blue2))}
+.kpi.c-green::after{background:linear-gradient(90deg,var(--green),var(--green3))}
+.kpi.c-teal::after{background:linear-gradient(90deg,var(--teal),var(--teal2))}
+.kpi.c-amber::after{background:linear-gradient(90deg,var(--gold),var(--amber2))}
+.kpi.c-red::after{background:linear-gradient(90deg,var(--red),var(--red2))}
+.kpi.c-purple::after{background:linear-gradient(90deg,#5B21B6,#9333EA)}
+.kpi-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:11px;flex-shrink:0}
+.c-blue .kpi-ico{background:#EBF3FF;color:var(--blue)}
+.c-green .kpi-ico{background:#E4F7F0;color:var(--green)}
+.c-teal .kpi-ico{background:#DFF5F5;color:var(--teal)}
+.c-amber .kpi-ico{background:#FDF3DC;color:var(--gold)}
+.c-red .kpi-ico{background:#FCECEA;color:var(--red)}
+.c-purple .kpi-ico{background:#EDE9FE;color:#5B21B6}
+.kpi-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-val{font-size:20px;font-weight:800;color:var(--text1);line-height:1.1;font-family:'JetBrains Mono',monospace}
+.kpi-val.sm{font-size:14px;font-family:'Sora',sans-serif;font-weight:700}
+.kpi-sub{font-size:10.5px;color:var(--text3);margin-top:4px}
+.kpi-bdg{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:10px;margin-top:6px}
+.bg-up{background:#E4F7F0;color:var(--green)}
+.bg-dn{background:#FCECEA;color:var(--red)}
+.bg-nt{background:#FDF3DC;color:var(--gold)}
+.bg-bl{background:#EBF3FF;color:var(--blue)}
+
+/* ─── CHART CARDS — idêntico ao Saving 2026 ─── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow1);padding:22px 24px;margin-bottom:20px}
+.card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.card-title{font-size:14px;font-weight:700;color:var(--text1)}
+.card-sub{font-size:11px;color:var(--text3);margin-top:3px;font-weight:400}
+.tags{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.tag{font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:10px;border:1px solid transparent}
+.tag-blue{background:#EBF3FF;color:var(--blue);border-color:#C4DBF6}
+.tag-green{background:#E4F7F0;color:var(--green);border-color:#B3DDD1}
+.tag-red{background:#FCECEA;color:var(--red);border-color:#F5C6C3}
+.tag-amber{background:#FDF3DC;color:var(--gold);border-color:#F3D887}
+.tag-gray{background:#F3F4F6;color:#374151;border-color:#D1D5DB}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.chart-h240{position:relative;height:240px}
+.chart-h280{position:relative;height:280px}
+
+/* ─── DISTRIBUIÇÃO POR EMPRESA — fundo claro, legível ─── */
+.empresa-row{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+.empresa-item{display:grid;grid-template-columns:110px 1fr 52px 90px;align-items:center;gap:12px}
+.emp-nm{font-size:12px;font-weight:600;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emp-bar-track{height:12px;background:var(--surface3);border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.emp-bar-fill{height:100%;border-radius:6px;transition:width .6s ease}
+.emp-pct-val{font-size:13px;font-weight:800;font-family:'JetBrains Mono',monospace;text-align:right}
+.emp-cnt-val{font-size:11px;color:var(--text3);text-align:right;font-family:'JetBrains Mono',monospace}
+
+/* ─── EMPRESA PAGE HEADER ─── */
+.emp-ph{padding:16px 22px;border-radius:var(--r2);margin-bottom:18px;display:flex;align-items:center;gap:14px}
+.emp-ph.ep-f{background:linear-gradient(135deg,var(--farmot),#9B1C1C)}
+.emp-ph.ep-p{background:linear-gradient(135deg,var(--pharma),#1E3A8A)}
+.emp-ph.ep-n{background:linear-gradient(135deg,var(--nutri),#1E3A8A)}
+.emp-ph.ep-c{background:linear-gradient(135deg,var(--clinu),#065F46)}
+.emp-ph .ep-icon{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;backdrop-filter:blur(4px)}
+.emp-ph h2{font-family:'Sora',sans-serif;font-size:17px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.emp-ph p{font-size:10.5px;color:rgba(255,255,255,.62);margin-top:2px}
+
+/* ─── RESPONSIVIDADE ─── */
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){
+  .hdr-inner{padding:14px 20px}
+  main{padding:16px 18px}
+  .two-col{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .filter-bar input{min-width:100%}
+  .empresa-item{grid-template-columns:90px 1fr 44px 70px;gap:8px}
+}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr 1fr}}
+@media print{body{background:#fff}.card,.kpi{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<!-- TOAST CONTAINER -->
+<div id="toast"></div>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="hdr-inner">
+    <div class="hdr-left">
+      <!-- Logo Farmoterápica: símbolo trifolha + wordmark branco -->
+      <div class="hdr-logo">
+        <svg width="34" height="34" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="57" cy="54" rx="20" ry="28" fill="#E8342A" transform="rotate(35 57 54)"/>
+          <ellipse cx="33" cy="54" rx="20" ry="28" fill="#3DBDE8" transform="rotate(-35 33 54)"/>
+          <ellipse cx="45" cy="30" rx="16" ry="23" fill="#F7C900"/>
+          <ellipse cx="45" cy="52" rx="13" ry="15" fill="white"/>
+        </svg>
+        <span class="hdr-logo-name">Farmoterápica</span>
+      </div>
+      <div class="hdr-sep"></div>
+      <div class="hdr-meta">
+        <div class="hdr-badge"><div class="pulse"></div><span>Gestão Estratégica de Compras · Grupo Emede</span></div>
+        <div class="hdr-title">Painel de <em>SCs Abertas</em></div>
+        <div class="hdr-subtitle" id="hdr-sub">Grupo Emede · Somente SCs em Aberto · <span id="hdr-data"></span></div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-kpis">
+        <div class="hdr-kpi kpi-t"><div class="n" id="kpi-total">0</div><div class="l">Total</div></div>
+        <div class="hdr-kpi kpi-c"><div class="n" id="kpi-cot">0</div><div class="l">Em Cotação</div></div>
+        <div class="hdr-kpi kpi-a"><div class="n" id="kpi-ag">0</div><div class="l">Aguarda</div></div>
+      </div>
+      <div class="sync-chip loading" id="sync-chip" onclick="testarStorage(true)" title="Clique para testar a conexão compartilhada"><span class="sdot"></span><span id="sync-chip-txt">Testando…</span></div>
+    </div>
+  </div>
+  <div class="emp-strip">
+    <button class="es-btn" id="strip-list" onclick="showTab('listagem',this,'al')"><span class="dot" style="background:#60A5FA"></span>Listagem Completa</button>
+    <button class="es-btn" onclick="showTab('dashboard',this,'ad')"><span class="dot" style="background:#C4B5FD"></span>Dashboard</button>
+    <button class="es-btn" onclick="showTab('phal',this,'af')"><span class="dot" style="background:#E8342A"></span>Farmoterápica</button>
+    <button class="es-btn" onclick="showTab('pharmabag',this,'ap')"><span class="dot" style="background:#1565C0"></span>Pharmabag</button>
+    <button class="es-btn" onclick="showTab('nutriente',this,'an')"><span class="dot" style="background:#1A3A6B"></span>Nutriente</button>
+    <button class="es-btn" onclick="showTab('clinutri',this,'ac')"><span class="dot" style="background:#0F7A4A"></span>Clinutri</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══ LISTAGEM ═══ -->
+<section id="sec-listagem" class="section active">
+  <div id="sync-banner" class="sync-banner">
+    <div id="sync-banner-icon" style="font-size:18px">🔄</div>
+    <div class="sb-text">
+      <strong id="sync-banner-title"><span class="sync-dot"></span>Verificando conexão…</strong>
+      <p id="sync-banner-desc">Testando disponibilidade do storage compartilhado.</p>
+    </div>
+    <span id="sync-status-bar" style="margin-left:auto;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap"></span>
+    <button onclick="testarStorage(true)" style="background:none;border:1px solid #BBF7D0;border-radius:6px;padding:4px 10px;font-size:10.5px;font-family:'Sora',sans-serif;color:#15803D;cursor:pointer;white-space:nowrap;font-weight:600" id="sync-retest-btn">↺ Testar</button>
+  </div>
+  <div class="import-bar">
+    <span class="ib-title">📥 <strong>Atualização de Dados:</strong> Importe o relatório Excel do sistema para atualizar o painel automaticamente.</span>
+    <label class="imp-btn primary">
+      <input type="file" id="file-input" accept=".xlsx,.xls" onchange="importExcel(this)">
+      📊 Importar Excel
+    </label>
+    <button class="imp-btn secondary" onclick="resetDados()">↺ Restaurar dados originais</button>
+  </div>
+  <div class="sec-hdr">
+    <div class="sec-title">Listagem Completa de SCs — Ordenada por Aprovação <span id="list-count"></span></div>
+  </div>
+  <div class="filter-bar">
+    <input type="text" id="search-input" placeholder="🔍  Buscar SC, descrição, solicitante..." oninput="applyFilters()">
+    <select id="filter-empresa" onchange="applyFilters()">
+      <option value="">Todas as Empresas</option>
+      <option value="Phal Ind">Farmoterápica / Phal Ind</option>
+      <option value="Pharmabag">Pharmabag</option>
+      <option value="Nutriente">Nutriente</option>
+      <option value="Clinutri">Clinutri</option>
+    </select>
+    <select id="filter-status" onchange="applyFilters()">
+      <option value="">Todos os Status</option>
+      <option value="Em cotação">Em Cotação</option>
+      <option value="Aguarda cotação">Aguarda Cotação</option>
+    </select>
+    <span class="filter-count" id="filter-result"></span>
+  </div>
+  <div class="tbl-wrap">
+    <table id="main-table">
+      <thead><tr>
+        <th onclick="sortBy(0)">Empresa <span class="si">↕</span></th>
+        <th onclick="sortBy(1)">SC / Item <span class="si">↕</span></th>
+        <th onclick="sortBy(2)">Status <span class="si">↕</span></th>
+        <th onclick="sortBy(3)">Descrição <span class="si">↕</span></th>
+        <th onclick="sortBy(4)">Aprovação <span class="si">↕</span></th>
+        <th onclick="sortBy(5)">Entrega SC <span class="si">↕</span></th>
+        <th onclick="sortBy(6)">Limite Compra <span class="si">↕</span></th>
+        <th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th>
+        <th onclick="sortBy(7)">Solicitante <span class="si">↕</span></th>
+        <th onclick="sortBy(8)">Dias <span class="si">↕</span></th>
+        <th>Responsável</th>
+      </tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ DASHBOARD ═══ -->
+<section id="sec-dashboard" class="section">
+
+  <div class="sec-head"><div class="sec-icon" style="background:#EBF3FF">📌</div><span class="sec-label">Indicadores · SCs em Aberto</span></div>
+  <div class="kpi-grid">
+    <div class="kpi c-blue">
+      <div class="kpi-ico">📋</div><div class="kpi-lbl">Total de SCs Abertas</div>
+      <div class="kpi-val" id="dkpi-t">—</div><div class="kpi-sub">Todas as empresas</div>
+      <div class="kpi-bdg bg-bl" id="dkpi-t-bdg">—</div>
+    </div>
+    <div class="kpi c-teal">
+      <div class="kpi-ico">💬</div><div class="kpi-lbl">Em Cotação</div>
+      <div class="kpi-val" id="dkpi-c">—</div><div class="kpi-sub" id="dkpi-cp">—</div>
+      <div class="kpi-bdg bg-up">Processo iniciado</div>
+    </div>
+    <div class="kpi c-amber">
+      <div class="kpi-ico">⏳</div><div class="kpi-lbl">Aguarda Cotação</div>
+      <div class="kpi-val" id="dkpi-a">—</div><div class="kpi-sub" id="dkpi-ap">—</div>
+      <div class="kpi-bdg bg-nt">Pendente de ação</div>
+    </div>
+    <div class="kpi c-red">
+      <div class="kpi-ico">⚠️</div><div class="kpi-lbl">Prazo Vencido</div>
+      <div class="kpi-val" id="dkpi-v">—</div><div class="kpi-sub">Limite de compra ultrapassado</div>
+      <div class="kpi-bdg bg-dn">Ação urgente</div>
+    </div>
+    <div class="kpi c-green">
+      <div class="kpi-ico">🏭</div><div class="kpi-lbl">Empresa Maior Volume</div>
+      <div class="kpi-val sm" id="dkpi-e">—</div><div class="kpi-sub" id="dkpi-es">—</div>
+      <div class="kpi-bdg bg-up">Maior demanda</div>
+    </div>
+    <div class="kpi c-purple">
+      <div class="kpi-ico">📊</div><div class="kpi-lbl">Taxa Em Cotação</div>
+      <div class="kpi-val" id="dkpi-taxa">—</div><div class="kpi-sub">% SCs já em andamento</div>
+      <div class="kpi-bdg bg-bl">Eficiência do processo</div>
+    </div>
+  </div>
+
+  <div class="sec-head"><div class="sec-icon" style="background:#EBF3FF">📊</div><span class="sec-label">Volume por Empresa &amp; Status</span></div>
+  <div class="two-col" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hdr">
+        <div><div class="card-title">SCs Abertas por Empresa</div><div class="card-sub">Total de solicitações em aberto por unidade</div></div>
+        <div class="tags"><span class="tag tag-blue">Consolidado</span></div>
+      </div>
+      <div class="chart-h240"><canvas id="chEmp"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hdr">
+        <div><div class="card-title">Status por Empresa</div><div class="card-sub">Em Cotação vs Aguarda Cotação por unidade</div></div>
+        <div class="tags"><span class="tag tag-blue">Em Cotação</span><span class="tag tag-amber">Aguarda</span></div>
+      </div>
+      <div class="chart-h240"><canvas id="chSt"></canvas></div>
+    </div>
+  </div>
+
+  <div class="sec-head"><div class="sec-icon" style="background:#E4F7F0">📅</div><span class="sec-label">Evolução Temporal &amp; Solicitantes</span></div>
+  <div class="two-col" style="margin-bottom:22px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hdr">
+        <div><div class="card-title">Volume por Mês de Aprovação</div><div class="card-sub">SCs agrupadas por mês de aprovação da solicitação</div></div>
+        <span class="tag tag-blue">Por período</span>
+      </div>
+      <div class="chart-h240"><canvas id="chTl"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-hdr">
+        <div><div class="card-title">SCs por Solicitante</div><div class="card-sub">Top 8 solicitantes com maior volume em aberto</div></div>
+        <span class="tag tag-amber">Top 8</span>
+      </div>
+      <div class="chart-h240"><canvas id="chSol"></canvas></div>
+    </div>
+  </div>
+
+  <!-- DISTRIBUIÇÃO POR EMPRESA — fundo branco, barras coloridas, texto escuro -->
+  <div class="sec-head"><div class="sec-icon" style="background:#FDF3DC">🏭</div><span class="sec-label">Distribuição por Empresa — Participação %</span></div>
+  <div class="card">
+    <div class="card-hdr">
+      <div><div class="card-title">Participação de cada Empresa no Total de SCs Abertas</div>
+      <div class="card-sub">Quantidade absoluta e percentual relativo por unidade do Grupo Emede</div></div>
+    </div>
+    <!-- legend -->
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:var(--farmot)"></div>Farmoterápica</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:var(--pharma)"></div>Pharmabag</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:var(--nutri)"></div>Nutriente</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:var(--clinu)"></div>Clinutri</div>
+    </div>
+    <div class="empresa-row" id="emp-bars"></div>
+  </div>
+
+</section>
+
+<!-- ═══ SEÇÕES POR EMPRESA ═══ -->
+<section id="sec-phal" class="section">
+  <div class="emp-ph ep-f"><div class="ep-icon">🏭</div><div><h2>Farmoterápica / Phal Ind</h2><p id="cnt-phal-s">SCs abertas</p></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
+</section>
+<section id="sec-pharmabag" class="section">
+  <div class="emp-ph ep-p"><div class="ep-icon">💊</div><div><h2>Pharmabag</h2><p id="cnt-pharma-s">SCs abertas</p></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
+</section>
+<section id="sec-nutriente" class="section">
+  <div class="emp-ph ep-n"><div class="ep-icon">🌿</div><div><h2>Nutriente</h2><p id="cnt-nutri-s">SCs abertas</p></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
+</section>
+<section id="sec-clinutri" class="section">
+  <div class="emp-ph ep-c"><div class="ep-icon">🌿</div><div><h2>Clinutri</h2><p id="cnt-clinu-s">SCs abertas</p></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
+</section>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  PAINEL SC COMPRAS — Grupo Emede
+//  Persistência: localStorage + JSONBin (compartilhado)
+//  Colaboração: polling 6s
+// ═══════════════════════════════════════════════════════
+
+// ── GOOGLE SHEETS CONFIG ────────────────────────────────
+const GS_URL   = 'https://script.google.com/macros/s/AKfycbybIU803gqhHNSE_n27tKIFFb0KUS0Hh34_ATG6RVXqU49HHuhkJtbifNU3YMwop5Eb4A/exec';
+const SK_LOCAL = 'painel_sc_local_v3';
+const DEBOUNCE = 800;
+const POLL_MS  = 8000;
+
+// ── DADOS ORIGINAIS ─────────────────────────────────────
+const DATA_ORIGINAL = [
+  {empresa:"Nutriente",sc:"005324",item:"0001",status:"Em cotação",descricao:"Construção de proteção antichamas nas caixas d'agua",aprovacao:"29/12/2025",entrega:"12/01/2026",solicitante:"ALINE.SANTOS",limite:"12/01/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Phal Ind",sc:"015801",item:"0010",status:"Em cotação",descricao:"CHROMIC CHLORIDE, HEXAHYDRATE, USP CAS 10060-12-5",aprovacao:"23/02/2026",entrega:"06/04/2026",solicitante:"CAIQUE.LIMA",limite:"25/02/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Phal Ind",sc:"015974",item:"0001",status:"Em cotação",descricao:"MANGUEIRA DE SILICONE 12X18,5 REF 210 SUPRIMAS",aprovacao:"25/04/2026",entrega:"05/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"25/04/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Phal Ind",sc:"015992",item:"0006",status:"Aguarda cotação",descricao:"BOBINA PARA AUTOCLAVE",aprovacao:"28/04/2026",entrega:"22/05/2026",solicitante:"JESSICA.CARVALHO",limite:"22/05/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Phal Ind",sc:"015994",item:"0001",status:"Em cotação",descricao:"Lâmpada fluorescente tubular T5 14 w/840",aprovacao:"28/04/2026",entrega:"04/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"12/05/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Phal Ind",sc:"015997",item:"0001",status:"Em cotação",descricao:"Manômetro Diam.63mm Vertical 0-4 kgf/cm2",aprovacao:"28/04/2026",entrega:"15/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"15/05/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Pharmabag",sc:"006231",item:"0001",status:"Em cotação",descricao:"MANUTENCAO PREDIAL - SERVICOS",aprovacao:"07/05/2026",entrega:"27/05/2026",solicitante:"ALEX.PEREIRA",limite:"07/05/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Pharmabag",sc:"006233",item:"0001",status:"Em cotação",descricao:"MATERIAL MANUTENCAO PREDIAL",aprovacao:"07/05/2026",entrega:"27/05/2026",solicitante:"ALEX.PEREIRA",limite:"07/05/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Clinutri",sc:"000264",item:"0001",status:"Aguarda cotação",descricao:"HOSPEDAGEM",aprovacao:"14/05/2026",entrega:"18/05/2026",solicitante:"FLAVIO.LEAL",limite:"18/05/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Nutriente",sc:"005403",item:"0001",status:"Aguarda cotação",descricao:"ESCOVA P/ LAVAGEM DE MAOS SECA 3B",aprovacao:"06/05/2026",entrega:"18/05/2026",solicitante:"ALINE.LIMA",limite:"07/06/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Phal Ind",sc:"016021",item:"0001",status:"Aguarda cotação",descricao:"QUALIFICACAO Autoclave Getinge GEC91425",aprovacao:"08/05/2026",entrega:"22/06/2026",solicitante:"MARIANA.RAMOS",limite:"08/05/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Phal Ind",sc:"016029",item:"0001",status:"Aguarda cotação",descricao:"EQUIPAMENTOS DE INFORMATICA",aprovacao:"13/05/2026",entrega:"18/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"18/05/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Phal Ind",sc:"016030",item:"0001",status:"Em cotação",descricao:"SENSOR DE RADAR COMPACTO PARA MEDICAO CONTINUA DE NIVEL",aprovacao:"13/05/2026",entrega:"25/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"25/05/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Clinutri",sc:"000277",item:"0001",status:"Aguarda cotação",descricao:"LOCACAO MAQUINAS E EQUIPAMENTOS",aprovacao:"18/05/2026",entrega:"01/06/2026",solicitante:"KATIA.SILVA",limite:"01/06/2026",f1:"",f2:"",f3:"",resp:""},
+  {empresa:"Nutriente",sc:"005409",item:"0001",status:"Aguarda cotação",descricao:"PROPE DESCARTAVEL DESCARPACK",aprovacao:"20/05/2026",entrega:"12/06/2026",solicitante:"ALINE.LIMA",limite:"07/06/2026",f1:"",f2:"",f3:"",resp:""}
+];
+
+// ── ESTADO ──────────────────────────────────────────────
+let DATA    = JSON.parse(JSON.stringify(DATA_ORIGINAL));
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+let _sD = {}, _ch = {};
+let _lastTs      = 0;
+let _lastSaveTs  = 0;
+let _pendingSave = false;
+let _saveTimer   = null;
+let _pollTimer   = null;
+let _isSaving    = false;
+const _updTimers = {};
+
+// ── TOAST ───────────────────────────────────────────────
+function toast(msg, type, dur){
+  type = type||'ok'; dur = dur||2800;
+  var c = document.getElementById('toast');
+  var el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.innerHTML = (type==='ok'?'✓':type==='err'?'✗':'ℹ') + ' ' + msg;
+  c.appendChild(el);
+  setTimeout(function(){ el.style.animation='toast-out .25s ease forwards'; setTimeout(function(){ el.remove(); },260); }, dur);
+}
+
+// ── HELPERS ─────────────────────────────────────────────
+function fTime(d){ return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function pD(s){ if(!s) return null; var p=String(s).split('/'); if(p.length===3) return new Date(+p[2],+p[1]-1,+p[0]); return null; }
+function xlS(n){ var d=new Date(Date.UTC(1899,11,30)+(n-1)*86400000); return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+'/'+d.getUTCFullYear(); }
+function dO(e){ var d=pD(e); if(!d) return 0; return Math.max(0,Math.floor((TODAY-d)/86400000)); }
+function dB(d){ var c=d>=60?'db-o':d>=20?'db-m':'db-n'; return '<span class="days-b '+c+'">'+d+'d</span>'; }
+function isOpen(r){ var n=String(r.status).trim().toLowerCase(); return n==='em cotação'||n==='aguarda cotação'; }
+function sCls(s){ var n=String(s).trim().toLowerCase(); if(n==='em cotação') return 'ss-cot'; if(n==='aguarda cotação') return 'ss-ag'; if(n==='finalizada') return 'ss-fin'; return 'ss-rej'; }
+
+var SOL_MAP={'MARILIA.GIANEZI':'Marília Gianezi','CAIQUE.LIMA':'Caique Lima','ALESSANDRA.MARTINS':'Alessandra Martins','DIEGO.ROCHA':'Diego Rocha','ALINE.LIMA':'Aline Lima','ANDREZA.GRACIOLA':'Andreza Graciola','DONIZETE.GRASSI':'Donizete Grassi','SANDRA.RIGOLETO':'Sandra Rigoleto','JESSICA.CARVALHO':'Jéssica Carvalho','MARIANA.RAMOS':'Mariana Ramos','RENATA.BOTEON':'Renata Boteon','ALEX.PEREIRA':'Alex Pereira','ALINE.SANTOS':'Aline Santos','RAFAEL.GASPAR':'Rafael Gaspar','TIAGO.BRITO':'Tiago Brito','FLAVIO.LEAL':'Flávio Leal','KATIA.SILVA':'Kátia Silva','NIKIARA.TAKAKI':'Nikiara Takaki'};
+function resSOL(r){ if(!r) return ''; var u=String(r).toUpperCase().trim(); if(SOL_MAP[u]) return SOL_MAP[u]; return String(r).trim().split('.').map(function(p){ return p.charAt(0).toUpperCase()+p.slice(1).toLowerCase(); }).join(' '); }
+
+function empTag(e){
+  var m={'Phal Ind':'et-f','Pharmabag':'et-p','Nutriente':'et-n','Clinutri':'et-c','Phal SPO':'et-f'};
+  var lbl={'Phal Ind':'Farmoterápica','Pharmabag':'Pharmabag','Nutriente':'Nutriente','Clinutri':'Clinutri','Phal SPO':'Phal SPO'};
+  var dc={'Phal Ind':'#C41E1E','Pharmabag':'#1558B0','Nutriente':'#1A3A6B','Clinutri':'#0F7A4A','Phal SPO':'#C41E1E'};
+  return '<span class="emp-tag '+(m[e]||'et-f')+'"><span class="dot" style="background:'+(dc[e]||'#C41E1E')+'"></span>'+(lbl[e]||e)+'</span>';
+}
+
+// ── RENDERIZAÇÃO DE LINHA ────────────────────────────────
+function rowHTML(r, showEmp){
+  var idx=DATA.indexOf(r), days=dO(r.aprovacao||r.emissao), sol=resSOL(r.solicitante);
+  var scC={'Phal Ind':'#C41E1E','Pharmabag':'#1558B0','Nutriente':'#1A3A6B','Clinutri':'#0F7A4A','Phal SPO':'#C41E1E'}[r.empresa]||'#1A3A6B';
+  var rv=r.resp||'';
+  var empCol = showEmp ? '<td>'+empTag(r.empresa)+'</td>' : '';
+  return '<tr data-idx="'+idx+'">'
+    +empCol
+    +'<td><span class="sc-num" style="color:'+scC+'">'+r.sc+'</span><br><span style="font-size:9px;color:var(--text4);font-family:JetBrains Mono,monospace">'+r.item+'</span></td>'
+    +'<td><select class="ssel '+sCls(r.status)+'" onchange="chSt('+idx+',this)">'
+    +'<option'+(r.status==='Aguarda cotação'?' selected':'')+'>Aguarda cotação</option>'
+    +'<option'+(r.status==='Em cotação'?' selected':'')+'>Em cotação</option>'
+    +'<option'+(r.status==='Finalizada'?' selected':'')+'>Finalizada</option>'
+    +'<option'+(r.status==='Rejeitada'?' selected':'')+'>Rejeitada</option>'
+    +'</select></td>'
+    +'<td class="desc">'+r.descricao+'</td>'
+    +'<td class="dc">'+(r.aprovacao||r.emissao||'')+'</td>'
+    +'<td class="dc">'+r.entrega+'</td>'
+    +'<td class="dc">'+r.limite+'</td>'
+    +'<td><input class="forn-c" placeholder="Fornecedor 1" value="'+(r.f1||'')+'" oninput="upd('+idx+',\'f1\',this.value)"></td>'
+    +'<td><input class="forn-c" placeholder="Fornecedor 2" value="'+(r.f2||'')+'" oninput="upd('+idx+',\'f2\',this.value)"></td>'
+    +'<td><input class="forn-c" placeholder="Fornecedor 3" value="'+(r.f3||'')+'" oninput="upd('+idx+',\'f3\',this.value)"></td>'
+    +'<td class="sol-nm">'+sol+'</td>'
+    +'<td>'+dB(days)+'</td>'
+    +'<td><select class="resp-sel" onchange="upd('+idx+',\'resp\',this.value)">'
+    +'<option value=""'+(!rv?' selected':'')+'>— Responsável —</option>'
+    +'<option value="Aline Lima"'+(rv==='Aline Lima'?' selected':'')+'>Aline Lima</option>'
+    +'<option value="Robert Santos"'+(rv==='Robert Santos'?' selected':'')+'>Robert Santos</option>'
+    +'</select></td>'
+    +'</tr>';
+}
+
+function chSt(idx, sel){
+  DATA[idx].status = sel.value;
+  sel.className = 'ssel '+sCls(sel.value);
+  triggerSave();
+  if(sel.value==='Finalizada'||sel.value==='Rejeitada'){
+    var tr=sel.closest('tr');
+    tr.style.transition='opacity .4s'; tr.style.opacity='0.2';
+    setTimeout(function(){ refreshAll(); }, 700);
+  }
+}
+function upd(idx, field, val){
+  DATA[idx][field] = val;
+  var k = idx+'_'+field;
+  if(_updTimers[k]) clearTimeout(_updTimers[k]);
+  _updTimers[k] = setTimeout(function(){ triggerSave(); }, 600);
+}
+function renderBody(id, rows, showEmp){
+  var tb=document.getElementById(id);
+  if(tb) tb.innerHTML = rows.map(function(r){ return rowHTML(r,showEmp); }).join('');
+}
+
+// ── REFRESH GERAL ────────────────────────────────────────
+function refreshAll(){
+  var open=DATA.filter(isOpen).sort(function(a,b){ return (pD(a.aprovacao||a.emissao)||0)-(pD(b.aprovacao||b.emissao)||0); });
+  var cot=open.filter(function(r){ return r.status.trim().toLowerCase()==='em cotação'; }).length;
+  document.getElementById('kpi-total').textContent=open.length;
+  document.getElementById('kpi-cot').textContent=cot;
+  document.getElementById('kpi-ag').textContent=open.length-cot;
+  var lc=document.getElementById('list-count'); if(lc) lc.textContent=open.length+' registros';
+  applyFilters();
+  var emps=[['Phal Ind','tb-phal','cnt-phal-s'],['Pharmabag','tb-pharma','cnt-pharma-s'],['Nutriente','tb-nutri','cnt-nutri-s'],['Clinutri','tb-clinu','cnt-clinu-s']];
+  emps.forEach(function(e){
+    var rows=open.filter(function(r){ return r.empresa===e[0]; });
+    renderBody(e[1],rows,false);
+    var el=document.getElementById(e[2]); if(el) el.textContent=rows.length+' SCs abertas';
+  });
+  updateDash(open);
+}
+function applyFilters(){
+  var q=(document.getElementById('search-input')||{}).value||'';
+  q=q.toLowerCase();
+  var emp=(document.getElementById('filter-empresa')||{}).value||'';
+  var st=(document.getElementById('filter-status')||{}).value||'';
+  var open=DATA.filter(isOpen).sort(function(a,b){ return (pD(a.aprovacao||a.emissao)||0)-(pD(b.aprovacao||b.emissao)||0); });
+  var f=open.filter(function(r){
+    var mq=!q||(r.sc+r.descricao+resSOL(r.solicitante)+r.solicitante).toLowerCase().indexOf(q)>=0;
+    return mq&&(!emp||r.empresa===emp)&&(!st||r.status.trim().toLowerCase()===st.toLowerCase());
+  });
+  renderBody('table-body',f,true);
+  var total=open.filter(function(r){ return !emp||r.empresa===emp; }).length;
+  var fr=document.getElementById('filter-result'); if(fr) fr.textContent=(q||emp||st)?f.length+' de '+total+' registros':'';
+}
+var _sKeys=['empresa','sc','status','descricao','aprovacao','entrega','limite','solicitante'];
+function sortBy(col){
+  _sD[col]=(_sD[col]||1)*-1; var k=_sKeys[col];
+  DATA.sort(function(a,b){
+    var av=a[k]||'',bv=b[k]||'';
+    if(['aprovacao','entrega','limite'].indexOf(k)>=0){ av=pD(av)||new Date(0); bv=pD(bv)||new Date(0); return(av-bv)*_sD[col]; }
+    return av.localeCompare(bv)*_sD[col];
+  });
+  applyFilters();
+  document.querySelectorAll('#main-table th').forEach(function(t,i){
+    t.classList.toggle('sorted',i===col);
+    var si=t.querySelector('.si'); if(si) si.textContent=i===col?(_sD[col]===1?'↑':'↓'):'↕';
+  });
+}
+function showTab(name, btn, cls){
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.es-btn').forEach(function(b){ b.className='es-btn'; });
+  document.getElementById('sec-'+name).classList.add('active');
+  if(btn) btn.classList.add(cls||'al');
+  if(name==='dashboard') setTimeout(function(){ buildCharts(DATA.filter(isOpen)); },50);
+}
+
+// ── DASHBOARD ────────────────────────────────────────────
+function updateDash(open){
+  var cot=open.filter(function(r){ return r.status.trim().toLowerCase()==='em cotação'; }).length, ag=open.length-cot;
+  var venc=open.filter(function(r){ var l=pD(r.limite); return l&&l<TODAY; }).length;
+  var byE={}; open.forEach(function(r){ byE[r.empresa]=(byE[r.empresa]||0)+1; });
+  var entries=Object.entries(byE).sort(function(a,b){ return b[1]-a[1]; });
+  var top=entries[0]||['—',0];
+  var sN={'Phal Ind':'Farmoterápica','Pharmabag':'Pharmabag','Nutriente':'Nutriente','Clinutri':'Clinutri','Phal SPO':'Phal SPO'};
+  var taxa=open.length?((cot/open.length*100).toFixed(1)+'%'):'—';
+  document.getElementById('dkpi-t').textContent=open.length;
+  document.getElementById('dkpi-t-bdg').textContent=ag+' aguardando · '+cot+' em cotação';
+  document.getElementById('dkpi-c').textContent=cot;
+  document.getElementById('dkpi-cp').textContent=open.length?((cot/open.length*100).toFixed(1)+'% do total'):'—';
+  document.getElementById('dkpi-a').textContent=ag;
+  document.getElementById('dkpi-ap').textContent=open.length?((ag/open.length*100).toFixed(1)+'% do total'):'—';
+  document.getElementById('dkpi-v').textContent=venc;
+  document.getElementById('dkpi-e').textContent=sN[top[0]]||top[0];
+  document.getElementById('dkpi-es').textContent=top[1]+' SCs abertas';
+  document.getElementById('dkpi-taxa').textContent=taxa;
+  var total=open.length||1;
+  var empCfg=[{k:'Phal Ind',nm:'Farmoterápica',cor:'#C41E1E'},{k:'Pharmabag',nm:'Pharmabag',cor:'#1558B0'},{k:'Nutriente',nm:'Nutriente',cor:'#1A3A6B'},{k:'Clinutri',nm:'Clinutri',cor:'#0F7A4A'}];
+  var maxCnt=Math.max.apply(null,empCfg.map(function(e){ return byE[e.k]||0; }).concat([1]));
+  var cont=document.getElementById('emp-bars');
+  if(cont){
+    cont.innerHTML=empCfg.map(function(e){
+      var cnt=byE[e.k]||0, pct=(cnt/total*100).toFixed(1), barW=Math.round(cnt/maxCnt*100);
+      return '<div class="empresa-item">'
+        +'<span class="emp-nm">'+e.nm+'</span>'
+        +'<div class="emp-bar-track"><div class="emp-bar-fill" style="width:'+barW+'%;background:'+e.cor+'"></div></div>'
+        +'<span class="emp-pct-val" style="color:'+e.cor+'">'+pct+'%</span>'
+        +'<span class="emp-cnt-val">'+cnt+' SC'+(cnt!==1?'s':'')+'</span>'
+        +'</div>';
+    }).join('');
+  }
+  buildCharts(open);
+}
+
+function buildCharts(open){
+  Object.values(_ch).forEach(function(c){ if(c) c.destroy(); }); _ch={};
+  var eN=['Phal Ind','Pharmabag','Nutriente','Clinutri'];
+  var eL=['Farmoterápica','Pharmabag','Nutriente','Clinutri'];
+  var eC=['#C41E1E','#1558B0','#1A3A6B','#0F7A4A'];
+  var tot=[],cot=[],ag=[];
+  eN.forEach(function(e){
+    var r=open.filter(function(x){ return x.empresa===e; });
+    tot.push(r.length);
+    cot.push(r.filter(function(x){ return x.status.trim().toLowerCase()==='em cotação'; }).length);
+    ag.push(r.filter(function(x){ return x.status.trim().toLowerCase()==='aguarda cotação'; }).length);
+  });
+  var go={responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#6B7A99',font:{size:10,family:'Sora'},boxWidth:10}},tooltip:{backgroundColor:'#0B1F3A',padding:10,cornerRadius:6}},
+    scales:{x:{grid:{display:false},ticks:{color:'#9AA3BF',font:{size:10,family:'Sora'}}},y:{grid:{color:'rgba(11,31,58,.06)'},ticks:{color:'#9AA3BF',font:{size:10,family:'Sora'}}}}};
+  var c1=document.getElementById('chEmp'),c2=document.getElementById('chSt'),c3=document.getElementById('chTl'),c4=document.getElementById('chSol');
+  if(c1) _ch.e=new Chart(c1,{type:'bar',data:{labels:eL,datasets:[{data:tot,backgroundColor:eC.map(function(c){ return c+'CC'; }),borderRadius:8,borderSkipped:false}]},options:Object.assign({},go,{plugins:Object.assign({},go.plugins,{legend:{display:false}})})});
+  if(c2) _ch.s=new Chart(c2,{type:'bar',data:{labels:eL,datasets:[{label:'Em Cotação',data:cot,backgroundColor:'#1558B0CC',borderRadius:5,borderSkipped:false},{label:'Aguarda',data:ag,backgroundColor:'#D68B1ACC',borderRadius:5,borderSkipped:false}]},options:Object.assign({},go,{scales:{x:Object.assign({},go.scales.x,{stacked:true}),y:Object.assign({},go.scales.y,{stacked:true})}})});
+  var mc={}; open.forEach(function(r){ var d=pD(r.aprovacao||r.emissao); if(d){ var k=String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); mc[k]=(mc[k]||0)+1; } });
+  var ml=Object.keys(mc).sort();
+  if(c3) _ch.t=new Chart(c3,{type:'bar',data:{labels:ml,datasets:[{data:ml.map(function(k){ return mc[k]; }),backgroundColor:'#1A3A6BCC',borderRadius:6,borderSkipped:false}]},options:Object.assign({},go,{plugins:Object.assign({},go.plugins,{legend:{display:false}})})});
+  var sc={}; open.forEach(function(r){ var n=resSOL(r.solicitante); if(n) sc[n]=(sc[n]||0)+1; });
+  var ss=Object.entries(sc).sort(function(a,b){ return b[1]-a[1]; }).slice(0,8);
+  if(c4) _ch.sol=new Chart(c4,{type:'bar',data:{labels:ss.map(function(s){ return s[0]; }),datasets:[{data:ss.map(function(s){ return s[1]; }),backgroundColor:'#C41E1ECC',borderRadius:6,borderSkipped:false}]},options:Object.assign({},go,{indexAxis:'y',plugins:Object.assign({},go.plugins,{legend:{display:false}}),scales:{x:go.scales.x,y:{grid:{display:false},ticks:{color:'#3B4A6B',font:{size:10,family:'Sora'}}}}})});
+}
+
+// ── PERSISTÊNCIA LOCAL ───────────────────────────────────
+function saveLocal(){
+  try{ localStorage.setItem(SK_LOCAL, JSON.stringify({data:DATA,ts:Date.now()})); }
+  catch(e){ console.warn('localStorage error:',e); }
+}
+function loadLocal(){
+  try{
+    var raw=localStorage.getItem(SK_LOCAL);
+    if(!raw) return false;
+    var p=JSON.parse(raw);
+    if(p&&p.data&&Array.isArray(p.data)&&p.data.length>0){ DATA=p.data; _lastTs=p.ts||0; return true; }
+  }catch(e){}
+  return false;
+}
+
+// ── GOOGLE SHEETS API via Netlify Function (sem CORS) ────
+const PROXY_URL = '/api/sync';
+async function jbRead(){
+  var resp = await fetch(PROXY_URL);
+  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  return await resp.json();
+}
+async function jbWrite(payload){
+  var ts = Date.now();
+  var full = JSON.stringify({ts:ts, v:'full', data:payload.data});
+  var resp = await fetch(PROXY_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({payload:full})
+  });
+  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  var result = await resp.json();
+  if(result.error) throw new Error(result.error);
+  return result;
+}
+
+// ── SYNC ────────────────────────────────────────────────
+function setSyncBar(msg){ var el=document.getElementById('sync-status-bar'); if(el) el.textContent=msg; }
+function setSyncChip(msg,state){
+  var chip=document.getElementById('sync-chip'),txt=document.getElementById('sync-chip-txt');
+  if(txt) txt.textContent=msg;
+  if(chip&&state) chip.className='sync-chip '+state;
+}
+function setBannerState(state,title,desc){
+  var banner=document.getElementById('sync-banner'),t=document.getElementById('sync-banner-title'),d=document.getElementById('sync-banner-desc');
+  if(banner) banner.className='sync-banner '+state;
+  if(t) t.innerHTML=(state==='ok'?'<span class="sync-dot"></span>':'')+title;
+  if(d) d.textContent=desc;
+}
+function triggerSave(){
+  saveLocal();
+  _pendingSave=true;
+  if(_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(function(){ saveShared(); },DEBOUNCE);
+}
+async function saveShared(){
+  if(_isSaving) return;
+  _isSaving=true;
+  try{
+    var ts=Date.now();
+    await jbWrite({data:DATA,ts:ts});
+    _lastTs=ts;
+    _lastSaveTs=ts;
+    _pendingSave=false;
+    saveLocal();
+    var t=fTime(new Date());
+    setSyncBar('✓ Salvo e sincronizado — '+t);
+    setSyncChip('🟢 Salvo '+t,'ok');
+  }catch(e){
+    console.error('saveShared error:',e);
+    _pendingSave=false;
+    saveLocal();
+    setSyncBar('⚠ Erro ao sincronizar — salvo localmente');
+    setSyncChip('🔴 Local','err');
+    toast('Erro ao sincronizar: '+e.message,'err',3000);
+  }finally{ _isSaving=false; }
+}
+function mergeSharedIntoFull(mini){
+  if(!mini) return false;
+  var changed = false;
+  // Formato 'edits': {ts, v:'edits', edits:{key: 'status|f1|f2|f3|resp'}}
+  if(mini.v==='edits' && mini.edits){
+    Object.keys(mini.edits).forEach(function(key){
+      var parts = key.split('_');
+      var emp=parts[0], sc=parts[1], item=parts[2];
+      var vals = mini.edits[key].split('|');
+      var r = DATA.find(function(d){ return d.empresa===emp&&d.sc===sc&&d.item===item; });
+      if(r){
+        var st=vals[0]||r.status, f1=vals[1]||'', f2=vals[2]||'', f3=vals[3]||'', rsp=vals[4]||'';
+        if(r.status!==st||r.f1!==f1||r.f2!==f2||r.f3!==f3||r.resp!==rsp){
+          r.status=st; r.f1=f1; r.f2=f2; r.f3=f3; r.resp=rsp;
+          changed=true;
+        }
+      }
+    });
+  // Formato 'compact': {ts, v:'compact', lines:['EMP|SC|ITEM|STATUS|F1|F2|F3|RESP']}
+  } else if(mini.v==='compact' && mini.lines){
+    mini.lines.forEach(function(line){
+      var p=line.split('|');
+      var r=DATA.find(function(d){ return d.empresa===p[0]&&d.sc===p[1]&&d.item===p[2]; });
+      if(r){
+        if(r.status!==p[3]||r.f1!==p[4]||r.f2!==p[5]||r.f3!==p[6]||r.resp!==p[7]){
+          r.status=p[3]; r.f1=p[4]||''; r.f2=p[5]||''; r.f3=p[6]||''; r.resp=p[7]||'';
+          changed=true;
+        }
+      }
+    });
+  // Formato legacy: {ts, data:[...]}
+  } else if(mini.data){
+    mini.data.forEach(function(m){
+      var r=DATA.find(function(d){ return d.empresa===m.empresa&&d.sc===m.sc&&d.item===m.item; });
+      if(r){
+        if(r.status!==m.status||r.f1!==m.f1||r.f2!==m.f2||r.f3!==m.f3||r.resp!==m.resp){
+          r.status=m.status; r.f1=m.f1||''; r.f2=m.f2||''; r.f3=m.f3||''; r.resp=m.resp||'';
+          changed=true;
+        }
+      }
+    });
+  }
+  return changed;
+}
+async function pollShared(){
+  if(_isSaving||_pendingSave) return;
+  try{
+    var p=await jbRead();
+    if(!p||!p.ts) return;
+    if(p.ts !== _lastTs && p.ts > _lastSaveTs){
+      _lastTs=p.ts;
+      if(p.v==='full' && p.data && Array.isArray(p.data) && p.data.length>0){
+        DATA=p.data;
+        saveLocal();
+        refreshAll();
+        setSyncChip('🟢 Sync '+fTime(new Date(p.ts)),'ok');
+        setSyncBar('↻ Sincronizado — '+fTime(new Date(p.ts)));
+      } else if(p.data && Array.isArray(p.data) && p.data.length>0){
+        var changed=mergeSharedIntoFull(p);
+        if(changed){ saveLocal(); refreshAll(); setSyncChip('🟢 Sync '+fTime(new Date(p.ts)),'ok'); }
+      }
+    }
+  }catch(e){ console.warn('pollShared error:',e); }
+}
+async function testarStorage(manual){
+  setSyncChip('Testando…','loading');
+  setBannerState('loading','Testando conexão com JSONBin…','Aguarde.');
+  try{
+    var p=await jbRead();
+    if(!p||typeof p!=='object') throw new Error('Resposta inválida');
+    var ts=Date.now();
+    await jbWrite({data:p.data||DATA,ts:ts});
+    _lastTs=ts;
+    setSyncChip('🟢 JSONBin ativo','ok');
+    setBannerState('ok','Sincronização ativa — JSONBin funcionando','Edições salvas localmente (imediato) e sincronizadas com a equipe em até '+DEBOUNCE+'ms. Polling a cada '+Math.round(POLL_MS/1000)+'s.');
+    setSyncBar('✓ Leitura + Escrita OK — '+fTime(new Date()));
+    if(manual) toast('JSONBin funcionando ✓','ok',3000);
+    if(_pollTimer) clearInterval(_pollTimer);
+    _pollTimer=setInterval(pollShared,POLL_MS);
+  }catch(e){
+    setSyncChip('🔴 Erro','err');
+    setBannerState('err','JSONBin indisponível — modo local','Erro: '+e.message+'. Dados salvos localmente. Clique em "↺ Testar" para reconectar.');
+    setSyncBar('✗ Erro: '+e.message);
+    if(manual) toast('Erro JSONBin: '+e.message,'err',5000);
+  }
+}
+
+// ── IMPORT EXCEL ─────────────────────────────────────────
+var EMP_MAP={'phal ind':'Phal Ind','pharmabag':'Pharmabag','nutriente':'Nutriente','clinutri':'Clinutri','phal spo':'Phal SPO'};
+function normHdr(h){
+  var s=String(h||'');
+  s=s.split('\r').join(' ').split('\n').join(' ');
+  while(s.indexOf('  ')>=0) s=s.split('  ').join(' ');
+  return s.trim().toLowerCase();
+}
+function findCol(hdrs,terms){
+  return hdrs.find(function(h){ return terms.some(function(t){ return normHdr(h).indexOf(t.toLowerCase())>=0; }); })||'';
+}
+function fmtDate(v){
+  if(!v||v==='') return '';
+  if(typeof v==='string'&&/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return v;
+  if(typeof v==='string'){ var d=new Date(v); if(!isNaN(d)) return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+  if(typeof v==='number'&&v>40000) return xlS(v);
+  return String(v).trim();
+}
+function importExcel(input){
+  var file=input.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'array',cellDates:true,cellText:false});
+      var nr=[];
+      wb.SheetNames.forEach(function(rawSN){
+        var empresa=EMP_MAP[rawSN.trim().toLowerCase()];
+        if(!empresa) return;
+        var ws=wb.Sheets[rawSN];
+        var json=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
+        if(!json.length) return;
+        var hdrs=Object.keys(json[0]);
+        var cSC=findCol(hdrs,['numero','nº','num']),cIt=findCol(hdrs,['item']),cSt=findCol(hdrs,['status']);
+        var cDs=findCol(hdrs,['descricao','descrição','descri']),cAp=findCol(hdrs,['aprovação','aprovacao','data aprov']);
+        var cEn=findCol(hdrs,['entrega']),cLm=findCol(hdrs,['limite','dt.limite']);
+        var cSol=findCol(hdrs,['solicitante']),cF1=findCol(hdrs,['fornecedor 1']),cF2=findCol(hdrs,['fornecedor 2']),cF3=findCol(hdrs,['fornecedor 3']);
+        var cRsp=findCol(hdrs,['responsável','responsavel']);
+        json.forEach(function(row){
+          var stLow=String(row[cSt]||'').trim().toLowerCase();
+          if(stLow.indexOf('final')>=0||stLow.indexOf('rejeit')>=0) return;
+          if(stLow.indexOf('cota')<0&&stLow.indexOf('aguarda')<0) return;
+          var st=stLow.indexOf('aguarda')>=0?'Aguarda cotação':'Em cotação';
+          var sc=String(row[cSC]||'').trim().replace(/\D/g,'').padStart(6,'0');
+          var desc=String(row[cDs]||'');
+          desc=desc.split('\r').join(' ').split('\n').join(' ').trim().substring(0,120);
+          nr.push({empresa:empresa,sc:sc,item:String(row[cIt]||'').trim(),status:st,descricao:desc,
+            aprovacao:fmtDate(row[cAp]),entrega:fmtDate(row[cEn]),solicitante:String(row[cSol]||'').trim(),
+            limite:fmtDate(row[cLm]),f1:String(row[cF1]||'').trim(),f2:String(row[cF2]||'').trim(),
+            f3:String(row[cF3]||'').trim(),resp:String(row[cRsp]||'').trim()});
+        });
+      });
+      if(!nr.length){ toast('Nenhuma SC aberta encontrada.','err',5000); input.value=''; return; }
+      DATA=nr;
+      var now=new Date();
+      var sub=document.getElementById('hdr-sub');
+      if(sub) sub.textContent='Grupo Emede · Somente SCs Abertas · '+String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
+      refreshAll(); triggerSave();
+      toast('✅ '+nr.length+' SCs importadas!','ok',4000);
+    }catch(err){ console.error(err); toast('Erro ao importar: '+err.message,'err',6000); }
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+function resetDados(){
+  if(!confirm('Restaurar dados originais?')) return;
+  DATA=JSON.parse(JSON.stringify(DATA_ORIGINAL));
+  saveLocal(); triggerSave(); refreshAll();
+  toast('Dados restaurados.','info');
+}
+
+// ── INICIALIZAÇÃO ────────────────────────────────────────
+document.getElementById('strip-list').classList.add('al');
+// Atualiza data no cabeçalho
+(function(){
+  var now=new Date();
+  var el=document.getElementById('hdr-data');
+  if(el) el.textContent=String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
+})();
+async function init(){
+  var hasLocal=loadLocal();
+  refreshAll();
+  setSyncChip(hasLocal?'💾 Local':'…', hasLocal?'warn':'loading');
+  if(hasLocal) setSyncBar('📂 Dados locais restaurados — '+fTime(new Date()));
+  await testarStorage(false);
+  try{
+    var p=await jbRead();
+    if(p&&p.data&&Array.isArray(p.data)&&p.data.length>0){
+      DATA=p.data; _lastTs=p.ts||0; saveLocal(); refreshAll();
+      setSyncBar('✓ Dados carregados do servidor — '+fTime(new Date()));
+    }
+  }catch(e){ console.warn('init load error:',e); }
+}
+init();
+</script>
+</body>
+</html>
