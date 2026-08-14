@@ -244,7 +244,22 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 .emp-ph p{font-size:10.5px;color:rgba(255,255,255,.62);margin-top:2px}
 
 /* ─── RESPONSIVIDADE ─── */
-@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+.control-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+.ctrl-btn{border:1px solid var(--border2);background:var(--surface);color:var(--text2);border-radius:6px;padding:7px 11px;font:600 10.5px 'Sora',sans-serif;cursor:pointer}
+.ctrl-btn:hover{border-color:var(--blue);color:var(--blue);background:#EBF3FF}
+.user-chip{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #C3DFFF;border-radius:20px;padding:4px 10px;font-size:10.5px;color:var(--navy)}
+.user-chip select{border:0;background:transparent;font:600 10.5px 'Sora',sans-serif;color:var(--navy);outline:none}
+.reason-sel{border-radius:var(--r3);font-size:10px;font-family:'Sora',sans-serif;padding:5px 7px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);width:150px}
+.modal-bg{display:none;position:fixed;inset:0;z-index:5000;background:rgba(11,31,58,.56);align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}.modal{background:#fff;border-radius:14px;width:min(920px,96vw);max-height:86vh;overflow:auto;box-shadow:0 22px 70px rgba(11,31,58,.35)}
+.modal-h{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2}
+.modal-h h3{font-size:15px}.modal-close{border:0;background:var(--surface3);border-radius:50%;width:30px;height:30px;cursor:pointer}.modal-b{padding:20px 22px}
+.user-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.user-card{border:1px solid var(--border);border-radius:9px;padding:12px;background:var(--surface2)}
+.user-card.off{opacity:.55}.user-card strong{display:block;font-size:12px}.user-card small{color:var(--text3)}
+.audit-table{width:100%;min-width:700px}.audit-table th{cursor:default}.audit-table td{font-size:10.5px}
+.resp-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.resp-card{border:1px solid var(--border);border-radius:9px;padding:14px;background:var(--surface2)}
+.resp-card .rn{font-size:12px;font-weight:700}.resp-card .rv{font:800 20px 'JetBrains Mono',monospace;margin:5px 0}.resp-card .rs{font-size:10px;color:var(--text3)}
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.resp-summary{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){
   .hdr-inner{padding:14px 20px}
   main{padding:16px 18px}
@@ -261,6 +276,8 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 
 <!-- TOAST CONTAINER -->
 <div id="toast"></div>
+<div class="modal-bg" id="users-modal"><div class="modal"><div class="modal-h"><h3>👥 Gestão de responsáveis</h3><button class="modal-close" onclick="closeModal('users-modal')">✕</button></div><div class="modal-b"><p style="font-size:11px;color:var(--text3);margin-bottom:14px">Cadastre ou desative responsáveis. Enquanto o painel estiver público, este controle organiza a operação, mas não substitui autenticação.</p><button class="ctrl-btn" onclick="addUser()" style="margin-bottom:14px">＋ Adicionar responsável</button><div class="user-list" id="user-list"></div></div></div></div>
+<div class="modal-bg" id="audit-modal"><div class="modal"><div class="modal-h"><h3>🕘 Histórico de alterações</h3><button class="modal-close" onclick="closeModal('audit-modal')">✕</button></div><div class="modal-b"><div class="filter-bar"><input id="audit-search" placeholder="Buscar SC, responsável ou campo..." oninput="renderAudit()"></div><div class="tbl-wrap"><table class="audit-table"><thead><tr><th>Data/hora</th><th>Usuário</th><th>SC / Item</th><th>Campo</th><th>Antes</th><th>Depois</th></tr></thead><tbody id="audit-body"></tbody></table></div></div></div></div>
 
 <!-- ═══ HEADER ═══ -->
 <header>
@@ -322,6 +339,11 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
       📊 Importar Excel
     </label>
     <button class="imp-btn secondary" onclick="resetDados()">↺ Restaurar dados originais</button>
+    <div class="control-bar">
+      <div class="user-chip">👤 Operando como <select id="active-user" onchange="setActiveUser(this.value)"></select></div>
+      <button class="ctrl-btn" onclick="openUsers()">⚙ Responsáveis</button>
+      <button class="ctrl-btn" onclick="openAudit()">🕘 Histórico</button>
+    </div>
   </div>
   <div class="sec-hdr">
     <div class="sec-title">Listagem Completa de SCs — Ordenada por Aprovação <span id="list-count"></span></div>
@@ -340,6 +362,8 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
       <option value="Em cotação">Em Cotação</option>
       <option value="Aguarda cotação">Aguarda Cotação</option>
     </select>
+    <select id="filter-resp" onchange="applyFilters()"><option value="">Todos os Responsáveis</option></select>
+    <select id="filter-reason" onchange="applyFilters()"><option value="">Todos os Motivos</option></select>
     <span class="filter-count" id="filter-result"></span>
   </div>
   <div class="tbl-wrap">
@@ -356,6 +380,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
         <th onclick="sortBy(7)">Solicitante <span class="si">↕</span></th>
         <th onclick="sortBy(8)">Dias <span class="si">↕</span></th>
         <th>Responsável</th>
+        <th>Motivo / Pendência</th>
       </tr></thead>
       <tbody id="table-body"></tbody>
     </table>
@@ -437,6 +462,12 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 
   <!-- DISTRIBUIÇÃO POR EMPRESA — fundo branco, barras coloridas, texto escuro -->
   <div class="sec-head"><div class="sec-icon" style="background:#FDF3DC">🏭</div><span class="sec-label">Distribuição por Empresa — Participação %</span></div>
+  <div class="sec-head"><div class="sec-icon" style="background:#EDE9FE">👥</div><span class="sec-label">Carteira por Responsável</span></div>
+  <div class="card">
+    <div class="card-hdr"><div><div class="card-title">Distribuição e criticidade por comprador</div><div class="card-sub">SCs abertas, em cotação, vencidas e sem motivo registrado</div></div></div>
+    <div class="resp-summary" id="resp-summary"></div>
+  </div>
+
   <div class="card">
     <div class="card-hdr">
       <div><div class="card-title">Participação de cada Empresa no Total de SCs Abertas</div>
@@ -457,19 +488,19 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 <!-- ═══ SEÇÕES POR EMPRESA ═══ -->
 <section id="sec-phal" class="section">
   <div class="emp-ph ep-f"><div class="ep-icon">🏭</div><div><h2>Farmoterápica / Phal Ind</h2><p id="cnt-phal-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
 </section>
 <section id="sec-pharmabag" class="section">
   <div class="emp-ph ep-p"><div class="ep-icon">💊</div><div><h2>Pharmabag</h2><p id="cnt-pharma-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
 </section>
 <section id="sec-nutriente" class="section">
   <div class="emp-ph ep-n"><div class="ep-icon">🌿</div><div><h2>Nutriente</h2><p id="cnt-nutri-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
 </section>
 <section id="sec-clinutri" class="section">
   <div class="emp-ph ep-c"><div class="ep-icon">🌿</div><div><h2>Clinutri</h2><p id="cnt-clinu-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
 </section>
 
 </main>
@@ -517,6 +548,10 @@ let _saveTimer   = null;
 let _pollTimer   = null;
 let _isSaving    = false;
 const _updTimers = {};
+let USERS=[{name:'Aline Lima',active:true},{name:'Robert Santos',active:true},{name:'Jaqueline Paulino',active:true}];
+let ACTIVE_USER=localStorage.getItem('painel_active_user')||'Aline Lima';
+let AUDIT=[];
+const REASONS=['Aguardando retorno do fornecedor','Aguardando área solicitante','Aguardando aprovação','Especificação incompleta','Negociação em andamento','Sem fornecedor disponível','Compra suspensa','Outro'];
 
 // ── TOAST ───────────────────────────────────────────────
 function toast(msg, type, dur){
@@ -552,7 +587,9 @@ function empTag(e){
 function rowHTML(r, showEmp){
   var idx=DATA.indexOf(r), days=dO(r.aprovacao||r.emissao), sol=resSOL(r.solicitante);
   var scC={'Phal Ind':'#C41E1E','Pharmabag':'#1558B0','Nutriente':'#1A3A6B','Clinutri':'#0F7A4A','Phal SPO':'#C41E1E'}[r.empresa]||'#1A3A6B';
-  var rv=r.resp||'';
+  var rv=r.resp||'', reason=r.reason||'';
+  var respOpts='<option value=""'+(!rv?' selected':'')+'>— Responsável —</option>'+USERS.filter(function(u){return u.active||u.name===rv;}).map(function(u){return '<option value="'+u.name+'"'+(rv===u.name?' selected':'')+'>'+u.name+'</option>';}).join('');
+  var reasonOpts='<option value=""'+(!reason?' selected':'')+'>— Motivo —</option>'+REASONS.map(function(x){return '<option value="'+x+'"'+(reason===x?' selected':'')+'>'+x+'</option>';}).join('');
   var empCol = showEmp ? '<td>'+empTag(r.empresa)+'</td>' : '';
   return '<tr data-idx="'+idx+'">'
     +empCol
@@ -572,17 +609,15 @@ function rowHTML(r, showEmp){
     +'<td><input class="forn-c" placeholder="Fornecedor 3" value="'+(r.f3||'')+'" oninput="upd('+idx+',\'f3\',this.value)"></td>'
     +'<td class="sol-nm">'+sol+'</td>'
     +'<td>'+dB(days)+'</td>'
-    +'<td><select class="resp-sel" onchange="upd('+idx+',\'resp\',this.value)">'
-    +'<option value=""'+(!rv?' selected':'')+'>— Responsável —</option>'
-    +'<option value="Aline Lima"'+(rv==='Aline Lima'?' selected':'')+'>Aline Lima</option>'
-    +'<option value="Robert Santos"'+(rv==='Robert Santos'?' selected':'')+'>Robert Santos</option>'
-    +'<option value="Jaqueline Paulino"'+(rv==='Jaqueline Paulino'?' selected':'')+'>Jaqueline Paulino</option>'
-    +'</select></td>'
+    +'<td><select class="resp-sel" onchange="upd('+idx+',\'resp\',this.value)">'+respOpts+'</select></td>'
+    +'<td><select class="reason-sel" onchange="upd('+idx+',\'reason\',this.value)">'+reasonOpts+'</select></td>'
     +'</tr>';
 }
 
 function chSt(idx, sel){
+  var before=DATA[idx].status;
   DATA[idx].status = sel.value;
+  logAudit(DATA[idx],'status',before,sel.value);
   sel.className = 'ssel '+sCls(sel.value);
   triggerSave();
   if(sel.value==='Finalizada'||sel.value==='Rejeitada'){
@@ -592,7 +627,10 @@ function chSt(idx, sel){
   }
 }
 function upd(idx, field, val){
+  var before=DATA[idx][field]||'';
+  if(before===val) return;
   DATA[idx][field] = val;
+  logAudit(DATA[idx],field,before,val);
   var k = idx+'_'+field;
   if(_updTimers[k]) clearTimeout(_updTimers[k]);
   _updTimers[k] = setTimeout(function(){ triggerSave(); }, 600);
@@ -604,6 +642,7 @@ function renderBody(id, rows, showEmp){
 
 // ── REFRESH GERAL ────────────────────────────────────────
 function refreshAll(){
+  setupControls();
   var open=DATA.filter(isOpen).sort(function(a,b){ return (pD(a.aprovacao||a.emissao)||0)-(pD(b.aprovacao||b.emissao)||0); });
   var cot=open.filter(function(r){ return r.status.trim().toLowerCase()==='em cotação'; }).length;
   document.getElementById('kpi-total').textContent=open.length;
@@ -624,14 +663,16 @@ function applyFilters(){
   q=q.toLowerCase();
   var emp=(document.getElementById('filter-empresa')||{}).value||'';
   var st=(document.getElementById('filter-status')||{}).value||'';
+  var rsp=(document.getElementById('filter-resp')||{}).value||'';
+  var rsn=(document.getElementById('filter-reason')||{}).value||'';
   var open=DATA.filter(isOpen).sort(function(a,b){ return (pD(a.aprovacao||a.emissao)||0)-(pD(b.aprovacao||b.emissao)||0); });
   var f=open.filter(function(r){
     var mq=!q||(r.sc+r.descricao+resSOL(r.solicitante)+r.solicitante).toLowerCase().indexOf(q)>=0;
-    return mq&&(!emp||r.empresa===emp)&&(!st||r.status.trim().toLowerCase()===st.toLowerCase());
+    return mq&&(!emp||r.empresa===emp)&&(!st||r.status.trim().toLowerCase()===st.toLowerCase())&&(!rsp||(rsp==='__none'?!r.resp:(r.resp||'')===rsp))&&(!rsn||(rsn==='__none'?!r.reason:(r.reason||'')===rsn));
   });
   renderBody('table-body',f,true);
   var total=open.filter(function(r){ return !emp||r.empresa===emp; }).length;
-  var fr=document.getElementById('filter-result'); if(fr) fr.textContent=(q||emp||st)?f.length+' de '+total+' registros':'';
+  var fr=document.getElementById('filter-result'); if(fr) fr.textContent=(q||emp||st||rsp||rsn)?f.length+' de '+total+' registros':'';
 }
 var _sKeys=['empresa','sc','status','descricao','aprovacao','entrega','limite','solicitante'];
 function sortBy(col){
@@ -674,6 +715,7 @@ function updateDash(open){
   document.getElementById('dkpi-e').textContent=sN[top[0]]||top[0];
   document.getElementById('dkpi-es').textContent=top[1]+' SCs abertas';
   document.getElementById('dkpi-taxa').textContent=taxa;
+  renderRespSummary(open);
   var total=open.length||1;
   var empCfg=[{k:'Phal Ind',nm:'Farmoterápica',cor:'#C41E1E'},{k:'Pharmabag',nm:'Pharmabag',cor:'#1558B0'},{k:'Nutriente',nm:'Nutriente',cor:'#1A3A6B'},{k:'Clinutri',nm:'Clinutri',cor:'#0F7A4A'}];
   var maxCnt=Math.max.apply(null,empCfg.map(function(e){ return byE[e.k]||0; }).concat([1]));
@@ -718,9 +760,62 @@ function buildCharts(open){
   if(c4) _ch.sol=new Chart(c4,{type:'bar',data:{labels:ss.map(function(s){ return s[0]; }),datasets:[{data:ss.map(function(s){ return s[1]; }),backgroundColor:'#C41E1ECC',borderRadius:6,borderSkipped:false}]},options:Object.assign({},go,{indexAxis:'y',plugins:Object.assign({},go.plugins,{legend:{display:false}}),scales:{x:go.scales.x,y:{grid:{display:false},ticks:{color:'#3B4A6B',font:{size:10,family:'Sora'}}}}})});
 }
 
+// ── USUÁRIOS, MOTIVOS E AUDITORIA ─────────────────────────
+function fieldLabel(f){ return {status:'Status',f1:'Fornecedor 1',f2:'Fornecedor 2',f3:'Fornecedor 3',resp:'Responsável',reason:'Motivo / Pendência'}[f]||f; }
+function logAudit(r,field,before,after){
+  AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER||'Não identificado',empresa:r.empresa,sc:r.sc,item:r.item,field:fieldLabel(field),before:String(before||'—'),after:String(after||'—')});
+  if(AUDIT.length>300) AUDIT=AUDIT.slice(0,300);
+}
+function setupControls(){
+  if(!USERS.some(function(u){return u.name===ACTIVE_USER&&u.active;})){ var a=USERS.find(function(u){return u.active;}); ACTIVE_USER=a?a.name:''; }
+  var au=document.getElementById('active-user');
+  if(au){ au.innerHTML=USERS.filter(function(u){return u.active;}).map(function(u){return '<option value="'+u.name+'"'+(u.name===ACTIVE_USER?' selected':'')+'>'+u.name+'</option>';}).join(''); }
+  var fr=document.getElementById('filter-resp');
+  if(fr){ var cur=fr.value; fr.innerHTML='<option value="">Todos os Responsáveis</option><option value="__none">Sem responsável</option>'+USERS.map(function(u){return '<option value="'+u.name+'">'+u.name+(u.active?'':' (inativo)')+'</option>';}).join(''); fr.value=cur; }
+  var rr=document.getElementById('filter-reason');
+  if(rr){ var cr=rr.value; rr.innerHTML='<option value="">Todos os Motivos</option><option value="__none">Sem motivo</option>'+REASONS.map(function(x){return '<option value="'+x+'">'+x+'</option>';}).join(''); rr.value=cr; }
+}
+function setActiveUser(v){ ACTIVE_USER=v; localStorage.setItem('painel_active_user',v); toast('Alterações serão registradas como '+v,'info'); }
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function openUsers(){ renderUsers(); openModal('users-modal'); }
+function renderUsers(){
+  var el=document.getElementById('user-list'); if(!el)return;
+  el.innerHTML=USERS.map(function(u,i){return '<div class="user-card '+(u.active?'':'off')+'"><strong>'+u.name+'</strong><small>'+(u.active?'Ativo':'Inativo')+'</small><br><button class="ctrl-btn" style="margin-top:8px" onclick="toggleUser('+i+')">'+(u.active?'Desativar':'Reativar')+'</button></div>';}).join('');
+}
+function addUser(){
+  var n=prompt('Nome completo do novo responsável:'); if(!n)return; n=n.trim();
+  if(!n||USERS.some(function(u){return u.name.toLowerCase()===n.toLowerCase();})){toast('Nome inválido ou já cadastrado.','err');return;}
+  USERS.push({name:n,active:true}); AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:'—',sc:'Configuração',item:'—',field:'Responsável cadastrado',before:'—',after:n});
+  setupControls();renderUsers();triggerSave();toast(n+' cadastrado.','ok');
+}
+function toggleUser(i){
+  if(!USERS[i])return; USERS[i].active=!USERS[i].active;
+  AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:'—',sc:'Configuração',item:'—',field:'Status do responsável',before:USERS[i].active?'Inativo':'Ativo',after:USERS[i].active?'Ativo':'Inativo'});
+  setupControls();renderUsers();refreshAll();triggerSave();
+}
+function openAudit(){ renderAudit(); openModal('audit-modal'); }
+function renderAudit(){
+  var q=((document.getElementById('audit-search')||{}).value||'').toLowerCase();
+  var a=AUDIT.filter(function(x){return !q||JSON.stringify(x).toLowerCase().indexOf(q)>=0;}).slice(0,200);
+  var tb=document.getElementById('audit-body'); if(!tb)return;
+  tb.innerHTML=a.length?a.map(function(x){var d=new Date(x.ts);return '<tr><td>'+d.toLocaleString('pt-BR')+'</td><td>'+x.user+'</td><td>'+x.sc+' / '+x.item+'</td><td>'+x.field+'</td><td>'+x.before+'</td><td>'+x.after+'</td></tr>';}).join(''):'<tr><td colspan="6">Nenhuma alteração registrada.</td></tr>';
+}
+function renderRespSummary(open){
+  var el=document.getElementById('resp-summary'); if(!el)return;
+  var names=USERS.filter(function(u){return u.active;}).map(function(u){return u.name;}).concat(['Sem responsável']);
+  el.innerHTML=names.map(function(n){
+    var rows=open.filter(function(r){return n==='Sem responsável'?!r.resp:r.resp===n;});
+    var cot=rows.filter(function(r){return String(r.status).toLowerCase()==='em cotação';}).length;
+    var venc=rows.filter(function(r){var l=pD(r.limite);return l&&l<TODAY;}).length;
+    var sem=rows.filter(function(r){return !r.reason;}).length;
+    return '<div class="resp-card"><div class="rn">'+n+'</div><div class="rv">'+rows.length+'</div><div class="rs">'+cot+' em cotação · '+venc+' vencidas · '+sem+' sem motivo</div></div>';
+  }).join('');
+}
+
 // ── PERSISTÊNCIA LOCAL ───────────────────────────────────
 function saveLocal(){
-  try{ localStorage.setItem(SK_LOCAL, JSON.stringify({data:DATA,ts:Date.now()})); }
+  try{ localStorage.setItem(SK_LOCAL, JSON.stringify({data:DATA,users:USERS,audit:AUDIT,ts:Date.now()})); }
   catch(e){ console.warn('localStorage error:',e); }
 }
 function loadLocal(){
@@ -728,7 +823,7 @@ function loadLocal(){
     var raw=localStorage.getItem(SK_LOCAL);
     if(!raw) return false;
     var p=JSON.parse(raw);
-    if(p&&p.data&&Array.isArray(p.data)&&p.data.length>0){ DATA=p.data; _lastTs=p.ts||0; return true; }
+    if(p&&p.data&&Array.isArray(p.data)&&p.data.length>0){ DATA=p.data; USERS=Array.isArray(p.users)&&p.users.length?p.users:USERS; AUDIT=Array.isArray(p.audit)?p.audit:[]; _lastTs=p.ts||0; return true; }
   }catch(e){}
   return false;
 }
@@ -742,7 +837,7 @@ async function jbRead(){
 }
 async function jbWrite(payload){
   var ts = Date.now();
-  var full = JSON.stringify({ts:ts, v:'full', data:payload.data});
+  var full = JSON.stringify({ts:ts, v:'full', data:payload.data, users:payload.users||USERS, audit:payload.audit||AUDIT});
   var resp = await fetch(PROXY_URL, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -778,7 +873,7 @@ async function saveShared(){
   _isSaving=true;
   try{
     var ts=Date.now();
-    await jbWrite({data:DATA,ts:ts});
+    await jbWrite({data:DATA,users:USERS,audit:AUDIT,ts:ts});
     _lastTs=ts;
     _lastSaveTs=ts;
     _pendingSave=false;
@@ -847,7 +942,7 @@ async function pollShared(){
     if(p.ts !== _lastTs && p.ts > _lastSaveTs){
       _lastTs=p.ts;
       if(p.v==='full' && p.data && Array.isArray(p.data) && p.data.length>0){
-        DATA=p.data;
+        DATA=p.data; USERS=Array.isArray(p.users)&&p.users.length?p.users:USERS; AUDIT=Array.isArray(p.audit)?p.audit:AUDIT;
         saveLocal();
         refreshAll();
         setSyncChip('🟢 Sync '+fTime(new Date(p.ts)),'ok');
@@ -962,6 +1057,7 @@ document.getElementById('strip-list').classList.add('al');
 })();
 async function init(){
   var hasLocal=loadLocal();
+  setupControls();
   refreshAll();
   setSyncChip(hasLocal?'💾 Local':'…', hasLocal?'warn':'loading');
   if(hasLocal) setSyncBar('📂 Dados locais restaurados — '+fTime(new Date()));
@@ -969,7 +1065,7 @@ async function init(){
   try{
     var p=await jbRead();
     if(p&&p.data&&Array.isArray(p.data)&&p.data.length>0){
-      DATA=p.data; _lastTs=p.ts||0; saveLocal(); refreshAll();
+      DATA=p.data; USERS=Array.isArray(p.users)&&p.users.length?p.users:USERS; AUDIT=Array.isArray(p.audit)?p.audit:AUDIT; _lastTs=p.ts||0; saveLocal(); refreshAll();
       setSyncBar('✓ Dados carregados do servidor — '+fTime(new Date()));
     }
   }catch(e){ console.warn('init load error:',e); }
