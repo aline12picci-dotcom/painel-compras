@@ -141,7 +141,7 @@ main{padding:26px 40px;max-width:1800px;margin:0 auto}
 
 /* ─── TABLE ─── */
 .tbl-wrap{overflow-x:auto;border-radius:var(--r2);box-shadow:var(--shadow2);border:1px solid var(--border)}
-table{width:100%;border-collapse:collapse;min-width:1350px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;min-width:1180px;background:var(--surface)}
 thead tr{background:linear-gradient(90deg,var(--navy),var(--navy3));position:sticky;top:0;z-index:10}
 th{padding:10px 12px;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.62);text-align:left;white-space:nowrap;cursor:pointer;user-select:none;font-family:'Sora',sans-serif}
 th:hover{color:#fff;background:rgba(255,255,255,.07)}
@@ -171,7 +171,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 .db-o{background:var(--rej-bg);color:var(--rej-c)}
 .db-m{background:var(--ag-bg);color:var(--ag-c)}
 .db-n{background:var(--fin-bg);color:var(--fin-c)}
-.forn-c{background:transparent;border:1px dashed var(--border2);border-radius:var(--r3);padding:4px 7px;font-size:11px;color:var(--text1);font-family:'Sora',sans-serif;width:120px;transition:.15s}
+.forn-c{background:transparent;border:1px dashed var(--border2);border-radius:var(--r3);padding:6px 8px;font-size:11px;color:var(--text1);font-family:'Sora',sans-serif;width:280px;min-width:220px;transition:.15s}
 .forn-c:hover{border-color:var(--blue);background:var(--surface3)}
 .forn-c:focus{border-color:var(--blue);background:var(--surface);outline:none;box-shadow:0 0 0 2px rgba(30,95,168,.1);border-style:solid}
 .forn-c::placeholder{color:var(--text4);font-style:italic;font-size:10px}
@@ -276,7 +276,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 
 <!-- TOAST CONTAINER -->
 <div id="toast"></div>
-<div class="modal-bg" id="users-modal"><div class="modal"><div class="modal-h"><h3>👥 Gestão de responsáveis</h3><button class="modal-close" onclick="closeModal('users-modal')">✕</button></div><div class="modal-b"><p style="font-size:11px;color:var(--text3);margin-bottom:14px">Cadastre ou desative responsáveis. Enquanto o painel estiver público, este controle organiza a operação, mas não substitui autenticação.</p><button class="ctrl-btn" onclick="addUser()" style="margin-bottom:14px">＋ Adicionar responsável</button><div class="user-list" id="user-list"></div></div></div></div>
+<div class="modal-bg" id="users-modal"><div class="modal"><div class="modal-h"><h3>👥 Gestão de responsáveis</h3><button class="modal-close" onclick="closeModal('users-modal')">✕</button></div><div class="modal-b"><p style="font-size:11px;color:var(--text3);margin-bottom:14px">Cadastre ou desative responsáveis. As observações devem registrar retornos, negociações e próximos passos. Enquanto o painel estiver público, este controle organiza a operação, mas não substitui autenticação.</p><button class="ctrl-btn" onclick="addUser()" style="margin-bottom:14px">＋ Adicionar responsável</button><div class="user-list" id="user-list"></div></div></div></div>
 <div class="modal-bg" id="audit-modal"><div class="modal"><div class="modal-h"><h3>🕘 Histórico de alterações</h3><button class="modal-close" onclick="closeModal('audit-modal')">✕</button></div><div class="modal-b"><div class="filter-bar"><input id="audit-search" placeholder="Buscar SC, responsável ou campo..." oninput="renderAudit()"></div><div class="tbl-wrap"><table class="audit-table"><thead><tr><th>Data/hora</th><th>Usuário</th><th>SC / Item</th><th>Campo</th><th>Antes</th><th>Depois</th></tr></thead><tbody id="audit-body"></tbody></table></div></div></div></div>
 
 <!-- ═══ HEADER ═══ -->
@@ -376,7 +376,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
         <th onclick="sortBy(4)">Aprovação <span class="si">↕</span></th>
         <th onclick="sortBy(5)">Entrega SC <span class="si">↕</span></th>
         <th onclick="sortBy(6)">Limite Compra <span class="si">↕</span></th>
-        <th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th>
+        <th>Observação</th>
         <th onclick="sortBy(7)">Solicitante <span class="si">↕</span></th>
         <th onclick="sortBy(8)">Dias <span class="si">↕</span></th>
         <th>Responsável</th>
@@ -488,19 +488,19 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 <!-- ═══ SEÇÕES POR EMPRESA ═══ -->
 <section id="sec-phal" class="section">
   <div class="emp-ph ep-f"><div class="ep-icon">🏭</div><div><h2>Farmoterápica / Phal Ind</h2><p id="cnt-phal-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
 </section>
 <section id="sec-pharmabag" class="section">
   <div class="emp-ph ep-p"><div class="ep-icon">💊</div><div><h2>Pharmabag</h2><p id="cnt-pharma-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
 </section>
 <section id="sec-nutriente" class="section">
   <div class="emp-ph ep-n"><div class="ep-icon">🌿</div><div><h2>Nutriente</h2><p id="cnt-nutri-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
 </section>
 <section id="sec-clinutri" class="section">
   <div class="emp-ph ep-c"><div class="ep-icon">🌿</div><div><h2>Clinutri</h2><p id="cnt-clinu-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Fornecedor 1</th><th>Fornecedor 2</th><th>Fornecedor 3</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
 </section>
 
 </main>
@@ -588,7 +588,7 @@ function empTag(e){
 function rowHTML(r, showEmp){
   var idx=DATA.indexOf(r), days=dO(r.aprovacao||r.emissao), sol=resSOL(r.solicitante);
   var scC={'Phal Ind':'#C41E1E','Pharmabag':'#1558B0','Nutriente':'#1A3A6B','Clinutri':'#0F7A4A','Phal SPO':'#C41E1E'}[r.empresa]||'#1A3A6B';
-  var rv=r.resp||'', reason=r.reason||'';
+  var rv=r.resp||'', reason=r.reason||'', obs=r.obs||[r.f1,r.f2,r.f3].filter(function(x){return x;}).join(' | ');
   var respOpts='<option value=""'+(!rv?' selected':'')+'>— Responsável —</option>'+USERS.filter(function(u){return u.active||u.name===rv;}).map(function(u){return '<option value="'+u.name+'"'+(rv===u.name?' selected':'')+'>'+u.name+'</option>';}).join('');
   var reasonOpts='<option value=""'+(!reason?' selected':'')+'>— Motivo —</option>'+REASONS.map(function(x){return '<option value="'+x+'"'+(reason===x?' selected':'')+'>'+x+'</option>';}).join('');
   var empCol = showEmp ? '<td>'+empTag(r.empresa)+'</td>' : '';
@@ -605,9 +605,7 @@ function rowHTML(r, showEmp){
     +'<td class="dc">'+(r.aprovacao||r.emissao||'')+'</td>'
     +'<td class="dc">'+r.entrega+'</td>'
     +'<td class="dc">'+r.limite+'</td>'
-    +'<td><input class="forn-c" placeholder="Fornecedor 1" value="'+(r.f1||'')+'" oninput="upd('+idx+',\'f1\',this.value)"></td>'
-    +'<td><input class="forn-c" placeholder="Fornecedor 2" value="'+(r.f2||'')+'" oninput="upd('+idx+',\'f2\',this.value)"></td>'
-    +'<td><input class="forn-c" placeholder="Fornecedor 3" value="'+(r.f3||'')+'" oninput="upd('+idx+',\'f3\',this.value)"></td>'
+    +'<td><input class="forn-c" placeholder="Registre retornos, negociações e próximos passos..." value="'+obs.replace(/"/g,'&quot;')+'" oninput="upd('+idx+',\'obs\',this.value)"></td>'
     +'<td class="sol-nm">'+sol+'</td>'
     +'<td>'+dB(days)+'</td>'
     +'<td><select class="resp-sel" onchange="upd('+idx+',\'resp\',this.value)">'+respOpts+'</select></td>'
@@ -647,6 +645,7 @@ function renderBody(id, rows, showEmp){
 
 // ── REFRESH GERAL ────────────────────────────────────────
 function refreshAll(){
+  DATA.forEach(function(r){ if(!r.obs){ r.obs=[r.f1,r.f2,r.f3].filter(function(x){return x;}).join(' | '); } });
   setupControls();
   var open=DATA.filter(isOpen).sort(function(a,b){ return (pD(a.aprovacao||a.emissao)||0)-(pD(b.aprovacao||b.emissao)||0); });
   var cot=open.filter(function(r){ return r.status.trim().toLowerCase()==='em cotação'; }).length;
@@ -672,7 +671,7 @@ function applyFilters(){
   var rsn=(document.getElementById('filter-reason')||{}).value||'';
   var open=DATA.filter(isOpen).sort(function(a,b){ return (pD(a.aprovacao||a.emissao)||0)-(pD(b.aprovacao||b.emissao)||0); });
   var f=open.filter(function(r){
-    var mq=!q||(r.sc+r.descricao+resSOL(r.solicitante)+r.solicitante).toLowerCase().indexOf(q)>=0;
+    var mq=!q||(r.sc+r.descricao+resSOL(r.solicitante)+r.solicitante+(r.obs||'')+(r.reason||'')).toLowerCase().indexOf(q)>=0;
     return mq&&(!emp||r.empresa===emp)&&(!st||r.status.trim().toLowerCase()===st.toLowerCase())&&(!rsp||(rsp==='__none'?!r.resp:(r.resp||'')===rsp))&&(!rsn||(rsn==='__none'?!r.reason:(r.reason||'')===rsn));
   });
   renderBody('table-body',f,true);
@@ -766,7 +765,7 @@ function buildCharts(open){
 }
 
 // ── USUÁRIOS, MOTIVOS E AUDITORIA ─────────────────────────
-function fieldLabel(f){ return {status:'Status',f1:'Fornecedor 1',f2:'Fornecedor 2',f3:'Fornecedor 3',resp:'Responsável',reason:'Motivo / Pendência'}[f]||f; }
+function fieldLabel(f){ return {status:'Status',obs:'Observação',resp:'Responsável',reason:'Motivo / Pendência'}[f]||f; }
 function logAudit(r,field,before,after){
   AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER||'Não identificado',empresa:r.empresa,sc:r.sc,item:r.item,field:fieldLabel(field),before:String(before||'—'),after:String(after||'—')});
   if(AUDIT.length>300) AUDIT=AUDIT.slice(0,300);
@@ -1017,7 +1016,7 @@ function importExcel(input){
         var cSC=findCol(hdrs,['numero','nº','num']),cIt=findCol(hdrs,['item']),cSt=findCol(hdrs,['status']);
         var cDs=findCol(hdrs,['descricao','descrição','descri']),cAp=findCol(hdrs,['aprovação','aprovacao','data aprov']);
         var cEn=findCol(hdrs,['entrega']),cLm=findCol(hdrs,['limite','dt.limite']);
-        var cSol=findCol(hdrs,['solicitante']),cF1=findCol(hdrs,['fornecedor 1']),cF2=findCol(hdrs,['fornecedor 2']),cF3=findCol(hdrs,['fornecedor 3']);
+        var cSol=findCol(hdrs,['solicitante']),cObs=findCol(hdrs,['observação','observacao']),cF1=findCol(hdrs,['fornecedor 1']),cF2=findCol(hdrs,['fornecedor 2']),cF3=findCol(hdrs,['fornecedor 3']);
         var cRsp=findCol(hdrs,['responsável','responsavel']);
         json.forEach(function(row){
           var stLow=String(row[cSt]||'').trim().toLowerCase();
@@ -1029,8 +1028,8 @@ function importExcel(input){
           desc=desc.split('\r').join(' ').split('\n').join(' ').trim().substring(0,120);
           nr.push({empresa:empresa,sc:sc,item:String(row[cIt]||'').trim(),status:st,descricao:desc,
             aprovacao:fmtDate(row[cAp]),entrega:fmtDate(row[cEn]),solicitante:String(row[cSol]||'').trim(),
-            limite:fmtDate(row[cLm]),f1:String(row[cF1]||'').trim(),f2:String(row[cF2]||'').trim(),
-            f3:String(row[cF3]||'').trim(),resp:String(row[cRsp]||'').trim()});
+            limite:fmtDate(row[cLm]),obs:String(row[cObs]||'').trim()||[row[cF1],row[cF2],row[cF3]].filter(function(x){return x;}).join(' | '),
+            resp:String(row[cRsp]||'').trim(),reason:''});
         });
       });
       if(!nr.length){ toast('Nenhuma SC aberta encontrada.','err',5000); input.value=''; return; }
