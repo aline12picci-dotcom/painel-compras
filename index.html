@@ -548,6 +548,7 @@ let _saveTimer   = null;
 let _pollTimer   = null;
 let _isSaving    = false;
 const _updTimers = {};
+const _auditBefore = {};
 let USERS=[{name:'Aline Lima',active:true},{name:'Robert Santos',active:true},{name:'Jaqueline Paulino',active:true}];
 let ACTIVE_USER=localStorage.getItem('painel_active_user')||'Aline Lima';
 let AUDIT=[];
@@ -629,11 +630,15 @@ function chSt(idx, sel){
 function upd(idx, field, val){
   var before=DATA[idx][field]||'';
   if(before===val) return;
-  DATA[idx][field] = val;
-  logAudit(DATA[idx],field,before,val);
   var k = idx+'_'+field;
+  if(!Object.prototype.hasOwnProperty.call(_auditBefore,k)) _auditBefore[k]=before;
+  DATA[idx][field] = val;
   if(_updTimers[k]) clearTimeout(_updTimers[k]);
-  _updTimers[k] = setTimeout(function(){ triggerSave(); }, 600);
+  _updTimers[k] = setTimeout(function(){
+    logAudit(DATA[idx],field,_auditBefore[k],DATA[idx][field]||'');
+    delete _auditBefore[k];
+    triggerSave();
+  }, 600);
 }
 function renderBody(id, rows, showEmp){
   var tb=document.getElementById(id);
