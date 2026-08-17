@@ -6,6 +6,7 @@
 <title>Painel SC Compras — Grupo Emede</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -270,9 +271,11 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 }
 @media(max-width:600px){.kpi-grid{grid-template-columns:1fr 1fr}}
 @media print{body{background:#fff}.card,.kpi{break-inside:avoid}}
+.auth-gate{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#07172d,#12385e);display:flex;align-items:center;justify-content:center;padding:24px}.auth-card{width:min(440px,100%);background:#fff;border-radius:20px;padding:32px;box-shadow:0 24px 80px rgba(0,0,0,.35)}.auth-card h2{color:var(--navy);margin:14px 0 8px}.auth-card p{color:var(--text3);font-size:13px;line-height:1.6}.auth-card input{width:100%;margin:20px 0 10px;padding:13px;border:1px solid var(--border2);border-radius:9px;font:inherit}.auth-card button{width:100%;padding:13px;border:0;border-radius:9px;background:var(--blue);color:#fff;font-weight:700;cursor:pointer}.auth-error{color:var(--red)!important;margin-top:10px}.auth-user{display:flex;align-items:center;gap:8px;font-size:11px;color:#dbeafe}.auth-user button{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:6px;padding:5px 8px;cursor:pointer}.stale-row{background:#fff8e7!important}.move-meta{font-size:9.5px;color:var(--text3);line-height:1.35;margin-top:5px}.stale-badge{display:inline-block;margin-top:4px;padding:3px 6px;border-radius:999px;background:#fff0c2;color:#8a5300;font-size:9px;font-weight:700}.history-table td{vertical-align:top}
 </style>
 </head>
 <body>
+<div id="auth-gate" class="auth-gate"><div class="auth-card"><div style="font-size:30px">🔐</div><h2>Acesso ao Painel de Compras</h2><p>Use seu e-mail corporativo autorizado. Você receberá um link seguro de acesso.</p><form onsubmit="sendMagicLink(event)"><input id="login-email" type="email" autocomplete="email" placeholder="nome@farmoterapica.com.br" required><button id="login-button" type="submit">Enviar link de acesso</button></form><p id="login-message"></p></div></div>
 
 <!-- TOAST CONTAINER -->
 <div id="toast"></div>
@@ -316,7 +319,9 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
     <button class="es-btn" onclick="showTab('pharmabag',this,'ap')"><span class="dot" style="background:#1565C0"></span>Pharmabag</button>
     <button class="es-btn" onclick="showTab('nutriente',this,'an')"><span class="dot" style="background:#1A3A6B"></span>Nutriente</button>
     <button class="es-btn" onclick="showTab('clinutri',this,'ac')"><span class="dot" style="background:#0F7A4A"></span>Clinutri</button>
+    <button class="es-btn" onclick="showTab('historico',this,'ad')"><span class="dot" style="background:#F0B429"></span>Encerradas</button>
   </div>
+    <div class="auth-user" id="auth-user" style="display:none"><span id="auth-user-name"></span><button onclick="signOut()">Sair</button></div>
 </header>
 
 <main>
@@ -327,7 +332,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
     <div id="sync-banner-icon" style="font-size:18px">🔄</div>
     <div class="sb-text">
       <strong id="sync-banner-title"><span class="sync-dot"></span>Verificando conexão…</strong>
-      <p id="sync-banner-desc">Testando disponibilidade do storage compartilhado.</p>
+      <p id="sync-banner-desc">Testando disponibilidade do banco protegido.</p>
     </div>
     <span id="sync-status-bar" style="margin-left:auto;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap"></span>
     <button onclick="testarStorage(true)" style="background:none;border:1px solid #BBF7D0;border-radius:6px;padding:4px 10px;font-size:10.5px;font-family:'Sora',sans-serif;color:#15803D;cursor:pointer;white-space:nowrap;font-weight:600" id="sync-retest-btn">↺ Testar</button>
@@ -503,12 +508,18 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
   <div class="tbl-wrap"><table><thead><tr><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
 </section>
 
+
+<section id="sec-historico" class="section">
+  <div class="sec-hdr"><div class="sec-title">Histórico de solicitações encerradas <span id="history-count"></span></div></div>
+  <div class="filter-bar"><input id="history-search" placeholder="Buscar empresa, SC, descrição ou responsável..." oninput="renderHistory()"></div>
+  <div class="tbl-wrap"><table class="history-table"><thead><tr><th>Empresa</th><th>SC / Item</th><th>Status</th><th>Descrição</th><th>Responsável</th><th>Encerramento</th><th>Encerrada por</th><th>Observação</th></tr></thead><tbody id="history-body"></tbody></table></div>
+</section>
 </main>
 
 <script>
 // ═══════════════════════════════════════════════════════
 //  PAINEL SC COMPRAS — Grupo Emede
-//  Persistência: localStorage + JSONBin (compartilhado)
+//  Persistência: localStorage + base protegida (compartilhado)
 //  Colaboração: polling 6s
 // ═══════════════════════════════════════════════════════
 
@@ -519,23 +530,7 @@ const DEBOUNCE = 800;
 const POLL_MS  = 8000;
 
 // ── DADOS ORIGINAIS ─────────────────────────────────────
-const DATA_ORIGINAL = [
-  {empresa:"Nutriente",sc:"005324",item:"0001",status:"Em cotação",descricao:"Construção de proteção antichamas nas caixas d'agua",aprovacao:"29/12/2025",entrega:"12/01/2026",solicitante:"ALINE.SANTOS",limite:"12/01/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Phal Ind",sc:"015801",item:"0010",status:"Em cotação",descricao:"CHROMIC CHLORIDE, HEXAHYDRATE, USP CAS 10060-12-5",aprovacao:"23/02/2026",entrega:"06/04/2026",solicitante:"CAIQUE.LIMA",limite:"25/02/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Phal Ind",sc:"015974",item:"0001",status:"Em cotação",descricao:"MANGUEIRA DE SILICONE 12X18,5 REF 210 SUPRIMAS",aprovacao:"25/04/2026",entrega:"05/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"25/04/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Phal Ind",sc:"015992",item:"0006",status:"Aguarda cotação",descricao:"BOBINA PARA AUTOCLAVE",aprovacao:"28/04/2026",entrega:"22/05/2026",solicitante:"JESSICA.CARVALHO",limite:"22/05/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Phal Ind",sc:"015994",item:"0001",status:"Em cotação",descricao:"Lâmpada fluorescente tubular T5 14 w/840",aprovacao:"28/04/2026",entrega:"04/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"12/05/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Phal Ind",sc:"015997",item:"0001",status:"Em cotação",descricao:"Manômetro Diam.63mm Vertical 0-4 kgf/cm2",aprovacao:"28/04/2026",entrega:"15/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"15/05/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Pharmabag",sc:"006231",item:"0001",status:"Em cotação",descricao:"MANUTENCAO PREDIAL - SERVICOS",aprovacao:"07/05/2026",entrega:"27/05/2026",solicitante:"ALEX.PEREIRA",limite:"07/05/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Pharmabag",sc:"006233",item:"0001",status:"Em cotação",descricao:"MATERIAL MANUTENCAO PREDIAL",aprovacao:"07/05/2026",entrega:"27/05/2026",solicitante:"ALEX.PEREIRA",limite:"07/05/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Clinutri",sc:"000264",item:"0001",status:"Aguarda cotação",descricao:"HOSPEDAGEM",aprovacao:"14/05/2026",entrega:"18/05/2026",solicitante:"FLAVIO.LEAL",limite:"18/05/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Nutriente",sc:"005403",item:"0001",status:"Aguarda cotação",descricao:"ESCOVA P/ LAVAGEM DE MAOS SECA 3B",aprovacao:"06/05/2026",entrega:"18/05/2026",solicitante:"ALINE.LIMA",limite:"07/06/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Phal Ind",sc:"016021",item:"0001",status:"Aguarda cotação",descricao:"QUALIFICACAO Autoclave Getinge GEC91425",aprovacao:"08/05/2026",entrega:"22/06/2026",solicitante:"MARIANA.RAMOS",limite:"08/05/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Phal Ind",sc:"016029",item:"0001",status:"Aguarda cotação",descricao:"EQUIPAMENTOS DE INFORMATICA",aprovacao:"13/05/2026",entrega:"18/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"18/05/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Phal Ind",sc:"016030",item:"0001",status:"Em cotação",descricao:"SENSOR DE RADAR COMPACTO PARA MEDICAO CONTINUA DE NIVEL",aprovacao:"13/05/2026",entrega:"25/05/2026",solicitante:"ALESSANDRA.MARTINS",limite:"25/05/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Clinutri",sc:"000277",item:"0001",status:"Aguarda cotação",descricao:"LOCACAO MAQUINAS E EQUIPAMENTOS",aprovacao:"18/05/2026",entrega:"01/06/2026",solicitante:"KATIA.SILVA",limite:"01/06/2026",f1:"",f2:"",f3:"",resp:""},
-  {empresa:"Nutriente",sc:"005409",item:"0001",status:"Aguarda cotação",descricao:"PROPE DESCARTAVEL DESCARPACK",aprovacao:"20/05/2026",entrega:"12/06/2026",solicitante:"ALINE.LIMA",limite:"07/06/2026",f1:"",f2:"",f3:"",resp:""}
-];
+const DATA_ORIGINAL = [];
 
 // ── ESTADO ──────────────────────────────────────────────
 let DATA    = JSON.parse(JSON.stringify(DATA_ORIGINAL));
@@ -550,7 +545,11 @@ let _isSaving    = false;
 const _updTimers = {};
 const _auditBefore = {};
 let USERS=[{name:'Aline Lima',active:true},{name:'Robert Santos',active:true},{name:'Jaqueline Paulino',active:true}];
-let ACTIVE_USER=localStorage.getItem('painel_active_user')||'Aline Lima';
+let ACTIVE_USER='';
+let CURRENT_SESSION=null, CURRENT_PROFILE=null;
+const SUPABASE_URL='https://tgrlhiznrguxdlbrluqq.supabase.co';
+const SUPABASE_KEY='sb_publishable_WIU3D1w0ruAYeDaI1EPSeg_xr6k-x12';
+const sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let AUDIT=[];
 const REASONS=['Aguardando retorno do fornecedor','Aguardando área solicitante','Aguardando aprovação','Especificação incompleta','Negociação em andamento','Sem fornecedor disponível','Compra suspensa','Outro'];
 
@@ -592,7 +591,8 @@ function rowHTML(r, showEmp){
   var respOpts='<option value=""'+(!rv?' selected':'')+'>— Responsável —</option>'+USERS.filter(function(u){return u.active||u.name===rv;}).map(function(u){return '<option value="'+u.name+'"'+(rv===u.name?' selected':'')+'>'+u.name+'</option>';}).join('');
   var reasonOpts='<option value=""'+(!reason?' selected':'')+'>— Motivo —</option>'+REASONS.map(function(x){return '<option value="'+x+'"'+(reason===x?' selected':'')+'>'+x+'</option>';}).join('');
   var empCol = showEmp ? '<td>'+empTag(r.empresa)+'</td>' : '';
-  return '<tr data-idx="'+idx+'">'
+  var stale=businessDaysSince(r.lastMovementAt)>=3;
+  return '<tr data-idx="'+idx+'" class="'+(stale?'stale-row':'')+'">'
     +empCol
     +'<td><span class="sc-num" style="color:'+scC+'">'+r.sc+'</span><br><span style="font-size:9px;color:var(--text4);font-family:JetBrains Mono,monospace">'+r.item+'</span></td>'
     +'<td><select class="ssel '+sCls(r.status)+'" onchange="chSt('+idx+',this)">'
@@ -605,7 +605,7 @@ function rowHTML(r, showEmp){
     +'<td class="dc">'+(r.aprovacao||r.emissao||'')+'</td>'
     +'<td class="dc">'+r.entrega+'</td>'
     +'<td class="dc">'+r.limite+'</td>'
-    +'<td><input class="forn-c" placeholder="Registre retornos, negociações e próximos passos..." value="'+obs.replace(/"/g,'&quot;')+'" oninput="upd('+idx+',\'obs\',this.value)"></td>'
+    +'<td><input class="forn-c" placeholder="Registre retornos, negociações e próximos passos..." value="'+obs.replace(/"/g,'&quot;')+'" oninput="upd('+idx+',\'obs\',this.value)"><div class="move-meta">'+movementLabel(r)+(stale?'<br><span class="stale-badge">⚠ '+businessDaysSince(r.lastMovementAt)+' dias úteis sem atualização</span>':'')+'</div></td>'
     +'<td class="sol-nm">'+sol+'</td>'
     +'<td>'+dB(days)+'</td>'
     +'<td><select class="resp-sel" onchange="upd('+idx+',\'resp\',this.value)">'+respOpts+'</select></td>'
@@ -643,6 +643,13 @@ function renderBody(id, rows, showEmp){
   if(tb) tb.innerHTML = rows.map(function(r){ return rowHTML(r,showEmp); }).join('');
 }
 
+
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fmtDateTime(v){if(!v)return '—';var d=new Date(v);return isNaN(d)?'—':d.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});}
+function businessDaysSince(v){if(!v)return 0;var d=new Date(v),end=new Date();d.setHours(0,0,0,0);end.setHours(0,0,0,0);var n=0;while(d<end){d.setDate(d.getDate()+1);var day=d.getDay();if(day!==0&&day!==6)n++;}return n;}
+function movementLabel(r){return r.lastMovementAt?'Última edição: '+fmtDateTime(r.lastMovementAt)+' · '+esc(r.lastUpdatedBy||'Usuário verificado'):'Sem movimentação registrada';}
+function renderHistory(){var q=((document.getElementById('history-search')||{}).value||'').toLowerCase();var rows=DATA.filter(function(r){return !isOpen(r);}).filter(function(r){return [r.empresa,r.sc,r.item,r.descricao,r.resp,r.closedBy,r.obs].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){return new Date(b.closedAt||b.lastMovementAt||0)-new Date(a.closedAt||a.lastMovementAt||0);});var body=document.getElementById('history-body');if(body)body.innerHTML=rows.map(function(r){return '<tr><td>'+empTag(r.empresa)+'</td><td><span class="sc-num">'+esc(r.sc)+'</span><br>'+esc(r.item)+'</td><td><span class="'+sCls(r.status)+'">'+esc(r.status)+'</span></td><td class="desc">'+esc(r.descricao)+'</td><td>'+esc(r.resp||'—')+'</td><td>'+fmtDateTime(r.closedAt||r.lastMovementAt)+'</td><td>'+esc(r.closedBy||r.lastUpdatedBy||'—')+'</td><td>'+esc(r.obs||'—')+'</td></tr>';}).join('');var c=document.getElementById('history-count');if(c)c.textContent=rows.length+' registros';}
+
 // ── REFRESH GERAL ────────────────────────────────────────
 function refreshAll(){
   DATA.forEach(function(r){ if(!r.obs){ r.obs=[r.f1,r.f2,r.f3].filter(function(x){return x;}).join(' | '); } });
@@ -661,6 +668,7 @@ function refreshAll(){
     var el=document.getElementById(e[2]); if(el) el.textContent=rows.length+' SCs abertas';
   });
   updateDash(open);
+  renderHistory();
 }
 function applyFilters(){
   var q=(document.getElementById('search-input')||{}).value||'';
@@ -698,6 +706,7 @@ function showTab(name, btn, cls){
   document.getElementById('sec-'+name).classList.add('active');
   if(btn) btn.classList.add(cls||'al');
   if(name==='dashboard') setTimeout(function(){ buildCharts(DATA.filter(isOpen)); },50);
+  if(name==='historico') renderHistory();
 }
 
 // ── DASHBOARD ────────────────────────────────────────────
@@ -771,11 +780,10 @@ function logAudit(r,field,before,after){
   if(AUDIT.length>300) AUDIT=AUDIT.slice(0,300);
 }
 function setupControls(){
-  if(!USERS.some(function(u){return u.name===ACTIVE_USER&&u.active;})){ var a=USERS.find(function(u){return u.active;}); ACTIVE_USER=a?a.name:''; }
   var au=document.getElementById('active-user');
-  if(au){ au.innerHTML=USERS.filter(function(u){return u.active;}).map(function(u){return '<option value="'+u.name+'"'+(u.name===ACTIVE_USER?' selected':'')+'>'+u.name+'</option>';}).join(''); }
+  if(au){ au.innerHTML='<option>'+esc(ACTIVE_USER||'Usuário verificado')+'</option>'; au.disabled=true; }
   var fr=document.getElementById('filter-resp');
-  if(fr){ var cur=fr.value; fr.innerHTML='<option value="">Todos os Responsáveis</option><option value="__none">Sem responsável</option>'+USERS.map(function(u){return '<option value="'+u.name+'">'+u.name+(u.active?'':' (inativo)')+'</option>';}).join(''); fr.value=cur; }
+  if(fr){ var cur=fr.value; fr.innerHTML='<option value="">Todos os Responsáveis</option><option value="__none">Sem responsável</option>'+USERS.map(function(u){return '<option value="'+esc(u.name)+'">'+esc(u.name)+'</option>';}).join(''); fr.value=cur; }
   var rr=document.getElementById('filter-reason');
   if(rr){ var cr=rr.value; rr.innerHTML='<option value="">Todos os Motivos</option><option value="__none">Sem motivo</option>'+REASONS.map(function(x){return '<option value="'+x+'">'+x+'</option>';}).join(''); rr.value=cr; }
 }
@@ -834,24 +842,10 @@ function loadLocal(){
 
 // ── GOOGLE SHEETS API via Netlify Function (sem CORS) ────
 const PROXY_URL = '/api/sync';
-async function jbRead(){
-  var resp = await fetch(PROXY_URL);
-  if(!resp.ok) throw new Error('HTTP '+resp.status);
-  return await resp.json();
-}
-async function jbWrite(payload){
-  var ts = Date.now();
-  var full = JSON.stringify({ts:ts, v:'full', data:payload.data, users:payload.users||USERS, audit:payload.audit||AUDIT});
-  var resp = await fetch(PROXY_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({payload:full})
-  });
-  if(!resp.ok) throw new Error('HTTP '+resp.status);
-  var result = await resp.json();
-  if(result.error) throw new Error(result.error);
-  return result;
-}
+function authHeaders(extra){var h=extra||{};if(CURRENT_SESSION&&CURRENT_SESSION.access_token)h.Authorization='Bearer '+CURRENT_SESSION.access_token;return h;}
+async function apiJson(resp){var out=await resp.json().catch(function(){return {};});if(!resp.ok)throw new Error(out.error||('HTTP '+resp.status));return out;}
+async function jbRead(){return apiJson(await fetch(PROXY_URL,{headers:authHeaders({}),cache:'no-store'}));}
+async function jbWrite(payload){return apiJson(await fetch(PROXY_URL,{method:'POST',headers:authHeaders({'Content-Type':'application/json'}),body:JSON.stringify({payload:JSON.stringify({data:payload.data,users:payload.users,audit:payload.audit})})}));}
 
 // ── SYNC ────────────────────────────────────────────────
 function setSyncBar(msg){ var el=document.getElementById('sync-status-bar'); if(el) el.textContent=msg; }
@@ -877,7 +871,8 @@ async function saveShared(){
   _isSaving=true;
   try{
     var ts=Date.now();
-    await jbWrite({data:DATA,users:USERS,audit:AUDIT,ts:ts});
+    var saved=await jbWrite({data:DATA,users:USERS,audit:AUDIT,ts:ts});
+    if(saved&&saved.data){DATA=saved.data;USERS=saved.users||USERS;AUDIT=saved.audit||AUDIT;refreshAll();}
     _lastTs=ts;
     _lastSaveTs=ts;
     _pendingSave=false;
@@ -960,24 +955,24 @@ async function pollShared(){
 }
 async function testarStorage(manual){
   setSyncChip('Testando…','loading');
-  setBannerState('loading','Testando conexão com JSONBin…','Aguarde.');
+  setBannerState('loading','Testando conexão com base protegida…','Aguarde.');
   try{
     var p=await jbRead();
     if(!p||typeof p!=='object') throw new Error('Resposta inválida');
     var ts=Date.now();
     await jbWrite({data:p.data||DATA,ts:ts});
     _lastTs=ts;
-    setSyncChip('🟢 JSONBin ativo','ok');
-    setBannerState('ok','Sincronização ativa — JSONBin funcionando','Edições salvas localmente (imediato) e sincronizadas com a equipe em até '+DEBOUNCE+'ms. Polling a cada '+Math.round(POLL_MS/1000)+'s.');
+    setSyncChip('🟢 base protegida ativo','ok');
+    setBannerState('ok','Sincronização ativa — base protegida funcionando','Edições salvas localmente (imediato) e sincronizadas com a equipe em até '+DEBOUNCE+'ms. Polling a cada '+Math.round(POLL_MS/1000)+'s.');
     setSyncBar('✓ Leitura + Escrita OK — '+fTime(new Date()));
-    if(manual) toast('JSONBin funcionando ✓','ok',3000);
+    if(manual) toast('base protegida funcionando ✓','ok',3000);
     if(_pollTimer) clearInterval(_pollTimer);
     _pollTimer=setInterval(pollShared,POLL_MS);
   }catch(e){
     setSyncChip('🔴 Erro','err');
-    setBannerState('err','JSONBin indisponível — modo local','Erro: '+e.message+'. Dados salvos localmente. Clique em "↺ Testar" para reconectar.');
+    setBannerState('err','base protegida indisponível — modo local','Erro: '+e.message+'. Dados salvos localmente. Clique em "↺ Testar" para reconectar.');
     setSyncBar('✗ Erro: '+e.message);
-    if(manual) toast('Erro JSONBin: '+e.message,'err',5000);
+    if(manual) toast('Erro base protegida: '+e.message,'err',5000);
   }
 }
 
@@ -1033,7 +1028,10 @@ function importExcel(input){
         });
       });
       if(!nr.length){ toast('Nenhuma SC aberta encontrada.','err',5000); input.value=''; return; }
-      DATA=nr;
+      var closed=DATA.filter(function(r){return !isOpen(r);});
+      var old={};DATA.filter(isOpen).forEach(function(r){old[[r.empresa,r.sc,r.item].join("|")]=r;});
+      nr=nr.map(function(r){var p=old[[r.empresa,r.sc,r.item].join("|")];return p?Object.assign({},p,r,{obs:p.obs||r.obs,resp:p.resp||r.resp,reason:p.reason||r.reason}):r;});
+      DATA=closed.concat(nr);
       var now=new Date();
       var sub=document.getElementById('hdr-sub');
       if(sub) sub.textContent='Grupo Emede · Somente SCs Abertas · '+String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
@@ -1059,22 +1057,27 @@ document.getElementById('strip-list').classList.add('al');
   var el=document.getElementById('hdr-data');
   if(el) el.textContent=String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
 })();
-async function init(){
-  var hasLocal=loadLocal();
-  setupControls();
-  refreshAll();
-  setSyncChip(hasLocal?'💾 Local':'…', hasLocal?'warn':'loading');
-  if(hasLocal) setSyncBar('📂 Dados locais restaurados — '+fTime(new Date()));
-  await testarStorage(false);
+async function sendMagicLink(ev){
+  ev.preventDefault();var email=document.getElementById('login-email').value.trim().toLowerCase(),msg=document.getElementById('login-message'),btn=document.getElementById('login-button');
+  if(!/@(emede\.com\.br|farmoterapica\.com\.br)$/.test(email)){msg.className='auth-error';msg.textContent='Use um e-mail corporativo autorizado.';return;}
+  btn.disabled=true;msg.className='';msg.textContent='Enviando…';
+  var out=await sbClient.auth.signInWithOtp({email:email,options:{emailRedirectTo:location.origin,shouldCreateUser:true}});
+  btn.disabled=false;if(out.error){msg.className='auth-error';msg.textContent=out.error.message;}else{msg.textContent='Link enviado. Abra seu e-mail corporativo para entrar.';}
+}
+async function signOut(){await sbClient.auth.signOut();localStorage.removeItem(SK_LOCAL);location.reload();}
+async function startSecureApp(session){
+  CURRENT_SESSION=session;
   try{
     var p=await jbRead();
-    if(p&&p.data&&Array.isArray(p.data)&&p.data.length>0){
-      DATA=p.data; USERS=Array.isArray(p.users)&&p.users.length?p.users:USERS; AUDIT=Array.isArray(p.audit)?p.audit:AUDIT; _lastTs=p.ts||0; saveLocal(); refreshAll();
-      setSyncBar('✓ Dados carregados do servidor — '+fTime(new Date()));
-    }
-  }catch(e){ console.warn('init load error:',e); }
+    CURRENT_PROFILE=p.authProfile||{};ACTIVE_USER=CURRENT_PROFILE.full_name||CURRENT_PROFILE.email||'Usuário verificado';
+    DATA=Array.isArray(p.data)?p.data:[];USERS=Array.isArray(p.users)?p.users:USERS;AUDIT=Array.isArray(p.audit)?p.audit:[];_lastTs=p.ts||0;
+    document.getElementById('auth-gate').style.display='none';var au=document.getElementById('auth-user');if(au)au.style.display='flex';var nm=document.getElementById('auth-user-name');if(nm)nm.textContent=ACTIVE_USER;
+    setupControls();refreshAll();setSyncChip('🟢 Protegido','ok');setSyncBar('✓ Acesso verificado — '+fTime(new Date()));setBannerState('ok','Conexão protegida ativa','Alterações identificadas e sincronizadas com segurança.');
+    if(_pollTimer)clearInterval(_pollTimer);_pollTimer=setInterval(pollShared,POLL_MS);
+  }catch(e){await sbClient.auth.signOut();var msg=document.getElementById('login-message');msg.className='auth-error';msg.textContent=e.message.indexOf('autorizado')>=0?e.message:'Acesso não autorizado para este e-mail.';}
 }
-init();
+async function initAuth(){var out=await sbClient.auth.getSession();if(out.data.session)await startSecureApp(out.data.session);sbClient.auth.onAuthStateChange(function(event,session){if(session&&!CURRENT_SESSION)setTimeout(function(){startSecureApp(session);},0);});}
+initAuth();
 </script>
 </body>
 </html>
