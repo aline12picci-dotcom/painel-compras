@@ -752,10 +752,19 @@ function openOrderModal(idx){
 function cancelOrderModal(){PENDING_FINALIZE=null;closeModal('order-modal');refreshAll();}
 function confirmFinalization(){
   if(PENDING_FINALIZE===null)return;var num=document.getElementById('order-number').value.trim(),supplier=document.getElementById('order-supplier').value.trim(),channel=document.getElementById('order-channel').value,obs=document.getElementById('order-observation').value.trim();
-  if(!num||!supplier){toast('Informe o número do pedido e o fornecedor.','err',3500);return;}
-  if(ORDERS.some(function(o){return String(o.orderNumber).trim()===num&&o.company===DATA[PENDING_FINALIZE].empresa;})){toast('Este número de pedido já está cadastrado para a empresa.','err',4000);return;}
   var r=DATA[PENDING_FINALIZE],now=new Date().toISOString(),status='Aguarda aprovação';
-  ORDERS.unshift({id:'PED-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),orderNumber:num,company:r.empresa,sourceSC:r.sc,sourceItem:r.item,supplier:supplier,channel:channel,status:status,issuedAt:now,sentAt:null,confirmedAt:null,owner:ACTIVE_USER,observation:obs,createdAt:now,createdBy:ACTIVE_USER,lastMovementAt:now,lastUpdatedBy:ACTIVE_USER,clientMutationAt:now});
+  if(!num){toast('Informe o número do pedido.','err',3500);return;}
+  var existing=ORDERS.find(function(o){return String(o.orderNumber).trim()===num&&o.company===r.empresa;});
+  if(existing){
+    var items=Array.isArray(existing.sourceItems)?existing.sourceItems.slice():[{sc:existing.sourceSC,item:existing.sourceItem,descricao:existing.sourceDescription||''}];
+    if(items.some(function(x){return String(x.sc)===String(r.sc)&&String(x.item)===String(r.item);})){toast('Este item da SC já pertence ao pedido '+num+'.','err',4000);return;}
+    items.push({sc:r.sc,item:r.item,descricao:r.descricao||''});existing.sourceItems=items;
+    existing.lastMovementAt=now;existing.lastUpdatedBy=ACTIVE_USER;existing.clientMutationAt=now;
+    if(supplier)existing.supplier=supplier;if(obs)existing.observation=existing.observation?existing.observation+' | '+obs:obs;
+  }else{
+    if(!supplier){toast('Informe o fornecedor para criar o pedido.','err',3500);return;}
+    ORDERS.unshift({id:'PED-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),orderNumber:num,company:r.empresa,sourceSC:r.sc,sourceItem:r.item,sourceDescription:r.descricao||'',sourceItems:[{sc:r.sc,item:r.item,descricao:r.descricao||''}],supplier:supplier,channel:channel,status:status,issuedAt:now,sentAt:null,confirmedAt:null,owner:ACTIVE_USER,observation:obs,createdAt:now,createdBy:ACTIVE_USER,lastMovementAt:now,lastUpdatedBy:ACTIVE_USER,clientMutationAt:now});
+  }
   var before=r.status;r.status='Finalizada';r.clientMutationAt=now;logAudit(r,'status',before,'Finalizada');PENDING_FINALIZE=null;closeModal('order-modal');triggerSave();refreshAll();var b=document.getElementById('strip-pedidos');showTab('pedidos',b,'ap');toast('Pedido criado no controle de envio.','ok',3500);
 }
 function orderStatusClass(s){return s==='Aguarda aprovação'?'wait':s==='Pedido Rejeitado'?'rejected':s==='Pedido enviado'?'sent':s==='Pedido confirmado pelo fornecedor'?'done':'approved';}
@@ -768,6 +777,8 @@ function changeOrderAction(id,status){
   o.lastMovementAt=now;o.lastUpdatedBy=ACTIVE_USER;o.clientMutationAt=now;AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:'Ação do pedido',before:before,after:o.status});triggerSave();renderOrders();toast('Ação atualizada: '+o.status+'.','ok',2500);
 }
 function updateOrderObs(id,val){var o=ORDERS.find(function(x){return x.id===id;});if(!o)return;var now=new Date().toISOString();o.observation=val;o.lastMovementAt=now;o.lastUpdatedBy=ACTIVE_USER;o.clientMutationAt=now;var k='order_'+id;if(_updTimers[k])clearTimeout(_updTimers[k]);_updTimers[k]=setTimeout(function(){triggerSave();},600);}
+function orderItemsHTML(o){var items=Array.isArray(o.sourceItems)&&o.sourceItems.length?o.sourceItems:[{sc:o.sourceSC,item:o.sourceItem}];return items.map(function(x){return '<div class="move-meta">SC '+esc(x.sc||'—')+' / '+esc(x.item||'')+'</div>';}).join('');}
+function orderItemsText(o){var items=Array.isArray(o.sourceItems)&&o.sourceItems.length?o.sourceItems:[{sc:o.sourceSC,item:o.sourceItem}];return items.map(function(x){return [x.sc,x.item,x.descricao].join(' ');}).join(' ');}
 function orderMonthKey(v){var d=new Date(v);return isNaN(d)?'':d.toISOString().slice(0,7);}
 function orderMonthLabel(k){if(k==='all')return 'Todos os meses';var p=k.split('-');return new Date(+p[0],+p[1]-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});}
 function orderAlertInfo(o){
@@ -803,11 +814,11 @@ function renderOrders(){
   var mgSpec=mgmtPeriodSpec(MGMT_PERIOD),mgBase=ORDERS.filter(function(o){return mgSpec.key==='portfolio'?orderMonthKey(o.issuedAt)===new Date().toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),mgSpec.start,mgSpec.end);});
   renderOrderManagement(mgBase);
   var q=((document.getElementById('order-search')||{}).value||'').toLowerCase(),st=((document.getElementById('order-status-filter')||{}).value||''),owner=((document.getElementById('order-owner-filter')||{}).value||'');
-  var rows=monthBase.filter(function(o){return (!st||o.status===st)&&(!owner||o.owner===owner)&&[o.orderNumber,o.company,o.supplier,o.owner,o.status,o.observation,o.sourceSC].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){var rank={'Aguarda aprovação':0,'Pedido Aprovado':1,'Pedido Rejeitado':2,'Pedido enviado':3,'Pedido confirmado pelo fornecedor':4};return (rank[a.status]||0)-(rank[b.status]||0)||new Date(b.issuedAt)-new Date(a.issuedAt);});
+  var rows=monthBase.filter(function(o){return (!st||o.status===st)&&(!owner||o.owner===owner)&&[o.orderNumber,o.company,o.supplier,o.owner,o.status,o.observation,orderItemsText(o)].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){var rank={'Aguarda aprovação':0,'Pedido Aprovado':1,'Pedido Rejeitado':2,'Pedido enviado':3,'Pedido confirmado pelo fornecedor':4};return (rank[a.status]||0)-(rank[b.status]||0)||new Date(b.issuedAt)-new Date(a.issuedAt);});
   var body=document.getElementById('orders-body');if(!body)return;body.innerHTML=rows.length?rows.map(function(o){
     var opts=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'].map(function(x){return '<option'+(o.status===x?' selected':'')+'>'+x+'</option>';}).join('');
     var actions='<select class="reason-sel" onchange="changeOrderAction(\''+o.id+'\',this.value)">'+opts+'</select>',a=orderAlertInfo(o),flag=a.label?'<div class="order-flag '+(a.critical?'danger':'')+'">⚠ '+esc(a.label)+'</div>':'';
-    return '<tr class="'+(a.critical?'order-row-danger':a.alert?'order-row-alert':'')+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+'<div class="move-meta">SC '+esc(o.sourceSC||'—')+' / '+esc(o.sourceItem||'')+'</div></td><td>'+esc(o.supplier)+'</td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+fmtDateTime(o.confirmedAt)+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'</div></td></tr>';
+    return '<tr class="'+(a.critical?'order-row-danger':a.alert?'order-row-alert':'')+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td>'+esc(o.supplier)+'</td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+fmtDateTime(o.confirmedAt)+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'</div></td></tr>';
   }).join(''):'<tr><td colspan="10" class="priority-empty">Nenhum pedido encontrado para os filtros selecionados.</td></tr>';
 }
 
