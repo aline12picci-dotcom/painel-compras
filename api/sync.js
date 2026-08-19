@@ -1,19 +1,25 @@
-import crypto from 'node:crypto';
-const GS_URL='https://script.google.com/macros/s/AKfycbybIU803gqhHNSE_n27tKIFFb0KUS0Hh34_ATG6RVXqU49HHuhkJtbifNU3YMwop5Eb4A/exec';
-const CREDENTIALS={'aline.lima':{salt:'plc-a-2026-8f3',hash:'afe0a89e03c32c7d2c36243f5fad2433c8fd569ff2128299c86d4f4fabafdaf6',name:'Aline Lima',email:'aline.lima@farmoterapica.com.br'},'robert.santos':{salt:'plc-r-2026-4d9',hash:'674107d134a994fc4b5d1de5a1ef0ea2ef1165ed70829bbba37ab94874db2fed',name:'Robert Santos',email:'robert.santos@farmoterapica.com.br'},'jaqueline.paulino':{salt:'plc-j-2026-7b1',hash:'d75ba07f6223b0694934b2eef4fb0a3640ccdae0d3c7d8b391185304c828d31f',name:'Jaqueline Paulino',email:'jaqueline.paulino@farmoterapica.com.br'}};
-const USERS=Object.values(CREDENTIALS).map(x=>({name:x.name,email:x.email,active:true,role:x.name==='Aline Lima'?'admin':'buyer'}));
-const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-let commitQueue=Promise.resolve();
-function authenticate(req){const raw=String(req.headers.authorization||'');if(!raw.startsWith('Basic '))return null;let decoded='';try{decoded=Buffer.from(raw.slice(6),'base64').toString('utf8');}catch{return null;}const cut=decoded.indexOf(':');if(cut<1)return null;const username=decoded.slice(0,cut).trim().toLowerCase(),password=decoded.slice(cut+1),entry=CREDENTIALS[username];if(!entry)return null;const actual=crypto.pbkdf2Sync(password,entry.salt,180000,32,'sha256'),expected=Buffer.from(entry.hash,'hex');if(actual.length!==expected.length||!crypto.timingSafeEqual(actual,expected))return null;return {full_name:entry.name,email:entry.email,role:entry.name==='Aline Lima'?'admin':'buyer'};}
-async function readStateOnce(){const resp=await fetch(GS_URL,{redirect:'follow',cache:'no-store'});if(!resp.ok)throw new Error('Falha ao ler base: HTTP '+resp.status);const text=await resp.text();let state={};try{state=JSON.parse(text||'{}');}catch{throw new Error('Resposta inválida da base');}if(typeof state.payload==='string')state=JSON.parse(state.payload);if(!Array.isArray(state.users)||!state.users.length)state.users=USERS;if(!Array.isArray(state.audit))state.audit=[];if(!Array.isArray(state.orders))state.orders=[];return state;}
-async function readState(){let last;for(let attempt=1;attempt<=3;attempt++){try{return await readStateOnce();}catch(e){last=e;if(attempt<3)await wait(attempt*250);}}throw last;}
-async function writeStateOnce(payload){const resp=await fetch(GS_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'payload='+encodeURIComponent(JSON.stringify(payload)),redirect:'follow'});if(!resp.ok)throw new Error('Falha ao salvar base: HTTP '+resp.status);return payload;}
-async function writeState(payload){let last;for(let attempt=1;attempt<=2;attempt++){try{return await writeStateOnce(payload);}catch(e){last=e;if(attempt<2)await wait(300);}}throw last;}
-const recordKey=r=>[r?.empresa||'',r?.sc||'',r?.item||''].join('|');
-const orderKey=o=>String(o?.id||[o?.company||'',o?.orderNumber||'',o?.sourceSC||''].join('|'));
-const timeOf=x=>Date.parse(x?.clientMutationAt||x?.lastMovementAt||x?.updatedAt||'')||0;
-const isClosed=r=>['finalizada','rejeitada'].includes(String(r?.status||'').trim().toLowerCase());
-function mergeEntities(current,incoming,keyFn,protectClosed){const result=new Map((Array.isArray(current)?current:[]).map(x=>[keyFn(x),x]));for(const next of (Array.isArray(incoming)?incoming:[])){const key=keyFn(next),old=result.get(key);if(!old){result.set(key,next);continue;}if(protectClosed&&isClosed(old)&&!isClosed(next))continue;if(timeOf(next)>=timeOf(old)||!timeOf(old))result.set(key,{...old,...next});}return [...result.values()];}
-function mergeAudit(current,incoming){const seen=new Set(),out=[];for(const row of [...(incoming||[]),...(current||[])]){const key=[row.ts,row.user,row.empresa,row.sc,row.item,row.field,row.after].join('|');if(!seen.has(key)){seen.add(key);out.push(row);}}return out.sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,1500);}
-function mergePayload(current,incoming,profile){const now=Date.now();return {...current,...incoming,version:10,v:'full',ts:now,data:mergeEntities(current.data,incoming.data,recordKey,true),orders:mergeEntities(current.orders,incoming.orders,orderKey,false),users:Array.isArray(incoming.users)&&incoming.users.length?incoming.users:(current.users||USERS),audit:mergeAudit(current.audit,incoming.audit),lastCommitBy:profile.full_name,lastCommitEmail:profile.email,lastCommitAt:new Date(now).toISOString()};}
-export default async function handler(req,res){res.setHeader('Access-Control-Allow-Origin','https://painel-compras.vercel.app');res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');res.setHeader('Cache-Control','no-store');if(req.method==='OPTIONS')return res.status(200).end();const profile=authenticate(req);if(!profile)return res.status(401).json({error:'Usuário ou senha inválidos'});try{if(req.method==='GET'){const state=await readState();return res.status(200).json({...state,authProfile:profile});}if(req.method!=='POST')return res.status(405).json({error:'Método não permitido'});let incoming=req.body?.payload;if(!incoming)return res.status(400).json({error:'Payload ausente'});if(typeof incoming==='string')incoming=JSON.parse(incoming);const task=async()=>{const current=await readState();const payload=mergePayload(current,incoming,profile);await writeState(payload);return payload;};const committed=await (commitQueue=commitQueue.then(task,task));return res.status(200).json({...committed,authProfile:profile});}catch(e){console.error('[sync]',e);return res.status(500).json({error:e.message});}}
+const SYNC_URL='https://tgrlhiznrguxdlbrluqq.supabase.co/functions/v1/panel-sync';
+
+export default async function handler(req,res){
+  res.setHeader('Access-Control-Allow-Origin','https://painel-compras.vercel.app');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');
+  res.setHeader('Cache-Control','no-store');
+  if(req.method==='OPTIONS')return res.status(200).end();
+  if(!['GET','POST'].includes(req.method))return res.status(405).json({error:'Método não permitido'});
+  try{
+    const upstream=await fetch(SYNC_URL,{
+      method:req.method,
+      headers:{Authorization:String(req.headers.authorization||''),'Content-Type':'application/json','Cache-Control':'no-store'},
+      body:req.method==='POST'?JSON.stringify(req.body||{}):undefined,
+      cache:'no-store'
+    });
+    const text=await upstream.text();
+    res.status(upstream.status);
+    res.setHeader('Content-Type',upstream.headers.get('content-type')||'application/json');
+    return res.send(text);
+  }catch(error){
+    console.error('[sync proxy]',error);
+    return res.status(502).json({error:'Base protegida temporariamente indisponível'});
+  }
+}
