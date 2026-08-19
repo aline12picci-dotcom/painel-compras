@@ -1375,22 +1375,42 @@ function importExcel(input){
       });
       if(!nr.length){ toast('Nenhuma SC aberta encontrada.','err',5000); input.value=''; return; }
       function importKey(r){return [String(r.empresa||'').trim().toLowerCase(),String(r.sc||'').trim(),String(r.item||'').trim().toLowerCase()].join('|');}
-      var existing=new Set(DATA.map(importKey)),seenFile=new Set(),fresh=[],ignored=0;
-      nr.forEach(function(r){
-        var key=importKey(r);
-        if(!r.sc||!r.item||existing.has(key)||seenFile.has(key)){ignored++;return;}
-        seenFile.add(key);fresh.push(r);
-      });
-      if(!fresh.length){
-        toast('Nenhuma SC nova encontrada. Os '+ignored+' registro(s) já existentes foram mantidos sem alteração.','info',5500);
-        input.value='';return;
-      }
-      DATA=DATA.concat(fresh);
       var now=new Date();
+      var nowIso=now.toISOString(),existingMap=new Map(DATA.map(function(r){return [importKey(r),r];}));
+      var fileMap=new Map();
+      nr.forEach(function(r){if(r.sc&&r.item&&!fileMap.has(importKey(r)))fileMap.set(importKey(r),r);});
+      var included=0,preserved=0,closed=0;
+      var reconciled=[];
+      fileMap.forEach(function(r,key){
+        var old=existingMap.get(key);
+        if(old){
+          reconciled.push(Object.assign({},r,{
+            obs:old.obs||r.obs||'',resp:old.resp||r.resp||'',reason:old.reason||'',
+            clientMutationAt:old.clientMutationAt||'',lastMovementAt:old.lastMovementAt||'',
+            lastUpdatedBy:old.lastUpdatedBy||'',lastUpdatedEmail:old.lastUpdatedEmail||''
+          }));
+          preserved++;
+        }else{
+          r.clientMutationAt=nowIso;r.lastMovementAt=nowIso;r.lastUpdatedBy=ACTIVE_USER;
+          reconciled.push(r);included++;
+        }
+      });
+      DATA.forEach(function(old){
+        var key=importKey(old);
+        if(fileMap.has(key))return;
+        if(isOpen(old)){
+          var before=old.status;
+          old=Object.assign({},old,{status:'Finalizada',closedAt:nowIso,closedBy:ACTIVE_USER,clientMutationAt:nowIso,lastMovementAt:nowIso,lastUpdatedBy:ACTIVE_USER});
+          AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:old.empresa,sc:old.sc,item:old.item,field:'Conciliação Excel',before:before,after:'Finalizada — ausente na base atual'});
+          closed++;
+        }
+        reconciled.push(old);
+      });
+      DATA=reconciled;
       var sub=document.getElementById('hdr-sub');
       if(sub) sub.textContent='Grupo Emede · Somente SCs Abertas · '+String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
       refreshAll(); triggerSave();
-      toast('✅ '+fresh.length+' nova(s) SC(s) incluída(s). '+ignored+' registro(s) existente(s) preservado(s).','ok',5500);
+      toast('✅ Base conciliada: '+fileMap.size+' ativas · '+included+' novas · '+preserved+' preservadas · '+closed+' movidas para Encerradas.','ok',7000);
     }catch(err){ console.error(err); toast('Erro ao importar: '+err.message,'err',6000); }
     input.value='';
   };
