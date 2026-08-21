@@ -32,6 +32,7 @@
   /* status */
   --ag-c:#92400E;--ag-bg:#FFFBEB;--ag-br:#FDE68A;
   --cot-c:#1558B0;--cot-bg:#EFF6FF;--cot-br:#93C5FD;
+  --pc-c:#6D28D9;--pc-bg:#F5F3FF;--pc-br:#C4B5FD;
   --fin-c:#0F7A4A;--fin-bg:#ECFDF5;--fin-br:#A7F3D0;
   --rej-c:#C41E1E;--rej-bg:#FEF2F2;--rej-br:#FECACA;
 }
@@ -164,6 +165,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 .ssel{border-radius:20px;font-size:9.5px;font-weight:700;font-family:'Sora',sans-serif;padding:4px 6px;cursor:pointer;outline:none;border:1px solid;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%236B7A99' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 5px center;padding-right:18px}
 .ss-ag{background:var(--ag-bg);color:var(--ag-c);border-color:var(--ag-br)}
 .ss-cot{background:var(--cot-bg);color:var(--cot-c);border-color:var(--cot-br)}
+.ss-pc{background:var(--pc-bg);color:var(--pc-c);border-color:var(--pc-br)}
 .ss-fin{background:var(--fin-bg);color:var(--fin-c);border-color:var(--fin-br)}
 .ss-rej{background:var(--rej-bg);color:var(--rej-c);border-color:var(--rej-br)}
 .dc{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);white-space:nowrap}
@@ -370,6 +372,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
       <div class="hdr-kpis">
         <div class="hdr-kpi kpi-t"><div class="n" id="kpi-total">0</div><div class="l">Total</div></div>
         <div class="hdr-kpi kpi-c"><div class="n" id="kpi-cot">0</div><div class="l">Em Cotação</div></div>
+        <div class="hdr-kpi"><div class="n" id="kpi-pc">0</div><div class="l">Emitir PC</div></div>
         <div class="hdr-kpi kpi-a"><div class="n" id="kpi-ag">0</div><div class="l">Aguarda</div></div>
       </div>
       <div class="sync-chip loading" id="sync-chip" onclick="testarStorage(true)" title="Clique para testar a conexão compartilhada"><span class="sdot"></span><span id="sync-chip-txt">Testando…</span></div>
@@ -452,6 +455,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
     <select id="filter-status" onchange="applyFilters()">
       <option value="">Todos os Status</option>
       <option value="Em cotação">Em Cotação</option>
+      <option value="Emitir PC">Emitir PC</option>
       <option value="Aguarda cotação">Aguarda Cotação</option>
     </select>
     <select id="filter-resp" onchange="applyFilters()"><option value="">Todos os Responsáveis</option></select>
@@ -668,8 +672,8 @@ function pD(s){ if(!s) return null; var p=String(s).split('/'); if(p.length===3)
 function xlS(n){ var d=new Date(Date.UTC(1899,11,30)+(n-1)*86400000); return String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+'/'+d.getUTCFullYear(); }
 function dO(e){ var d=pD(e); if(!d) return 0; return Math.max(0,Math.floor((TODAY-d)/86400000)); }
 function dB(d){ var c=d>=60?'db-o':d>=20?'db-m':'db-n'; return '<span class="days-b '+c+'">'+d+'d</span>'; }
-function isOpen(r){ var n=String(r.status).trim().toLowerCase(); return n==='em cotação'||n==='aguarda cotação'; }
-function sCls(s){ var n=String(s).trim().toLowerCase(); if(n==='em cotação') return 'ss-cot'; if(n==='aguarda cotação') return 'ss-ag'; if(n==='finalizada') return 'ss-fin'; return 'ss-rej'; }
+function isOpen(r){ var n=String(r.status).trim().toLowerCase(); return n==='em cotação'||n==='aguarda cotação'||n==='emitir pc'; }
+function sCls(s){ var n=String(s).trim().toLowerCase(); if(n==='em cotação') return 'ss-cot'; if(n==='emitir pc') return 'ss-pc'; if(n==='aguarda cotação') return 'ss-ag'; if(n==='finalizada') return 'ss-fin'; return 'ss-rej'; }
 
 var SOL_MAP={'MARILIA.GIANEZI':'Marília Gianezi','CAIQUE.LIMA':'Caique Lima','ALESSANDRA.MARTINS':'Alessandra Martins','DIEGO.ROCHA':'Diego Rocha','ALINE.LIMA':'Aline Lima','ANDREZA.GRACIOLA':'Andreza Graciola','DONIZETE.GRASSI':'Donizete Grassi','SANDRA.RIGOLETO':'Sandra Rigoleto','JESSICA.CARVALHO':'Jéssica Carvalho','MARIANA.RAMOS':'Mariana Ramos','RENATA.BOTEON':'Renata Boteon','ALEX.PEREIRA':'Alex Pereira','ALINE.SANTOS':'Aline Santos','RAFAEL.GASPAR':'Rafael Gaspar','TIAGO.BRITO':'Tiago Brito','FLAVIO.LEAL':'Flávio Leal','KATIA.SILVA':'Kátia Silva','NIKIARA.TAKAKI':'Nikiara Takaki'};
 function resSOL(r){ if(!r) return ''; var u=String(r).toUpperCase().trim(); if(SOL_MAP[u]) return SOL_MAP[u]; return String(r).trim().split('.').map(function(p){ return p.charAt(0).toUpperCase()+p.slice(1).toLowerCase(); }).join(' '); }
@@ -698,6 +702,7 @@ function rowHTML(r, showEmp){
     +'<td><select class="ssel '+sCls(r.status)+'" onchange="chSt('+idx+',this)">'
     +'<option'+(r.status==='Aguarda cotação'?' selected':'')+'>Aguarda cotação</option>'
     +'<option'+(r.status==='Em cotação'?' selected':'')+'>Em cotação</option>'
+    +'<option'+(r.status==='Emitir PC'?' selected':'')+'>Emitir PC</option>'
     +'<option'+(r.status==='Finalizada'?' selected':'')+'>Finalizada</option>'
     +'<option'+(r.status==='Rejeitada'?' selected':'')+'>Rejeitada</option>'
     +'</select></td>'
@@ -876,7 +881,7 @@ function setPriorityFilter(f,btn){PRIORITY_FILTER=f;document.querySelectorAll('.
 function priorityRowHTML(r){
   var idx=DATA.indexOf(r),p=priorityInfo(r),obs=r.obs||'',reason=r.reason||'',tags=p.tags.length?p.tags.map(function(x){return '<span class="priority-tag '+x.c+'">'+x.t+'</span>';}).join(''):'<span class="priority-tag">Acompanhar</span>';
   var reasonOpts='<option value=""'+(!reason?' selected':'')+'>— Motivo —</option>'+REASONS.map(function(x){return '<option value="'+x+'"'+(reason===x?' selected':'')+'>'+x+'</option>';}).join('');
-  return '<tr class="'+(p.overdue||p.stale?'stale-row':'')+'"><td><div class="priority-tags">'+tags+'</div></td><td>'+empTag(r.empresa)+'</td><td><span class="sc-num">'+esc(r.sc)+'</span><br><span style="font-size:9px">'+esc(r.item)+'</span></td><td><select class="ssel '+sCls(r.status)+'" onchange="chSt('+idx+',this)"><option'+(r.status==='Aguarda cotação'?' selected':'')+'>Aguarda cotação</option><option'+(r.status==='Em cotação'?' selected':'')+'>Em cotação</option><option>Finalizada</option><option>Rejeitada</option></select></td><td class="desc">'+esc(r.descricao)+'</td><td class="dc">'+esc(r.limite||'—')+'</td><td><input class="forn-c" placeholder="Registre retornos, negociações e próximos passos..." value="'+esc(obs)+'" oninput="upd('+idx+',\'obs\',this.value)"><div class="move-meta">'+movementLabel(r)+'</div></td><td><select class="reason-sel" onchange="upd('+idx+',\'reason\',this.value)">'+reasonOpts+'</select></td></tr>';
+  return '<tr class="'+(p.overdue||p.stale?'stale-row':'')+'"><td><div class="priority-tags">'+tags+'</div></td><td>'+empTag(r.empresa)+'</td><td><span class="sc-num">'+esc(r.sc)+'</span><br><span style="font-size:9px">'+esc(r.item)+'</span></td><td><select class="ssel '+sCls(r.status)+'" onchange="chSt('+idx+',this)"><option'+(r.status==='Aguarda cotação'?' selected':'')+'>Aguarda cotação</option><option'+(r.status==='Em cotação'?' selected':'')+'>Em cotação</option><option'+(r.status==='Emitir PC'?' selected':'')+'>Emitir PC</option><option>Finalizada</option><option>Rejeitada</option></select></td><td class="desc">'+esc(r.descricao)+'</td><td class="dc">'+esc(r.limite||'—')+'</td><td><input class="forn-c" placeholder="Registre retornos, negociações e próximos passos..." value="'+esc(obs)+'" oninput="upd('+idx+',\'obs\',this.value)"><div class="move-meta">'+movementLabel(r)+'</div></td><td><select class="reason-sel" onchange="upd('+idx+',\'reason\',this.value)">'+reasonOpts+'</select></td></tr>';
 }
 function renderPriorities(){
   var mine=DATA.filter(function(r){return isOpen(r)&&r.resp===ACTIVE_USER;});
@@ -895,9 +900,11 @@ function refreshAll(){
   setupControls();
   var open=DATA.filter(isOpen).sort(function(a,b){ return (pD(a.aprovacao||a.emissao)||0)-(pD(b.aprovacao||b.emissao)||0); });
   var cot=open.filter(function(r){ return r.status.trim().toLowerCase()==='em cotação'; }).length;
+  var pc=open.filter(function(r){ return r.status.trim().toLowerCase()==='emitir pc'; }).length;
   document.getElementById('kpi-total').textContent=open.length;
   document.getElementById('kpi-cot').textContent=cot;
-  document.getElementById('kpi-ag').textContent=open.length-cot;
+  document.getElementById('kpi-pc').textContent=pc;
+  document.getElementById('kpi-ag').textContent=open.length-cot-pc;
   var lc=document.getElementById('list-count'); if(lc) lc.textContent=open.length+' registros';
   applyFilters();
   var emps=[['Phal Ind','tb-phal','cnt-phal-s'],['Phal SPO','tb-phalspo','cnt-phalspo-s'],['Pharmabag','tb-pharma','cnt-pharma-s'],['Nutriente','tb-nutri','cnt-nutri-s'],['Clinutri','tb-clinu','cnt-clinu-s']];
@@ -1091,8 +1098,8 @@ function renderManagementDashboard(open){
   mgmtBars('mg-reasons',Object.entries(reasons).sort(function(a,b){return b[1]-a[1];}).slice(0,7),['#F59E0B','#3B82F6','#8B5CF6','#14B8A6','#F97316','#64748B','#DC2626']);
   var companies={};scopedOpen.forEach(function(r){companies[r.empresa]=(companies[r.empresa]||0)+1;});
   mgmtBars('mg-companies',Object.entries(companies).sort(function(a,b){return b[1]-a[1];}),['#C41E1E','#B91C1C','#1558B0','#0F7A4A','#1A3A6B']);
-  var cot=scopedOpen.filter(function(r){return String(r.status).toLowerCase()==='em cotação';}).length,aguarda=scopedOpen.length-cot,pct=scopedOpen.length?Math.round(cot/scopedOpen.length*100):0,ring=document.getElementById('mg-status');
-  if(ring)ring.innerHTML='<div class="mgmt-ring" style="background:conic-gradient(#1558B0 0 '+pct+'%,#F0B429 '+pct+'% 100%)"><strong>'+pct+'%</strong></div><div class="mgmt-ring-legend"><div><i style="background:#1558B0"></i>Em cotação: <strong>'+cot+'</strong></div><div><i style="background:#F0B429"></i>Aguarda: <strong>'+aguarda+'</strong></div><div><small>% já em andamento</small></div></div>';
+  var cot=scopedOpen.filter(function(r){return String(r.status).toLowerCase()==='em cotação';}).length,pc=scopedOpen.filter(function(r){return String(r.status).toLowerCase()==='emitir pc';}).length,aguarda=scopedOpen.length-cot-pc,pctCot=scopedOpen.length?Math.round(cot/scopedOpen.length*100):0,pctPc=scopedOpen.length?Math.round(pc/scopedOpen.length*100):0,pct=scopedOpen.length?Math.round((cot+pc)/scopedOpen.length*100):0,ring=document.getElementById('mg-status');
+  if(ring)ring.innerHTML='<div class="mgmt-ring" style="background:conic-gradient(#1558B0 0 '+pctCot+'%,#7C3AED '+pctCot+'% '+(pctCot+pctPc)+'%,#F0B429 '+(pctCot+pctPc)+'% 100%)"><strong>'+pct+'%</strong></div><div class="mgmt-ring-legend"><div><i style="background:#1558B0"></i>Em cotação: <strong>'+cot+'</strong></div><div><i style="background:#7C3AED"></i>Emitir PC: <strong>'+pc+'</strong></div><div><i style="background:#F0B429"></i>Aguarda: <strong>'+aguarda+'</strong></div><div><small>% já em andamento</small></div></div>';
   buildCharts(scopedOpen,spec);
 }
 function buildCharts(open,spec){
