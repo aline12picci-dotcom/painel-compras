@@ -937,11 +937,12 @@ function sortBy(col){
     var si=t.querySelector('.si'); if(si) si.textContent=i===col?(_sD[col]===1?'↑':'↓'):'↕';
   });
 }
-function showTab(name, btn, cls){
+function showTab(name, btn, cls, preserveDrill){
   document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
   document.querySelectorAll('.es-btn').forEach(function(b){ b.className='es-btn'; });
   document.getElementById('sec-'+name).classList.add('active');
   if(btn) btn.classList.add(cls||'al');
+  if(name==='listagem'&&!preserveDrill){DASH_FILTER='';applyFilters();}
   if(name==='dashboard') setTimeout(function(){ buildCharts(DATA.filter(isOpen)); renderOrders(); },50);
   if(name==='historico') renderHistory();
   if(name==='prioridades') renderPriorities();
@@ -994,7 +995,7 @@ function dashboardDrill(type){
   DASH_FILTER=type||'all';
   ['search-input','filter-empresa','filter-status','filter-resp','filter-reason'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   applyFilters();
-  showTab('listagem',document.getElementById('strip-list'),'al');
+  showTab('listagem',document.getElementById('strip-list'),'al',true);
   toast('Filtro aplicado: '+dashboardFilterLabel(DASH_FILTER),'info');
 }
 function clearDashboardFilter(){
@@ -1247,6 +1248,13 @@ function mergeServerState(p){
   if(Array.isArray(p.users)&&p.users.length)USERS=p.users;
   if(Array.isArray(p.audit))AUDIT=p.audit;
 }
+function applyServerVersions(p){
+  if(!p)return;
+  var dataVersions=new Map((p.data||[]).map(function(r){return [[r.empresa||'',r.sc||'',r.item||''].join('|'),r._serverVersion];}));
+  DATA.forEach(function(r){var v=dataVersions.get([r.empresa||'',r.sc||'',r.item||''].join('|'));if(v!==undefined)r._serverVersion=v;});
+  var orderVersions=new Map((p.orders||[]).map(function(o){return [String(o.id||[o.company||'',o.orderNumber||'',o.sourceSC||''].join('|')),o._serverVersion];}));
+  ORDERS.forEach(function(o){var v=orderVersions.get(String(o.id||[o.company||'',o.orderNumber||'',o.sourceSC||''].join('|')));if(v!==undefined)o._serverVersion=v;});
+}
 async function saveShared(){
   if(_isSaving){_pendingSave=true;return;}
   _isSaving=true;
@@ -1256,7 +1264,9 @@ async function saveShared(){
     var ts=Date.now();
     var saved=await jbWrite({data:DATA,users:USERS,audit:AUDIT,orders:ORDERS,ts:ts});
     var hasNewerChanges=_changeVersion!==saveVersion;
-    if(saved&&Array.isArray(saved.data))mergeServerState(saved);
+    // Preserva a ordem da tela enquanto o usuário edita. Trocar o array aqui
+    // invalidava os índices das linhas e podia aplicar a próxima digitação em outra SC.
+    if(saved&&Array.isArray(saved.data))applyServerVersions(saved);
     // Nunca substitui a tela pelo retorno do POST. Algumas bases devolvem um
     // snapshot anterior mesmo após aceitar a gravação, causando regressão visual.
     var syncTs=(saved&&saved.ts)||ts;
@@ -1336,6 +1346,8 @@ function mergeSharedIntoFull(mini){
 }
 async function pollShared(){
   if(_isSaving||_pendingSave) return;
+  var focused=document.activeElement;
+  if(focused&&/^(INPUT|SELECT|TEXTAREA)$/.test(focused.tagName)&&focused.closest('table'))return;
   try{
     var p=await jbRead();
     if(!p||!p.ts) return;
@@ -1502,7 +1514,7 @@ async function startCredentialApp(basic){
   CURRENT_PROFILE=p.authProfile||{};ACTIVE_USER=CURRENT_PROFILE.full_name||'Usuário';
   mergeServerState(p);_lastTs=p.ts||0;saveLocal();
   document.getElementById('auth-gate').style.display='none';var au=document.getElementById('auth-user');if(au)au.style.display='flex';var nm=document.getElementById('auth-user-name');if(nm)nm.textContent=ACTIVE_USER;
-  setupControls();refreshAll();var pb=document.getElementById('strip-prioridades');showTab('prioridades',pb,'ad');setSyncChip('🟢 Protegido','ok');setSyncBar('✓ Acesso verificado — '+fTime(new Date()));setReliableSync('saved','Conexão confirmada. Nenhuma alteração pendente.');setBannerState('ok','Conexão protegida ativa','Alterações identificadas e sincronizadas.');
+  setupControls();refreshAll();var lb=document.getElementById('strip-list');showTab('listagem',lb,'al');setSyncChip('🟢 Protegido','ok');setSyncBar('✓ Acesso verificado — '+fTime(new Date()));setReliableSync('saved','Conexão confirmada. Nenhuma alteração pendente.');setBannerState('ok','Conexão protegida ativa','Alterações identificadas e sincronizadas.');
   if(_pollTimer)clearInterval(_pollTimer);_pollTimer=setInterval(pollShared,POLL_MS);
 }
 async function initCredentials(){if(!CURRENT_BASIC)return;try{await startCredentialApp(CURRENT_BASIC);}catch(e){sessionStorage.removeItem('painel_basic');CURRENT_BASIC='';}}
