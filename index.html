@@ -344,7 +344,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 <!-- TOAST CONTAINER -->
 <div id="toast"></div>
 <div class="modal-bg" id="users-modal"><div class="modal"><div class="modal-h"><h3>👥 Gestão de responsáveis</h3><button class="modal-close" onclick="closeModal('users-modal')">✕</button></div><div class="modal-b"><p style="font-size:11px;color:var(--text3);margin-bottom:14px">Cadastre ou desative responsáveis. As observações devem registrar retornos, negociações e próximos passos. Enquanto o painel estiver público, este controle organiza a operação, mas não substitui autenticação.</p><button class="ctrl-btn" onclick="addUser()" style="margin-bottom:14px">＋ Adicionar responsável</button><div class="user-list" id="user-list"></div></div></div></div>
-<div class="modal-bg" id="order-modal"><div class="modal"><div class="modal-h"><h3 id="order-modal-title">📦 Registrar pedido finalizado</h3><button class="modal-close" onclick="cancelOrderModal()">✕</button></div><div class="modal-b"><p id="order-items-summary" style="font-size:11px;color:var(--text3);margin-bottom:14px">O pedido será incluído automaticamente no Controle de Pedidos.</p><div class="order-form-grid"><div class="order-field"><label>Empresa</label><input id="order-company" disabled></div><div class="order-field"><label>Responsável</label><input id="order-owner" disabled></div><div class="order-field full"><label>Itens selecionados</label><div id="order-selected-items" style="max-height:110px;overflow:auto;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:10px;line-height:1.6"></div></div><div class="order-field"><label>Número do pedido *</label><input id="order-number" inputmode="numeric" placeholder="Ex.: 123456"></div><div class="order-field"><label>Fornecedor *</label><input id="order-supplier" placeholder="Nome ou código do fornecedor"></div><div class="order-field full"><label>Forma de processamento *</label><select id="order-channel"><option value="Fornecedor">Enviar ao fornecedor</option><option value="Dispensado">Não requer envio</option><option value="Marketplace">Marketplace</option></select></div><div class="order-field full"><label>Observação do pedido</label><textarea id="order-observation" placeholder="Registre informações específicas deste pedido..."></textarea></div></div><button class="ctrl-btn" onclick="confirmFinalization()" style="margin-top:16px;width:100%;padding:11px">Finalizar itens e criar um único pedido</button></div></div></div>
+<div class="modal-bg" id="order-modal"><div class="modal"><div class="modal-h"><h3 id="order-modal-title">📦 Registrar pedido finalizado</h3><button class="modal-close" onclick="cancelOrderModal()">✕</button></div><div class="modal-b"><p id="order-items-summary" style="font-size:11px;color:var(--text3);margin-bottom:14px">O pedido será incluído automaticamente no Controle de Pedidos.</p><div class="order-form-grid"><div class="order-field"><label>Empresa</label><input id="order-company" disabled></div><div class="order-field"><label>Responsável</label><input id="order-owner" disabled></div><div class="order-field full"><label>Itens selecionados</label><div id="order-selected-items" style="max-height:110px;overflow:auto;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:10px;line-height:1.6"></div></div><div class="order-field"><label>Número do pedido *</label><input id="order-number" inputmode="numeric" placeholder="Ex.: 123456"></div><div class="order-field"><label>Fornecedor *</label><input id="order-supplier" placeholder="Nome ou código do fornecedor"></div><div class="order-field"><label>Previsão de entrega *</label><input id="order-delivery" type="date"></div><div class="order-field"><label>Valor total negociado *</label><input id="order-value" inputmode="decimal" placeholder="Ex.: 1.250,00"></div><div class="order-field full"><label>Forma de processamento *</label><select id="order-channel"><option value="Fornecedor">Enviar ao fornecedor</option><option value="Dispensado">Não requer envio</option><option value="Marketplace">Marketplace</option></select></div><div class="order-field full" style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:#F8FAFC"><label style="display:flex;gap:8px;align-items:flex-start;text-transform:none"><input id="order-quote-checked" type="checkbox" style="width:auto;margin-top:2px"> Cotação conferida: fornecedor, preços, quantidades, unidade e descrição dos itens.</label><label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;text-transform:none"><input id="order-docs-checked" type="checkbox" style="width:auto;margin-top:2px"> Documentos obrigatórios e condições de compra conferidos.</label></div><div class="order-field full"><label>Observação do pedido</label><textarea id="order-observation" placeholder="Registre informações específicas deste pedido..."></textarea></div></div><button class="ctrl-btn" onclick="confirmFinalization()" style="margin-top:16px;width:100%;padding:11px">Validar e emitir um único pedido</button></div></div></div>
 <div class="modal-bg" id="audit-modal"><div class="modal"><div class="modal-h"><h3>🕘 Histórico de alterações</h3><button class="modal-close" onclick="closeModal('audit-modal')">✕</button></div><div class="modal-b"><div class="filter-bar"><input id="audit-search" placeholder="Buscar SC, responsável ou campo..." oninput="renderAudit()"></div><div class="tbl-wrap"><table class="audit-table"><thead><tr><th>Data/hora</th><th>Usuário</th><th>SC / Item</th><th>Campo</th><th>Antes</th><th>Depois</th></tr></thead><tbody id="audit-body"></tbody></table></div></div></div></div>
 
 <!-- ═══ HEADER ═══ -->
@@ -790,7 +790,7 @@ function openOrderModal(value){
   var indexes=Array.isArray(value)?value:[value];indexes=indexes.filter(function(i){return DATA[i]&&isOpen(DATA[i]);});
   if(!indexes.length)return;
   PENDING_FINALIZE=indexes;var r=DATA[indexes[0]],items=indexes.map(function(i){return DATA[i];});
-  document.getElementById('order-company').value=r.empresa||'';document.getElementById('order-owner').value=ACTIVE_USER;document.getElementById('order-number').value='';document.getElementById('order-supplier').value='';document.getElementById('order-channel').value='Fornecedor';document.getElementById('order-observation').value='';
+  document.getElementById('order-company').value=r.empresa||'';document.getElementById('order-owner').value=ACTIVE_USER;document.getElementById('order-number').value='';document.getElementById('order-supplier').value='';document.getElementById('order-delivery').value='';document.getElementById('order-value').value='';document.getElementById('order-quote-checked').checked=false;document.getElementById('order-docs-checked').checked=false;document.getElementById('order-channel').value='Fornecedor';document.getElementById('order-observation').value='';
   document.getElementById('order-modal-title').textContent='📦 Finalizar '+items.length+' item'+(items.length>1?'s':'')+' em um único pedido';
   document.getElementById('order-items-summary').textContent=items.length>1?'Preencha os dados uma única vez. Todos os itens abaixo serão agrupados no mesmo pedido.':'O pedido será incluído automaticamente no Controle de Pedidos.';
   document.getElementById('order-selected-items').innerHTML=items.map(function(x){return '<div><strong>SC '+esc(x.sc)+' / '+esc(x.item)+'</strong> — '+esc(x.descricao||'')+'</div>';}).join('');
@@ -798,19 +798,28 @@ function openOrderModal(value){
 }
 function cancelOrderModal(){PENDING_FINALIZE=[];closeModal('order-modal');refreshAll();}
 function confirmFinalization(){
-  if(!PENDING_FINALIZE.length)return;var num=document.getElementById('order-number').value.trim(),supplier=document.getElementById('order-supplier').value.trim(),channel=document.getElementById('order-channel').value,obs=document.getElementById('order-observation').value.trim();
+  if(!PENDING_FINALIZE.length)return;var num=document.getElementById('order-number').value.trim(),supplier=document.getElementById('order-supplier').value.trim(),channel=document.getElementById('order-channel').value,obs=document.getElementById('order-observation').value.trim(),delivery=document.getElementById('order-delivery').value,totalRaw=document.getElementById('order-value').value.trim(),total=Number(totalRaw.replace(/\./g,'').replace(',','.'));
   var selected=PENDING_FINALIZE.map(function(i){return DATA[i];}).filter(Boolean),r=selected[0],now=new Date().toISOString(),status='Aguarda aprovação';
   if(!num){toast('Informe o número do pedido.','err',3500);return;}
+  if(!/^\d+$/.test(num)){toast('O número do pedido deve conter apenas números.','err',4000);return;}
+  if(!supplier){toast('Informe o fornecedor do pedido.','err',3500);return;}
+  if(!delivery){toast('Informe a previsão de entrega antes de emitir o pedido.','err',4500);return;}
+  if(delivery<new Date().toISOString().slice(0,10)){toast('A previsão de entrega não pode estar vencida.','err',4500);return;}
+  if(!totalRaw||!Number.isFinite(total)||total<=0){toast('Informe um valor total negociado válido.','err',4500);return;}
+  if(!document.getElementById('order-quote-checked').checked){toast('Confirme a conferência da cotação, preços, quantidades e descrição.','err',5000);return;}
+  if(!document.getElementById('order-docs-checked').checked){toast('Confirme a conferência dos documentos obrigatórios.','err',4500);return;}
+  if(selected.some(function(row){return !String(row.descricao||'').trim();})){toast('Existem itens sem descrição. Corrija a SC antes de emitir o pedido.','err',5000);return;}
   var existing=ORDERS.find(function(o){return String(o.orderNumber).trim()===num&&o.company===r.empresa;});
+  if(existing&&String(existing.supplier||'').trim().toLowerCase()!==supplier.toLowerCase()){toast('Esse pedido já pertence a outro fornecedor. Confira o número informado.','err',5500);return;}
   if(existing){
     var items=Array.isArray(existing.sourceItems)?existing.sourceItems.slice():[{sc:existing.sourceSC,item:existing.sourceItem,descricao:existing.sourceDescription||''}];
     selected.forEach(function(row){if(!items.some(function(x){return String(x.sc)===String(row.sc)&&String(x.item)===String(row.item);})){items.push({sc:row.sc,item:row.item,descricao:row.descricao||''});}});
     existing.sourceItems=items;
-    existing.lastMovementAt=now;existing.lastUpdatedBy=ACTIVE_USER;existing.clientMutationAt=now;
+    existing.lastMovementAt=now;existing.lastUpdatedBy=ACTIVE_USER;existing.clientMutationAt=now;existing.expectedDelivery=delivery;existing.negotiatedTotal=total;existing.validatedAt=now;existing.validatedBy=ACTIVE_USER;
     if(supplier)existing.supplier=supplier;if(obs)existing.observation=existing.observation?existing.observation+' | '+obs:obs;
   }else{
     if(!supplier){toast('Informe o fornecedor para criar o pedido.','err',3500);return;}
-    ORDERS.unshift({id:'PED-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),orderNumber:num,company:r.empresa,sourceSC:r.sc,sourceItem:r.item,sourceDescription:r.descricao||'',sourceItems:selected.map(function(row){return {sc:row.sc,item:row.item,descricao:row.descricao||''};}),supplier:supplier,channel:channel,status:status,issuedAt:now,sentAt:null,confirmedAt:null,owner:ACTIVE_USER,observation:obs,createdAt:now,createdBy:ACTIVE_USER,lastMovementAt:now,lastUpdatedBy:ACTIVE_USER,clientMutationAt:now});
+    ORDERS.unshift({id:'PED-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),orderNumber:num,company:r.empresa,sourceSC:r.sc,sourceItem:r.item,sourceDescription:r.descricao||'',sourceItems:selected.map(function(row){return {sc:row.sc,item:row.item,descricao:row.descricao||''};}),supplier:supplier,channel:channel,status:status,issuedAt:now,sentAt:null,confirmedAt:null,owner:ACTIVE_USER,observation:obs,expectedDelivery:delivery,negotiatedTotal:total,quoteChecked:true,documentsChecked:true,validatedAt:now,validatedBy:ACTIVE_USER,createdAt:now,createdBy:ACTIVE_USER,lastMovementAt:now,lastUpdatedBy:ACTIVE_USER,clientMutationAt:now});
   }
   selected.forEach(function(row){var before=row.status;row.status='Finalizada';row.clientMutationAt=now;row.lastMovementAt=now;row.lastUpdatedBy=ACTIVE_USER;logAudit(row,'status',before,'Finalizada — pedido '+num);SELECTED_ITEMS.delete(recordKey(row));});
   var qty=selected.length;PENDING_FINALIZE=[];closeModal('order-modal');updateBatchBar();triggerSave();refreshAll();var b=document.getElementById('strip-pedidos');showTab('pedidos',b,'ap');toast(qty+' item'+(qty>1?'s':'')+' agrupado'+(qty>1?'s':'')+' no pedido '+num+'.','ok',4000);
@@ -1453,16 +1462,17 @@ function importExcel(input){
       var nowIso=now.toISOString(),existingMap=new Map(DATA.map(function(r){return [importKey(r),r];}));
       var fileMap=new Map();
       nr.forEach(function(r){if(r.sc&&r.item&&!fileMap.has(importKey(r)))fileMap.set(importKey(r),r);});
-      var included=0,preserved=0,closed=0;
+      var included=0,preserved=0,updated=0,retained=0;
       var reconciled=[];
       fileMap.forEach(function(r,key){
         var old=existingMap.get(key);
         if(old){
-          reconciled.push(Object.assign({},r,{
-            obs:old.obs||r.obs||'',resp:old.resp||r.resp||'',reason:old.reason||'',
-            clientMutationAt:old.clientMutationAt||'',lastMovementAt:old.lastMovementAt||'',
-            lastUpdatedBy:old.lastUpdatedBy||'',lastUpdatedEmail:old.lastUpdatedEmail||''
-          }));
+          var merged=Object.assign({},old),sourceChanged=false;
+          ['descricao','aprovacao','entrega','solicitante','limite'].forEach(function(field){if(r[field]&&r[field]!==old[field]){merged[field]=r[field];sourceChanged=true;}});
+          if(!merged.obs&&r.obs){merged.obs=r.obs;sourceChanged=true;}
+          if(!merged.resp&&r.resp){merged.resp=r.resp;sourceChanged=true;}
+          if(sourceChanged){merged.clientMutationAt=nowIso;merged.lastMovementAt=nowIso;merged.lastUpdatedBy=ACTIVE_USER;updated++;}
+          reconciled.push(merged);
           preserved++;
         }else{
           r.clientMutationAt=nowIso;r.lastMovementAt=nowIso;r.lastUpdatedBy=ACTIVE_USER;
@@ -1472,19 +1482,15 @@ function importExcel(input){
       DATA.forEach(function(old){
         var key=importKey(old);
         if(fileMap.has(key))return;
-        if(isOpen(old)){
-          var before=old.status;
-          old=Object.assign({},old,{status:'Finalizada',closedAt:nowIso,closedBy:ACTIVE_USER,clientMutationAt:nowIso,lastMovementAt:nowIso,lastUpdatedBy:ACTIVE_USER});
-          AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:old.empresa,sc:old.sc,item:old.item,field:'Conciliação Excel',before:before,after:'Finalizada — ausente na base atual'});
-          closed++;
-        }
+        if(isOpen(old))retained++;
         reconciled.push(old);
       });
       DATA=reconciled;
       var sub=document.getElementById('hdr-sub');
       if(sub) sub.textContent='Grupo Emede · Somente SCs Abertas · '+String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
       refreshAll(); triggerSave();
-      toast('✅ Base conciliada: '+fileMap.size+' ativas · '+included+' novas · '+preserved+' preservadas · '+closed+' movidas para Encerradas.','ok',7000);
+      AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:'Todas',sc:'Importação',item:'Excel',field:'Importação incremental',before:DATA.length-included+' registros',after:included+' novas · '+updated+' atualizadas · '+retained+' ausentes preservadas'});
+      toast('✅ Importação segura: '+included+' novas · '+updated+' atualizadas · '+preserved+' preservadas · '+retained+' ausentes mantidas abertas.','ok',7500);
     }catch(err){ console.error(err); toast('Erro ao importar: '+err.message,'err',6000); }
     input.value='';
   };
