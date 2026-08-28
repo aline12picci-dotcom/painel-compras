@@ -619,7 +619,9 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 
 // ── GOOGLE SHEETS CONFIG ────────────────────────────────
 const GS_URL   = 'https://script.google.com/macros/s/AKfycbybIU803gqhHNSE_n27tKIFFb0KUS0Hh34_ATG6RVXqU49HHuhkJtbifNU3YMwop5Eb4A/exec';
-const SK_LOCAL = 'painel_sc_local_v3';
+// Versão do cache alterada para impedir que fotografias antigas de outros
+// usuários prevaleçam sobre a base compartilhada após uma publicação.
+const SK_LOCAL = 'painel_sc_local_v4';
 const DEBOUNCE = 800;
 const POLL_MS  = 8000;
 
@@ -1256,6 +1258,13 @@ function mergeServerState(p){
   if(Array.isArray(p.users)&&p.users.length)USERS=p.users;
   if(Array.isArray(p.audit))AUDIT=p.audit;
 }
+function loadAuthoritativeServerState(p){
+  if(!p)return;
+  DATA=Array.isArray(p.data)?p.data:[];
+  ORDERS=Array.isArray(p.orders)?p.orders:[];
+  if(Array.isArray(p.users)&&p.users.length)USERS=p.users;
+  AUDIT=Array.isArray(p.audit)?p.audit:[];
+}
 function applyServerVersions(p){
   if(!p)return;
   var dataVersions=new Map((p.data||[]).map(function(r){return [[r.empresa||'',r.sc||'',r.item||''].join('|'),r._serverVersion];}));
@@ -1514,10 +1523,12 @@ async function credentialLogin(ev){
 async function signOut(){sessionStorage.removeItem('painel_basic');CURRENT_BASIC='';location.reload();}
 async function startCredentialApp(basic){
   CURRENT_BASIC=basic;
-  loadLocal();
   var p=await jbRead();
   CURRENT_PROFILE=p.authProfile||{};ACTIVE_USER=CURRENT_PROFILE.full_name||'Usuário';
-  mergeServerState(p);_lastTs=p.ts||0;saveLocal();
+  // No login, a base compartilhada é a fonte de verdade. O cache local serve
+  // apenas como proteção durante a sessão e nunca pode montar uma visão
+  // diferente para cada usuário.
+  loadAuthoritativeServerState(p);_lastTs=p.ts||0;_lastSaveTs=p.ts||0;_pendingSave=false;saveLocal();
   document.getElementById('auth-gate').style.display='none';var au=document.getElementById('auth-user');if(au)au.style.display='flex';var nm=document.getElementById('auth-user-name');if(nm)nm.textContent=ACTIVE_USER;
   setupControls();refreshAll();var lb=document.getElementById('strip-list');showTab('listagem',lb,'al');setSyncChip('🟢 Protegido','ok');setSyncBar('✓ Acesso verificado — '+fTime(new Date()));setReliableSync('saved','Conexão confirmada. Nenhuma alteração pendente.');setBannerState('ok','Conexão protegida ativa','Alterações identificadas e sincronizadas.');
   if(_pollTimer)clearInterval(_pollTimer);_pollTimer=setInterval(pollShared,POLL_MS);
