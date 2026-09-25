@@ -1440,6 +1440,8 @@ function importExcel(input){
         var hdrs=Object.keys(json[0]);
         var cSC=findCol(hdrs,['numero','nº','num']),cIt=findCol(hdrs,['item']),cSt=findCol(hdrs,['status']);
         var cDs=findCol(hdrs,['descricao','descrição','descri']),cAp=findCol(hdrs,['aprovação','aprovacao','data aprov']);
+        var cProd=findCol(hdrs,['produto']),cQtd=findCol(hdrs,['quantidade']);
+        var cUm=hdrs.find(function(h){return normHdr(h)==='um'||normHdr(h).indexOf('unidade de medida')>=0;})||'';
         var cEn=findCol(hdrs,['entrega']),cLm=findCol(hdrs,['limite','dt.limite']);
         var cSol=findCol(hdrs,['solicitante']),cObs=findCol(hdrs,['observação','observacao']),cF1=findCol(hdrs,['fornecedor 1']),cF2=findCol(hdrs,['fornecedor 2']),cF3=findCol(hdrs,['fornecedor 3']);
         var cRsp=findCol(hdrs,['responsável','responsavel']);
@@ -1452,6 +1454,7 @@ function importExcel(input){
           var desc=String(row[cDs]||'');
           desc=desc.split('\r').join(' ').split('\n').join(' ').trim().substring(0,120);
           nr.push({empresa:empresa,sc:sc,item:String(row[cIt]||'').trim(),status:st,descricao:desc,
+            codigoProduto:String(row[cProd]||'').trim(),quantidade:String(row[cQtd]||'').trim(),um:String(row[cUm]||'').trim(),
             aprovacao:fmtDate(row[cAp]),entrega:fmtDate(row[cEn]),solicitante:String(row[cSol]||'').trim(),
             limite:fmtDate(row[cLm]),obs:String(row[cObs]||'').trim()||[row[cF1],row[cF2],row[cF3]].filter(function(x){return x;}).join(' | '),
             resp:String(row[cRsp]||'').trim(),reason:''});
@@ -1469,7 +1472,7 @@ function importExcel(input){
         var old=existingMap.get(key);
         if(old){
           var merged=Object.assign({},old),sourceChanged=false;
-          ['descricao','aprovacao','entrega','solicitante','limite'].forEach(function(field){if(r[field]&&r[field]!==old[field]){merged[field]=r[field];sourceChanged=true;}});
+          ['descricao','codigoProduto','quantidade','um','aprovacao','entrega','solicitante','limite'].forEach(function(field){if(r[field]&&r[field]!==old[field]){merged[field]=r[field];sourceChanged=true;}});
           if(!merged.obs&&r.obs){merged.obs=r.obs;sourceChanged=true;}
           if(!merged.resp&&r.resp){merged.resp=r.resp;sourceChanged=true;}
           if(sourceChanged){merged.clientMutationAt=nowIso;merged.lastMovementAt=nowIso;merged.lastUpdatedBy=ACTIVE_USER;updated++;}
