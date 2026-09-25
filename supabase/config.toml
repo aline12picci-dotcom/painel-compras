@@ -1,0 +1,2 @@
+[functions.quote-sync]
+verify_jwt = false # The function validates the panel's existing Basic credentials through panel-sync.

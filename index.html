@@ -336,6 +336,9 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 .mgmt-executive{display:flex;align-items:flex-start;gap:12px;background:linear-gradient(90deg,#EFF6FF,#F8FAFC);border:1px solid #BFDBFE;border-radius:13px;padding:14px 16px;margin:-8px 0 20px}.mgmt-exec-icon{font-size:20px}.mgmt-executive span{font-size:8px;letter-spacing:1.1px;color:#1D4ED8;font-weight:800}.mgmt-executive p{font-size:10.5px;line-height:1.6;color:#334155;margin-top:3px}.mgmt-trend{font-size:8px;font-weight:700;margin:5px 0 2px;min-height:12px}.mgmt-trend.good{color:#047857}.mgmt-trend.bad{color:#B91C1C}.mgmt-trend.neutral{color:#64748B}
 @media(max-width:650px){.mgmt-hero-controls{align-items:stretch;width:100%}}
 
+
+/* Agente de Cotações */
+.quote-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}.quote-work{min-width:0}.quote-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow1)}.quote-card h3{font-size:14px;color:var(--navy);margin:0 0 12px}.quote-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.quote-actions h3{margin:0;margin-right:auto}.quote-muted{font-size:10px;color:var(--text3);line-height:1.55}.quote-list-item{display:block;width:100%;text-align:left;border:1px solid var(--border);background:#f8fbfe;padding:9px;border-radius:7px;margin:6px 0;cursor:pointer;color:var(--navy)}.quote-list-item small{display:block;font-size:9px;color:var(--text3);margin-top:4px}.quote-card label,.quote-actions label{display:block;font-size:10px;color:var(--text2);font-weight:700;flex:1;min-width:180px}.quote-card input,.quote-card textarea,.quote-card select{display:block;width:100%;padding:7px;border-radius:6px;border:1px solid var(--border);font:inherit;background:#fff;color:var(--text);margin-top:4px}.quote-card textarea{min-height:55px;resize:vertical}.quote-overflow{overflow:auto}.quote-table{border-collapse:collapse;width:100%;min-width:950px}.quote-table th{background:#e6f1fa;color:var(--navy);font-size:10px;text-align:left}.quote-table th,.quote-table td{border:1px solid var(--border);padding:7px;vertical-align:top;font-size:10px}.quote-table input,.quote-table textarea{min-width:78px}.quote-table td:nth-child(4) textarea{min-width:250px}.quote-preview{max-height:440px;overflow:auto;border:1px solid var(--border);padding:13px;background:#fff;font:13px Arial,sans-serif}.quote-preview table td{padding:7px}.quote-suppliers{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:9px;overflow:auto;margin-bottom:12px}.quote-supplier{border:1px solid var(--border);padding:10px;border-radius:8px;background:#f8fbfe}.quote-supplier strong{font-size:11px;color:var(--navy)}.quote-supplier label{margin-top:7px;min-width:0}.quote-totals{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:8px;margin:12px 0;overflow:auto}.quote-totals>div{background:#eff7fa;border:1px solid #d9e4ec;border-radius:8px;padding:10px;font-size:10px;line-height:1.7}.q-item-total{display:block;color:#167d68;font-weight:700;margin-top:5px}@media(max-width:900px){.quote-layout{grid-template-columns:1fr}.quote-suppliers,.quote-totals{grid-template-columns:repeat(2,minmax(160px,1fr))}}
 </style>
 </head>
 <body>
@@ -393,6 +396,7 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
     <button class="es-btn" onclick="showTab('pharmabag',this,'ap')"><span class="dot" style="background:#1565C0"></span>Pharmabag</button>
     <button class="es-btn" onclick="showTab('nutriente',this,'an')"><span class="dot" style="background:#1A3A6B"></span>Nutriente</button>
     <button class="es-btn" onclick="showTab('clinutri',this,'ac')"><span class="dot" style="background:#0F7A4A"></span>Clinutri</button>
+    <button class="es-btn" id="strip-cotacoes" onclick="showTab('cotacoes',this,'ap')"><span class="dot" style="background:#5284AF"></span>Agente de Cotações</button>
     <button class="es-btn" id="strip-pedidos" onclick="showTab('pedidos',this,'ap')"><span class="dot" style="background:#13BFBF"></span>Controle de Pedidos</button>
     <button class="es-btn" onclick="showTab('historico',this,'ad')"><span class="dot" style="background:#F0B429"></span>Encerradas</button>
   </div>
@@ -591,6 +595,16 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 
 
 
+<section id="sec-cotacoes" class="section">
+  <div class="sec-hdr"><div><div class="sec-title">Agente de Cotações · Pharmabag</div><div class="quote-muted">Selecione itens abertos na aba Pharmabag ou na listagem e crie um processo. As cotações são compartilhadas com a equipe.</div></div></div>
+  <div class="quote-actions"><button class="ctrl-btn" type="button" onclick="createQuote()">＋ Criar com itens selecionados</button><button class="ctrl-btn" type="button" onclick="loadQuotes()">↺ Atualizar processos</button><span id="q-sync" class="quote-muted"></span></div>
+  <div class="quote-layout"><aside class="quote-card"><h3>Processos salvos</h3><div id="q-list"><p class="quote-muted">Abra esta aba para carregar os processos.</p></div></aside>
+  <div class="quote-work"><div id="q-empty" class="quote-card">Marque os itens no painel e clique em <strong>Criar com itens selecionados</strong>, ou abra um processo salvo.</div>
+  <div id="q-editor" hidden><div class="quote-card"><div class="quote-actions"><h3 id="q-process">Cotação</h3><span id="q-save-status" class="quote-muted"></span><button class="ctrl-btn" type="button" onclick="saveQuote()">Salvar agora</button></div><div class="quote-actions"><label>Prazo de resposta<input type="datetime-local" id="q-deadline" oninput="qField('deadline',this.value)"></label><label>Comprador<input id="q-buyer" oninput="qField('buyer',this.value)"></label></div><div class="quote-actions"><label>Local de entrega<input id="q-deliveryAddress" oninput="qField('deliveryAddress',this.value)"></label><label>Horário de entrega<input id="q-deliveryHours" oninput="qField('deliveryHours',this.value)"></label></div><label>Dados adicionais<textarea id="q-extraInfo" oninput="qField('extraInfo',this.value)"></textarea></label></div>
+  <div class="quote-card"><h3>Itens da cotação</h3><div class="quote-overflow"><table class="quote-table"><thead><tr><th>SC</th><th>Item</th><th>Código</th><th>Descrição editável</th><th>Quantidade</th><th>UM</th></tr></thead><tbody id="q-items"></tbody></table></div></div>
+  <div class="quote-card"><h3>Prévia para o Outlook</h3><p class="quote-muted">Assunto: <strong id="q-subject"></strong></p><div id="q-email" class="quote-preview"></div><div class="quote-actions"><button class="ctrl-btn" onclick="copyQuote()">Copiar cotação visual</button><button class="ctrl-btn" onclick="copyQuoteSubject()">Copiar assunto</button><button class="ctrl-btn" onclick="printQuote('quote')">Salvar cotação PDF</button></div><p class="quote-muted">A cópia não envia o e-mail. Após revisar, cole no Outlook e faça o envio por lá até a integração autorizada.</p></div>
+  <div class="quote-card"><h3>Mapa comparativo · cinco fornecedores</h3><div id="q-suppliers" class="quote-suppliers"></div><div class="quote-overflow"><table class="quote-table"><thead><tr><th>Último preço</th><th>SC / item</th><th>Descrição</th><th>Qtd / UM</th><th>F1 · unitário / total</th><th>F2 · unitário / total</th><th>F3 · unitário / total</th><th>F4 · unitário / total</th><th>F5 · unitário / total</th><th>IPI e ressalvas</th></tr></thead><tbody id="q-map-items"></tbody></table></div><div id="q-totals" class="quote-totals"></div><div class="quote-actions"><label>Fornecedor escolhido<select id="q-chosenSupplier" onchange="qField('chosenSupplier',this.value)"></select></label><label>PC no Protheus<input id="q-pcNumber" oninput="qField('pcNumber',this.value)"></label></div><label>Justificativa da escolha<textarea id="q-choiceReason" oninput="qField('choiceReason',this.value)"></textarea></label><div class="quote-actions"><button class="ctrl-btn" onclick="printQuote('map')">Salvar mapa PDF</button><button class="ctrl-btn" onclick="finishQuote()">Finalizar e gerar PDFs</button></div><p class="quote-muted">O total final exige preço para todos os itens e valor de IPI, despesas adicionais e frete FOB quando aplicável. Informe zero quando não houver cobrança.</p></div></div></div></div>
+</section>
 <section id="sec-pedidos" class="section">
   <div class="sec-hdr"><div><div class="sec-title">Controle de Envio de Pedidos</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Operação dos pedidos · a visão abre no mês atual</div></div></div>
   <div class="order-alerts">
@@ -957,6 +971,7 @@ function showTab(name, btn, cls, preserveDrill){
   if(name==='historico') renderHistory();
   if(name==='prioridades') renderPriorities();
   if(name==='pedidos') renderOrders();
+  if(name==='cotacoes') loadQuotes();
 }
 
 // ── DASHBOARD ────────────────────────────────────────────
@@ -1440,6 +1455,8 @@ function importExcel(input){
         var hdrs=Object.keys(json[0]);
         var cSC=findCol(hdrs,['numero','nº','num']),cIt=findCol(hdrs,['item']),cSt=findCol(hdrs,['status']);
         var cDs=findCol(hdrs,['descricao','descrição','descri']),cAp=findCol(hdrs,['aprovação','aprovacao','data aprov']);
+        var cProd=findCol(hdrs,['produto']),cQtd=findCol(hdrs,['quantidade']);
+        var cUm=hdrs.find(function(h){return normHdr(h)==='um'||normHdr(h).indexOf('unidade de medida')>=0;})||'';
         var cEn=findCol(hdrs,['entrega']),cLm=findCol(hdrs,['limite','dt.limite']);
         var cSol=findCol(hdrs,['solicitante']),cObs=findCol(hdrs,['observação','observacao']),cF1=findCol(hdrs,['fornecedor 1']),cF2=findCol(hdrs,['fornecedor 2']),cF3=findCol(hdrs,['fornecedor 3']);
         var cRsp=findCol(hdrs,['responsável','responsavel']);
@@ -1452,6 +1469,7 @@ function importExcel(input){
           var desc=String(row[cDs]||'');
           desc=desc.split('\r').join(' ').split('\n').join(' ').trim().substring(0,120);
           nr.push({empresa:empresa,sc:sc,item:String(row[cIt]||'').trim(),status:st,descricao:desc,
+            codigoProduto:String(row[cProd]||'').trim(),quantidade:String(row[cQtd]||'').trim(),um:String(row[cUm]||'').trim(),
             aprovacao:fmtDate(row[cAp]),entrega:fmtDate(row[cEn]),solicitante:String(row[cSol]||'').trim(),
             limite:fmtDate(row[cLm]),obs:String(row[cObs]||'').trim()||[row[cF1],row[cF2],row[cF3]].filter(function(x){return x;}).join(' | '),
             resp:String(row[cRsp]||'').trim(),reason:''});
@@ -1469,7 +1487,7 @@ function importExcel(input){
         var old=existingMap.get(key);
         if(old){
           var merged=Object.assign({},old),sourceChanged=false;
-          ['descricao','aprovacao','entrega','solicitante','limite'].forEach(function(field){if(r[field]&&r[field]!==old[field]){merged[field]=r[field];sourceChanged=true;}});
+          ['descricao','codigoProduto','quantidade','um','aprovacao','entrega','solicitante','limite'].forEach(function(field){if(r[field]&&r[field]!==old[field]){merged[field]=r[field];sourceChanged=true;}});
           if(!merged.obs&&r.obs){merged.obs=r.obs;sourceChanged=true;}
           if(!merged.resp&&r.resp){merged.resp=r.resp;sourceChanged=true;}
           if(sourceChanged){merged.clientMutationAt=nowIso;merged.lastMovementAt=nowIso;merged.lastUpdatedBy=ACTIVE_USER;updated++;}
@@ -1538,5 +1556,6 @@ window.addEventListener('offline',function(){if(_pendingSave)setReliableSync('of
 window.addEventListener('online',function(){if(_pendingSave)retryPendingSave();});
 initCredentials();
 </script>
+<script src="/cotacoes.js"></script>
 </body>
 </html>
