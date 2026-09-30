@@ -597,8 +597,8 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 
 
 <section id="sec-cotacoes" class="section">
-  <div class="sec-hdr"><div><div class="sec-title">Agente de Cotações · Pharmabag</div><div class="quote-muted">Selecione abaixo os itens importados do Excel e crie sua cotação. Os processos salvos são compartilhados com a equipe.</div></div></div>
-  <div class="quote-card"><div class="quote-actions"><h3>Itens disponíveis para cotação</h3><span id="q-available-count" class="quote-muted"></span></div><input id="q-item-search" type="search" placeholder="Buscar por SC, item, código ou descrição" aria-label="Buscar itens para cotação" oninput="renderQuoteAvailable()"><div class="quote-overflow"><table class="quote-table"><thead><tr><th>Selecionar</th><th>SC</th><th>Item</th><th>Código</th><th>Descrição</th><th>Quantidade</th><th>UM</th></tr></thead><tbody id="q-available-items"></tbody></table></div></div>
+  <div class="sec-hdr"><div><div class="sec-title">Agente de Cotações · Pharmabag e Phal Ind</div><div class="quote-muted">Selecione abaixo os itens importados do Excel e crie sua cotação. Os processos salvos são compartilhados com a equipe.</div></div></div>
+  <div class="quote-card"><div class="quote-actions"><label>Empresa<select id="q-company" onchange="setQuoteCompany(this.value)"><option value="Pharmabag">Pharmabag</option><option value="Phal Ind">Phal Ind · Farmoterápica</option></select></label></div><div class="quote-actions"><h3>Itens disponíveis para cotação</h3><span id="q-available-count" class="quote-muted"></span></div><input id="q-item-search" type="search" placeholder="Buscar por SC, item, código ou descrição" aria-label="Buscar itens para cotação" oninput="renderQuoteAvailable()"><div class="quote-overflow"><table class="quote-table"><thead><tr><th>Selecionar</th><th>SC</th><th>Item</th><th>Código</th><th>Descrição</th><th>Quantidade</th><th>UM</th></tr></thead><tbody id="q-available-items"></tbody></table></div></div>
   <div class="quote-actions"><button class="ctrl-btn" type="button" onclick="createQuote()">＋ Criar com itens selecionados</button><button class="ctrl-btn" type="button" onclick="loadQuotes()">↺ Atualizar processos</button><span id="q-sync" class="quote-muted"></span></div>
   <div class="quote-layout"><aside class="quote-card"><h3>Processos salvos</h3><div id="q-list"><p class="quote-muted">Abra esta aba para carregar os processos.</p></div></aside>
   <div class="quote-work"><div id="q-empty" class="quote-card">Selecione os itens acima e clique em <strong>Criar com itens selecionados</strong>, ou abra um processo salvo.</div>
@@ -1559,6 +1559,6 @@ window.addEventListener('offline',function(){if(_pendingSave)setReliableSync('of
 window.addEventListener('online',function(){if(_pendingSave)retryPendingSave();});
 initCredentials();
 </script>
-<script src="/cotacoes.js"></script>
+<script src="/cotacoes.js?v=20260930-phal-ind"></script>
 </body>
 </html>

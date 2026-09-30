@@ -22,7 +22,7 @@ Deno.serve(async req=>{
       return reply({quotes:rows.map(x=>({...x.payload,_serverVersion:x.revision}))});
     }
     const body=await req.json(),q=body?.quote;
-    if(!q||typeof q!=='object'||typeof q.id!=='string'||!/^COT-[0-9A-Za-z-]{10,80}$/.test(q.id)||q.company!=='Pharmabag'||!Array.isArray(q.items)||q.items.length<1||q.items.length>300||!Array.isArray(q.suppliers)||q.suppliers.length!==5)return reply({error:'Processo de cotação inválido'},400);
+    if(!q||typeof q!=='object'||typeof q.id!=='string'||!/^COT-[0-9A-Za-z-]{10,80}$/.test(q.id)||!['Pharmabag','Phal Ind'].includes(q.company)||!Array.isArray(q.items)||q.items.length<1||q.items.length>300||!Array.isArray(q.suppliers)||q.suppliers.length!==5)return reply({error:'Processo de cotação inválido'},400);
     if(q.items.some((x:any)=>typeof x.sc!=='string'||typeof x.item!=='string'||typeof x.description!=='string'||typeof x.quantity!=='string'||typeof x.unit!=='string'))return reply({error:'Itens incompletos'},400);
     if(q.suppliers.some((x:any)=>!x||typeof x!=='object'||typeof x.email!=='string'))return reply({error:'Fornecedores inválidos'},400);
     const payload={...q};delete payload._serverVersion;
