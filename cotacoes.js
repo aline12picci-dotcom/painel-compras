@@ -114,7 +114,7 @@ function buildQuoteClosingPlan(q,orders,data){
  }
  return {id:'CLOSE-'+Date.now(),state:'pending',at:new Date().toISOString(),by:ACTIVE_USER,groups:[...groups.values()]};
 }
-function applyQuoteClosingPlan(q,plan){
+function applyQuoteClosingPlan(q,plan){const appliedAt=new Date().toISOString();
  // Validate every group before mutating any panel record.
  for(const g of plan.groups){
   const o=ORDERS.find(o=>o.company===q.company&&String(o.orderNumber).trim()===g.pc);
@@ -132,9 +132,9 @@ function applyQuoteClosingPlan(q,plan){
   for(const x of g.items){
    if(!o.sourceItems.some(t=>String(t.sc)===String(x.sc)&&String(t.item)===String(x.item)))o.sourceItems.push({sc:x.sc,item:x.item,descricao:x.description,quantidade:x.quantity,um:x.unit});
    const r=DATA.find(r=>r.empresa===q.company&&String(r.sc)===String(x.sc)&&String(r.item)===String(x.item));
-   if(isOpen(r)){const before=r.status;r.status='Finalizada';r.clientMutationAt=plan.at;r.lastMovementAt=plan.at;r.lastUpdatedBy=plan.by;logAudit(r,'status',before,'Finalizada — pedido '+g.pc);SELECTED_ITEMS.delete(recordKey(r));}
+   if(isOpen(r)){const before=r.status;r.status='Finalizada';r.clientMutationAt=appliedAt;r.lastMovementAt=appliedAt;r.lastUpdatedBy=plan.by;logAudit(r,'status',before,'Finalizada — pedido '+g.pc);SELECTED_ITEMS.delete(recordKey(r));}
   }
-  o.purchaseType='cotacao';o.quoteIds=Array.from(new Set([...(o.quoteIds||[]),q.id]));o.lastMovementAt=plan.at;o.lastUpdatedBy=plan.by;o.clientMutationAt=plan.at;
+  o.purchaseType='cotacao';o.quoteIds=Array.from(new Set([...(o.quoteIds||[]),q.id]));o.lastMovementAt=appliedAt;o.lastUpdatedBy=plan.by;o.clientMutationAt=appliedAt;
  }
  triggerSave();refreshAll();
 }
@@ -156,8 +156,11 @@ async function finishQuote(){
   qel('q-save-status').textContent='Salvando fechamento…';
   if(!await flushQuoteSave())throw Error('O fechamento não foi salvo. Confira a conexão e tente novamente.');
   if(QUOTE?.id!==processId)return;
+  mergeServerState(await jbRead());
   applyQuoteClosingPlan(QUOTE,plan);
   if(!await flushClosingPanel())throw Error('Pedido e baixa da SC estão pendentes de sincronização. Tente finalizar novamente; o pedido não será duplicado.');
+  const verified=await jbRead();
+  for(const g of plan.groups){const savedOrder=(verified.orders||[]).find(o=>o.company===QUOTE.company&&String(o.orderNumber).trim()===g.pc);if(!savedOrder||savedOrder.supplier?.trim().toLowerCase()!==g.name.trim().toLowerCase()||savedOrder.purchaseType!=='cotacao')throw Error('O pedido '+g.pc+' ainda não foi confirmado na base. Tente novamente.');for(const x of g.items){const row=(verified.data||[]).find(r=>r.empresa===QUOTE.company&&String(r.sc)===String(x.sc)&&String(r.item)===String(x.item));if(row?.status!=='Finalizada'||!qOrderContains(savedOrder,x))throw Error('A baixa da SC '+x.sc+' / '+x.item+' ainda não foi confirmada na base. Tente novamente.');}}
   for(const g of plan.groups)for(const x of g.items)QUOTE.completedItems[qItemKey(x)]={pc:g.pc,supplierIndex:g.supplierIndex,supplierName:g.name,at:plan.at,by:plan.by};
   plan.state='done';QUOTE.closingPlan=plan;
   const complete=QUOTE.items.every(x=>QUOTE.completedItems[qItemKey(x)]);
