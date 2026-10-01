@@ -16,3 +16,7 @@ A nova aba **Agente de Cotações** usa os dados importados da Pharmabag e da Ph
 - Os PDFs dos fornecedores continuam sendo conferidos e lançados pelo comprador; não há extração automática nesta fase.
 - O logo na mensagem utiliza URL pública do próprio painel. Clientes de e-mail podem bloquear imagens externas até o destinatário permitir o carregamento.
 - Salvar PDF abre a janela de impressão. O comprador escolhe *Salvar como PDF* e anexa ao pedido no Protheus.
+
+## Expansão em 01/10/2026
+
+Clinutri e Nutriente podem selecionar itens importados, salvar processos, registrar fornecedores e montar mapas. Seus dados fiscais, contatos e logotipos foram informados por Aline e cadastrados; os templates usam os endereços corporativos informados como padrão de entrega (editáveis por processo) e recebimento das 08:30 às 11:30 e das 13:30 às 16:30. A preparação do envio e cópia da cotação exigem os dados corporativos completos para evitar usar o cabeçalho de outra empresa. Nome/e-mail são editáveis na área de envio e sincronizados com os campos do mapa sem recriar o campo durante a digitação.
