@@ -376,7 +376,7 @@ main{padding:26px 32px}
 <!-- TOAST CONTAINER -->
 <div id="toast"></div>
 <div class="modal-bg" id="users-modal"><div class="modal"><div class="modal-h"><h3>👥 Gestão de responsáveis</h3><button class="modal-close" onclick="closeModal('users-modal')">✕</button></div><div class="modal-b"><p style="font-size:11px;color:var(--text3);margin-bottom:14px">Cadastre ou desative responsáveis. As observações devem registrar retornos, negociações e próximos passos. Enquanto o painel estiver público, este controle organiza a operação, mas não substitui autenticação.</p><button class="ctrl-btn" onclick="addUser()" style="margin-bottom:14px">＋ Adicionar responsável</button><div class="user-list" id="user-list"></div></div></div></div>
-<div class="modal-bg" id="order-modal"><div class="modal"><div class="modal-h"><h3 id="order-modal-title">📦 Registrar pedido finalizado</h3><button class="modal-close" onclick="cancelOrderModal()">✕</button></div><div class="modal-b"><p id="order-items-summary" style="font-size:11px;color:var(--text3);margin-bottom:14px">O pedido será incluído automaticamente no Controle de Pedidos.</p><div class="order-form-grid"><div class="order-field"><label>Empresa</label><input id="order-company" disabled></div><div class="order-field"><label>Responsável</label><input id="order-owner" disabled></div><div class="order-field full"><label>Itens selecionados</label><div id="order-selected-items" style="max-height:110px;overflow:auto;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:10px;line-height:1.6"></div></div><div class="order-field"><label>Número do pedido *</label><input id="order-number" inputmode="numeric" placeholder="Ex.: 123456"></div><div class="order-field"><label>Fornecedor</label><input id="order-supplier" placeholder="Nome ou código do fornecedor (opcional)"></div><div class="order-field full"><label>Forma de processamento</label><select id="order-channel"><option value="Fornecedor">Enviar ao fornecedor</option><option value="Dispensado">Não requer envio</option><option value="Marketplace">Marketplace</option></select></div><div class="order-field full"><label>Observação do pedido</label><textarea id="order-observation" placeholder="Registre informações específicas deste pedido..."></textarea></div></div><button class="ctrl-btn" onclick="confirmFinalization()" style="margin-top:16px;width:100%;padding:11px">Finalizar e registrar pedido</button></div></div></div>
+<div class="modal-bg" id="order-modal"><div class="modal"><div class="modal-h"><h3 id="order-modal-title">📦 Registrar pedido finalizado</h3><button class="modal-close" onclick="cancelOrderModal()">✕</button></div><div class="modal-b"><p id="order-items-summary" style="font-size:11px;color:var(--text3);margin-bottom:14px">O pedido será incluído automaticamente no Controle de Pedidos.</p><div class="order-form-grid"><div class="order-field"><label>Empresa</label><input id="order-company" disabled></div><div class="order-field"><label>Responsável</label><input id="order-owner" disabled></div><div class="order-field full"><label>Itens selecionados</label><div id="order-selected-items" style="max-height:110px;overflow:auto;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:10px;line-height:1.6"></div></div><div class="order-field"><label>Número do pedido *</label><input id="order-number" inputmode="numeric" placeholder="Ex.: 123456"></div><div class="order-field"><label>Fornecedor</label><input id="order-supplier" placeholder="Nome ou código do fornecedor (opcional)"></div><div class="order-field full"><label>Forma de processamento</label><select id="order-channel"><option value="Fornecedor">Enviar ao fornecedor</option><option value="Dispensado">Não requer envio</option><option value="Marketplace">Marketplace</option></select></div><div class="order-field"><label>Tipo do pedido</label><select id="order-purchase-type"><option value="">Não classificado</option><option value="cotacao">Com cotação</option><option value="direta">Emissão direta</option></select></div><div class="order-field"><label><input id="order-urgent" type="checkbox"> Pedido urgente</label></div><div class="order-field full"><label>Observação do pedido</label><textarea id="order-observation" placeholder="Registre informações específicas deste pedido..."></textarea></div></div><button class="ctrl-btn" onclick="confirmFinalization()" style="margin-top:16px;width:100%;padding:11px">Finalizar e registrar pedido</button></div></div></div>
 <div class="modal-bg" id="audit-modal"><div class="modal"><div class="modal-h"><h3>🕘 Histórico de alterações</h3><button class="modal-close" onclick="closeModal('audit-modal')">✕</button></div><div class="modal-b"><div class="filter-bar"><input id="audit-search" placeholder="Buscar SC, responsável ou campo..." oninput="renderAudit()"></div><div class="tbl-wrap"><table class="audit-table"><thead><tr><th>Data/hora</th><th>Usuário</th><th>SC / Item</th><th>Campo</th><th>Antes</th><th>Depois</th></tr></thead><tbody id="audit-body"></tbody></table></div></div></div></div>
 
 <!-- ═══ HEADER ═══ -->
@@ -533,6 +533,14 @@ main{padding:26px 32px}
     <div><span>RESUMO EXECUTIVO AUTOMÁTICO</span><p id="mgmt-executive-text">Analisando os dados do período selecionado…</p></div>
   </div>
 
+  <div class="sec-head"><span class="sec-label">Pedidos por tipo de trabalho</span></div>
+  <div class="mgmt-action-grid">
+    <button class="mgmt-action blue" onclick="openWorkOrders('cotacao')"><strong id="work-cotacao">0</strong><small>Pedidos com cotação</small><em>Ver pedidos →</em></button>
+    <button class="mgmt-action" onclick="openWorkOrders('direta')"><strong id="work-direta">0</strong><small>Emissão direta</small><em>Taxas, boletos e concessionárias →</em></button>
+    <button class="mgmt-action red" onclick="openWorkOrders('urgent')"><strong id="work-urgent">0</strong><small>Pedidos urgentes</small><em>Ver urgentes →</em></button>
+    <button class="mgmt-action amber" onclick="openWorkOrders('unknown')"><strong id="work-unknown">0</strong><small>Não classificados</small><em>Classificar registros →</em></button>
+  </div>
+  <p class="quote-muted" style="margin-bottom:20px">Pedidos únicos por número e empresa, no período selecionado. Urgentes também integram seu tipo de trabalho. Cotações finalizadas são reconhecidas pelo PC; registros sem informação permanecem não classificados.</p>
   <div class="sec-head"><div class="sec-icon" style="background:#FEE2E2">🚨</div><span class="sec-label">O que exige ação agora</span></div>
   <div class="mgmt-action-grid">
     <button class="mgmt-action blue" onclick="dashboardDrill('all')"><span>📋</span><strong id="mg-open">0</strong><small>SCs abertas</small><div class="mgmt-trend" id="mg-trend-open">—</div><em>Ver carteira →</em></button>
@@ -639,7 +647,7 @@ main{padding:26px 32px}
     <div class="order-alert danger"><strong id="oa-rejected">0</strong><span>Rejeitados sem observação</span></div>
   </div>
   <div class="order-alert-note">As linhas destacadas indicam pedidos que exigem acompanhamento do comprador responsável.</div>
-  <div class="filter-bar"><input id="order-search" placeholder="Buscar pedido, fornecedor ou empresa..." oninput="renderOrders()"><select id="order-month" class="order-filter-select" onchange="ORDER_DASH_RANGE='';ORDER_MONTH_FILTER=this.value;renderOrders()"></select><select id="order-status-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os status</option><option>Aguarda aprovação</option><option>Pedido Aprovado</option><option>Pedido Rejeitado</option><option>Pedido enviado</option><option>Pedido confirmado pelo fornecedor</option></select><select id="order-owner-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os compradores</option><option>Aline Lima</option><option>Robert Santos</option><option>Jaqueline Paulino</option></select></div>
+  <div class="filter-bar"><input id="order-search" placeholder="Buscar pedido, fornecedor ou empresa..." oninput="renderOrders()"><select id="order-month" class="order-filter-select" onchange="ORDER_DASH_RANGE='';ORDER_MONTH_FILTER=this.value;renderOrders()"></select><select id="order-status-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os status</option><option>Aguarda aprovação</option><option>Pedido Aprovado</option><option>Pedido Rejeitado</option><option>Pedido enviado</option><option>Pedido confirmado pelo fornecedor</option></select><select id="order-work-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os tipos</option><option value="cotacao">Com cotação</option><option value="direta">Emissão direta</option><option value="urgent">Urgentes</option><option value="unknown">Não classificados</option></select><select id="order-owner-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os compradores</option><option>Aline Lima</option><option>Robert Santos</option><option>Jaqueline Paulino</option></select></div>
   <div class="tbl-wrap"><table><thead><tr><th>Pedido</th><th>Empresa / Origem</th><th>Fornecedor</th><th>Status</th><th>Emissão</th><th>Envio</th><th>Confirmação</th><th>Responsável</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="orders-body"></tbody></table></div>
 </section>
 <section id="sec-historico" class="section">
@@ -681,7 +689,7 @@ let _retryTimer  = null;
 let _changeVersion = 0;
 const _updTimers = {};
 const _auditBefore = {};
-let USERS=[{name:'Aline Lima',active:true},{name:'Robert Santos',active:true},{name:'Jaqueline Paulino',active:true}];
+let USERS=[{name:'Aline Lima',active:true},{name:'Robert Santos',active:false},{name:'Jaqueline Paulino',active:false}];
 let ACTIVE_USER='';
 let CURRENT_SESSION=null, CURRENT_PROFILE=null, CURRENT_BASIC=sessionStorage.getItem('painel_basic')||'';
 let AUDIT=[];
@@ -731,7 +739,7 @@ function rowHTML(r, showEmp){
   var idx=DATA.indexOf(r), days=dO(r.aprovacao||r.emissao), sol=resSOL(r.solicitante);
   var scC={'Phal Ind':'#C41E1E','Pharmabag':'#1558B0','Nutriente':'#1A3A6B','Clinutri':'#0F7A4A','Phal SPO':'#C41E1E'}[r.empresa]||'#1A3A6B';
   var rv=r.resp||'', reason=r.reason||'', obs=r.obs||[r.f1,r.f2,r.f3].filter(function(x){return x;}).join(' | ');
-  var respOpts='<option value=""'+(!rv?' selected':'')+'>— Responsável —</option>'+USERS.filter(function(u){return u.active||u.name===rv;}).map(function(u){return '<option value="'+u.name+'"'+(rv===u.name?' selected':'')+'>'+u.name+'</option>';}).join('');
+  var respOpts='<option value=""'+(!rv?' selected':'')+'>— Responsável —</option>'+USERS.filter(function(u){return isCurrentBuyer(u)||u.name===rv;}).map(function(u){return '<option value="'+u.name+'"'+(rv===u.name?' selected':'')+'>'+u.name+'</option>';}).join('');
   var reasonOpts='<option value=""'+(!reason?' selected':'')+'>— Motivo —</option>'+REASONS.map(function(x){return '<option value="'+x+'"'+(reason===x?' selected':'')+'>'+x+'</option>';}).join('');
   var empCol = showEmp ? '<td>'+empTag(r.empresa)+'</td>' : '';
   var stale=businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;
@@ -830,6 +838,7 @@ function openBatchOrderModal(){
 function openOrderModal(value){
   var indexes=Array.isArray(value)?value:[value];indexes=indexes.filter(function(i){return DATA[i]&&isOpen(DATA[i]);});
   if(!indexes.length)return;
+  document.getElementById('order-purchase-type').value='';document.getElementById('order-urgent').checked=false;
   PENDING_FINALIZE=indexes;var r=DATA[indexes[0]],items=indexes.map(function(i){return DATA[i];});
   document.getElementById('order-company').value=r.empresa||'';document.getElementById('order-owner').value=ACTIVE_USER;document.getElementById('order-number').value='';document.getElementById('order-supplier').value='';document.getElementById('order-channel').value='Fornecedor';document.getElementById('order-observation').value='';
   document.getElementById('order-modal-title').textContent='📦 Finalizar '+items.length+' item'+(items.length>1?'s':'')+' em um único pedido';
@@ -850,13 +859,22 @@ function confirmFinalization(){
     selected.forEach(function(row){if(!items.some(function(x){return String(x.sc)===String(row.sc)&&String(x.item)===String(row.item);})){items.push({sc:row.sc,item:row.item,descricao:row.descricao||''});}});
     existing.sourceItems=items;
     existing.lastMovementAt=now;existing.lastUpdatedBy=ACTIVE_USER;existing.clientMutationAt=now;
+    if(document.getElementById('order-purchase-type').value)existing.purchaseType=document.getElementById('order-purchase-type').value;if(document.getElementById('order-urgent').checked)existing.urgent=true;
     if(supplier)existing.supplier=supplier;if(obs)existing.observation=existing.observation?existing.observation+' | '+obs:obs;
   }else{
-    ORDERS.unshift({id:'PED-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),orderNumber:num,company:r.empresa,sourceSC:r.sc,sourceItem:r.item,sourceDescription:r.descricao||'',sourceItems:selected.map(function(row){return {sc:row.sc,item:row.item,descricao:row.descricao||''};}),supplier:supplier,channel:channel,status:status,issuedAt:now,sentAt:null,confirmedAt:null,owner:ACTIVE_USER,observation:obs,createdAt:now,createdBy:ACTIVE_USER,lastMovementAt:now,lastUpdatedBy:ACTIVE_USER,clientMutationAt:now});
+    ORDERS.unshift({id:'PED-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),orderNumber:num,company:r.empresa,sourceSC:r.sc,sourceItem:r.item,sourceDescription:r.descricao||'',sourceItems:selected.map(function(row){return {sc:row.sc,item:row.item,descricao:row.descricao||''};}),supplier:supplier,channel:channel,purchaseType:document.getElementById('order-purchase-type').value,urgent:document.getElementById('order-urgent').checked,status:status,issuedAt:now,sentAt:null,confirmedAt:null,owner:ACTIVE_USER,observation:obs,createdAt:now,createdBy:ACTIVE_USER,lastMovementAt:now,lastUpdatedBy:ACTIVE_USER,clientMutationAt:now});
   }
   selected.forEach(function(row){var before=row.status;row.status='Finalizada';row.clientMutationAt=now;row.lastMovementAt=now;row.lastUpdatedBy=ACTIVE_USER;logAudit(row,'status',before,'Finalizada — pedido '+num);SELECTED_ITEMS.delete(recordKey(row));});
   var qty=selected.length;PENDING_FINALIZE=[];closeModal('order-modal');updateBatchBar();triggerSave();refreshAll();var b=document.getElementById('strip-pedidos');showTab('pedidos',b,'ap');toast(qty+' item'+(qty>1?'s':'')+' agrupado'+(qty>1?'s':'')+' no pedido '+num+'.','ok',4000);
 }
+function isCurrentBuyer(u){return u.active&&!/^(Robert Santos|Jaqueline Paulino)$/i.test(u.name.trim());}
+function orderWorkType(o){
+  if(typeof QUOTES!=='undefined'&&QUOTES.some(function(q){return q.company===o.company&&q.status==='Finalizado'&&String(q.pcNumber||'').trim()===String(o.orderNumber||'').trim();}))return 'cotacao';
+  return ['cotacao','direta'].includes(o.purchaseType)?o.purchaseType:'';
+}
+function orderWorkControls(o){var type=orderWorkType(o),linked=type==='cotacao'&&typeof QUOTES!=='undefined'&&QUOTES.some(function(q){return q.company===o.company&&q.status==='Finalizado'&&String(q.pcNumber||'').trim()===String(o.orderNumber||'').trim();});return '<div style="margin-top:8px"><select aria-label="Tipo do pedido" '+(linked?'disabled':'')+' onchange="updateOrderWork(\''+o.id+'\',\'purchaseType\',this.value)"><option value="">Não classificado</option><option value="cotacao" '+(type==='cotacao'?'selected':'')+'>Com cotação</option><option value="direta" '+(type==='direta'?'selected':'')+'>Emissão direta</option></select><label style="display:block;margin-top:5px"><input type="checkbox" '+(o.urgent?'checked':'')+' onchange="updateOrderWork(\''+o.id+'\',\'urgent\',this.checked)"> Urgente</label></div>';}
+function updateOrderWork(id,field,value){if(!['purchaseType','urgent'].includes(field))return;var o=ORDERS.find(function(x){return x.id===id;});if(!o)return;var before=o[field];o[field]=value;var now=new Date().toISOString();o.lastMovementAt=now;o.lastUpdatedBy=ACTIVE_USER;o.clientMutationAt=now;AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:field==='urgent'?'Urgência do pedido':'Tipo do pedido',before:String(before??'Não classificado'),after:String(value)});triggerSave();refreshAll();}
+function renderPurchaseWorkload(base){base=Array.from(new Map(base.map(function(o){return [o.company+'|'+String(o.orderNumber).trim(),o];})).values());var n={cotacao:0,direta:0,unknown:0,urgent:0};base.forEach(function(o){n[orderWorkType(o)||'unknown']++;if(o.urgent)n.urgent++;});Object.keys(n).forEach(function(k){var el=document.getElementById('work-'+k);if(el)el.textContent=n[k];});}
 function orderStatusClass(s){return s==='Aguarda aprovação'?'wait':s==='Pedido Rejeitado'?'rejected':s==='Pedido enviado'?'sent':s==='Pedido confirmado pelo fornecedor'?'done':'approved';}
 function changeOrderAction(id,status){
   var o=ORDERS.find(function(x){return x.id===id;});if(!o||o.status===status)return;var now=new Date().toISOString(),before=o.status;o.status=status;
@@ -881,7 +899,7 @@ function orderAlertInfo(o){
 }
 function orderBusinessDaysBetween(a,b){var d1=new Date(a),d2=new Date(b);if(isNaN(d1)||isNaN(d2)||d2<d1)return null;var n=0,d=new Date(d1);d.setHours(0,0,0,0);d2.setHours(0,0,0,0);while(d<d2){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)n++;}return n;}
 function renderOrderManagement(base){
-  base=base||[];var owners=['Aline Lima','Robert Santos','Jaqueline Paulino'],statuses=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'],colors=['#F0B429','#4A9EE0','#C0392B','#2979C9','#10A87A'];
+  base=base||[];var owners=Array.from(new Set(USERS.filter(isCurrentBuyer).map(function(u){return u.name;}).concat(['portfolio','current'].includes(MGMT_PERIOD)?[]:base.map(function(o){return o.owner;}).filter(Boolean)))),statuses=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'],colors=['#F0B429','#4A9EE0','#C0392B','#2979C9','#10A87A'];
   var confirmed=base.filter(function(o){return o.status==='Pedido confirmado pelo fornecedor';});
   var durations=confirmed.map(function(o){return orderBusinessDaysBetween(o.issuedAt,o.confirmedAt);}).filter(function(x){return x!==null;});
   var avg=durations.length?(durations.reduce(function(a,b){return a+b;},0)/durations.length).toFixed(1)+' dias úteis':'—';
@@ -892,6 +910,8 @@ function renderOrderManagement(base){
   var canvas=document.getElementById('order-management-chart');if(!canvas||typeof Chart==='undefined')return;
   if(ORDER_CHART)ORDER_CHART.destroy();ORDER_CHART=new Chart(canvas,{type:'bar',data:{labels:owners,datasets:statuses.map(function(st,i){return {label:st,data:owners.map(function(owner){return base.filter(function(o){return o.owner===owner&&o.status===st;}).length;}),backgroundColor:colors[i],borderRadius:5};})},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{precision:0}}}}});
 }
+function matchesWorkFilter(o){var f=document.getElementById('order-work-filter')?.value||'';return !f||(f==='urgent'?o.urgent===true:f==='unknown'?!orderWorkType(o):orderWorkType(o)===f);}
+function openWorkOrders(type){ORDER_DASH_RANGE=MGMT_PERIOD;document.getElementById('order-work-filter').value=type;document.getElementById('order-status-filter').value='';document.getElementById('order-owner-filter').value='';document.getElementById('order-search').value='';showTab('pedidos',document.getElementById('strip-pedidos'),'ap',true);renderOrders();}
 function renderOrders(){
   var normalized={'Aprovado':'Pedido Aprovado','Aguardando aprovação':'Aguarda aprovação','Aguardando envio':'Aguarda aprovação','Enviado':'Pedido enviado','Rejeitado':'Pedido Rejeitado','Confirmado':'Pedido confirmado pelo fornecedor','Marketplace':'Aguarda aprovação','Dispensado':'Aguarda aprovação'};
   ORDERS.forEach(function(o){if(normalized[o.status])o.status=normalized[o.status];});
@@ -903,12 +923,13 @@ function renderOrders(){
   [['oa-approval',alerts.approval],['oa-send',alerts.send],['oa-confirm',alerts.confirm],['oa-rejected',alerts.rejected]].forEach(function(x){var e=document.getElementById(x[0]);if(e)e.textContent=x[1];});
   var mgSpec=mgmtPeriodSpec(MGMT_PERIOD),mgBase=ORDERS.filter(function(o){return mgSpec.key==='portfolio'?orderMonthKey(o.issuedAt)===new Date().toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),mgSpec.start,mgSpec.end);});
   renderOrderManagement(mgBase);
+  var ownerSelect=document.getElementById('order-owner-filter');if(ownerSelect){var selectedOwner=ownerSelect.value;var historical=rangeSpec?!['portfolio','current'].includes(rangeSpec.key):(ORDER_MONTH_FILTER==='all'||ORDER_MONTH_FILTER!==orderMonthKey(new Date()));var ownerNames=Array.from(new Set(USERS.filter(isCurrentBuyer).map(function(u){return u.name;}).concat(historical?monthBase.map(function(o){return o.owner;}).filter(Boolean):[])));ownerSelect.innerHTML='<option value="">Todos os compradores</option>'+ownerNames.map(function(n){return '<option>'+esc(n)+'</option>';}).join('');ownerSelect.value=ownerNames.includes(selectedOwner)?selectedOwner:'';}
   var q=((document.getElementById('order-search')||{}).value||'').toLowerCase(),st=((document.getElementById('order-status-filter')||{}).value||''),owner=((document.getElementById('order-owner-filter')||{}).value||'');
-  var rows=monthBase.filter(function(o){return (!st||o.status===st)&&(!owner||o.owner===owner)&&[o.orderNumber,o.company,o.supplier,o.owner,o.status,o.observation,orderItemsText(o)].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){var rank={'Aguarda aprovação':0,'Pedido Aprovado':1,'Pedido Rejeitado':2,'Pedido enviado':3,'Pedido confirmado pelo fornecedor':4};return (rank[a.status]||0)-(rank[b.status]||0)||new Date(b.issuedAt)-new Date(a.issuedAt);});
+  var rows=monthBase.filter(function(o){return matchesWorkFilter(o)&&(!st||o.status===st)&&(!owner||o.owner===owner)&&[o.orderNumber,o.company,o.supplier,o.owner,o.status,o.observation,orderItemsText(o)].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){var rank={'Aguarda aprovação':0,'Pedido Aprovado':1,'Pedido Rejeitado':2,'Pedido enviado':3,'Pedido confirmado pelo fornecedor':4};return (rank[a.status]||0)-(rank[b.status]||0)||new Date(b.issuedAt)-new Date(a.issuedAt);});
   var body=document.getElementById('orders-body');if(!body)return;body.innerHTML=rows.length?rows.map(function(o){
     var opts=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'].map(function(x){return '<option'+(o.status===x?' selected':'')+'>'+x+'</option>';}).join('');
     var actions='<select class="reason-sel" onchange="changeOrderAction(\''+o.id+'\',this.value)">'+opts+'</select>',a=orderAlertInfo(o),flag=a.label?'<div class="order-flag '+(a.critical?'danger':'')+'">⚠ '+esc(a.label)+'</div>':'';
-    return '<tr class="'+(a.critical?'order-row-danger':a.alert?'order-row-alert':'')+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td>'+esc(o.supplier)+'</td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+fmtDateTime(o.confirmedAt)+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'</div></td></tr>';
+    return '<tr class="'+(a.critical?'order-row-danger':a.alert?'order-row-alert':'')+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td>'+esc(o.supplier)+'</td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+orderWorkControls(o)+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+fmtDateTime(o.confirmedAt)+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'</div></td></tr>';
   }).join(''):'<tr><td colspan="10" class="priority-empty">Nenhum pedido encontrado para os filtros selecionados.</td></tr>';
 }
 
@@ -998,6 +1019,7 @@ function showTab(name, btn, cls, preserveDrill){
   if(name==='prioridades') renderPriorities();
   if(name==='pedidos') renderOrders();
   if(name==='cotacoes'){renderQuoteAvailable();loadQuotes();}
+  if(name==='dashboard'||name==='pedidos')loadQuotes();
 }
 
 // ── DASHBOARD ────────────────────────────────────────────
@@ -1074,6 +1096,7 @@ function renderManagementDashboard(open){
   open=open||DATA.filter(isOpen);
   var now=new Date(),spec=mgmtPeriodSpec(MGMT_PERIOD);
   var scopedOpen=(spec.key==='portfolio'||spec.key==='all')?open:open.filter(function(r){return inMgmtRange(mgmtEntryDate(r),spec.start,spec.end);});
+  renderPurchaseWorkload(ORDERS.filter(function(o){return spec.key==='portfolio'?orderMonthKey(o.issuedAt)===now.toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),spec.start,spec.end);}));
   var previousOpen=spec.prevStart?open.filter(function(r){return inMgmtRange(mgmtEntryDate(r),spec.prevStart,spec.prevEnd);}):null;
   var scopedOrders=ORDERS.filter(function(o){return spec.key==='portfolio'?orderMonthKey(o.issuedAt)===now.toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),spec.start,spec.end);});
   var previousOrders=ORDERS.filter(function(o){return inMgmtRange(mgmtOrderDate(o),spec.prevStart,spec.prevEnd);});
@@ -1129,7 +1152,7 @@ function renderManagementDashboard(open){
   scopedOpen.forEach(function(r){var d=businessDaysSince(r.aprovacao||r.emissao);if(d<=2)bins[0][1]++;else if(d<=5)bins[1][1]++;else if(d<=10)bins[2][1]++;else bins[3][1]++;});
   mgmtBars('mg-aging',bins,['#10B981','#F59E0B','#F97316','#DC2626']);
 
-  var buyerStart=doneStart,buyerEnd=doneEnd,names=USERS.filter(function(u){return u.active;}).map(function(u){return u.name;}),buyer=document.getElementById('mg-buyer-body');
+  var buyerStart=doneStart,buyerEnd=doneEnd,names=Array.from(new Set(USERS.filter(isCurrentBuyer).map(function(u){return u.name;}).concat(['portfolio','current'].includes(MGMT_PERIOD)?[]:DATA.filter(function(r){return !isOpen(r);}).map(function(r){return r.responsavel;}).filter(Boolean)))),buyer=document.getElementById('mg-buyer-body');
   if(buyer)buyer.innerHTML=names.map(function(name){
     var cart=scopedOpen.filter(function(r){return r.resp===name;}),venc=cart.filter(isOverdue).length,sem=cart.filter(isStale).length;
     var finished=DATA.filter(function(r){var c=dateFromRecord(r.closedAt);return r.resp===name&&inMgmtRange(c,buyerStart,buyerEnd)&&String(r.status).toLowerCase()==='finalizada';});
@@ -1172,7 +1195,7 @@ function setupControls(){
   var au=document.getElementById('active-user');
   if(au){ au.innerHTML='<option>'+esc(ACTIVE_USER||'Usuário verificado')+'</option>'; au.disabled=true; }
   var fr=document.getElementById('filter-resp');
-  if(fr){ var cur=fr.value; fr.innerHTML='<option value="">Todos os Responsáveis</option><option value="__none">Sem responsável</option>'+USERS.map(function(u){return '<option value="'+esc(u.name)+'">'+esc(u.name)+'</option>';}).join(''); fr.value=cur; }
+  if(fr){ var cur=fr.value; fr.innerHTML='<option value="">Todos os Responsáveis</option><option value="__none">Sem responsável</option>'+USERS.filter(function(u){return isCurrentBuyer(u);}).map(function(u){return '<option value="'+esc(u.name)+'">'+esc(u.name)+'</option>';}).join(''); fr.value=cur; }
   var rr=document.getElementById('filter-reason');
   if(rr){ var cr=rr.value; rr.innerHTML='<option value="">Todos os Motivos</option><option value="__none">Sem motivo</option>'+REASONS.map(function(x){return '<option value="'+x+'">'+x+'</option>';}).join(''); rr.value=cr; }
 }
@@ -1204,7 +1227,7 @@ function renderAudit(){
 }
 function renderRespSummary(open){
   var el=document.getElementById('resp-summary'); if(!el)return;
-  var names=USERS.filter(function(u){return u.active;}).map(function(u){return u.name;}).concat(['Sem responsável']);
+  var names=USERS.filter(function(u){return isCurrentBuyer(u);}).map(function(u){return u.name;}).concat(['Sem responsável']);
   el.innerHTML=names.map(function(n){
     var rows=open.filter(function(r){return n==='Sem responsável'?!r.resp:r.resp===n;});
     var cot=rows.filter(function(r){return String(r.status).toLowerCase()==='em cotação';}).length;
@@ -1582,6 +1605,6 @@ window.addEventListener('offline',function(){if(_pendingSave)setReliableSync('of
 window.addEventListener('online',function(){if(_pendingSave)retryPendingSave();});
 initCredentials();
 </script>
-<script src="/cotacoes.js?v=20261001-pharmacia-title"></script>
+<script src="/cotacoes.js?v=20261001-dashboard-types"></script>
 </body>
 </html>
