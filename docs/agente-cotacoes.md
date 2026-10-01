@@ -20,3 +20,9 @@ A nova aba **Agente de Cotações** usa os dados importados da Pharmabag e da Ph
 ## Expansão em 01/10/2026
 
 Clinutri e Nutriente podem selecionar itens importados, salvar processos, registrar fornecedores e montar mapas. Seus dados fiscais, contatos e logotipos foram informados por Aline e cadastrados; os templates usam os endereços corporativos informados como padrão de entrega (editáveis por processo) e recebimento das 08:30 às 11:30 e das 13:30 às 16:30. A preparação do envio e cópia da cotação exigem os dados corporativos completos para evitar usar o cabeçalho de outra empresa. Nome/e-mail são editáveis na área de envio e sincronizados com os campos do mapa sem recriar o campo durante a digitação.
+
+## HTML, prazos e follow-up — 01/10/2026
+
+O botão copia `text/html` e abre o Outlook com destinatário/assunto, sem corpo em texto simples. O comprador cola com Ctrl+V, revisa, envia e confirma no painel. A confirmação salva destinatário, prazo, data/hora, responsável e itens consultados no histórico do processo; atualiza os itens abertos correspondentes da SC para Em cotação por meio da sincronização existente. Preparar/abrir rascunho não altera a SC.
+
+O acompanhamento por empresa classifica envios confirmados como dentro do prazo, em atraso ou resposta registrada. Respostas são registradas manualmente e têm data/hora de registro, não detecção automática. FUP é preparado em HTML para atrasados sem resposta, enviado no Outlook e confirmado pelo comprador, preservando histórico e contagem. Não há envio automático, leitura da caixa, Microsoft Graph ou novo banco nesta entrega.
