@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel SC Compras — Grupo Emede</title>
+<title>Central de Compras · Grupo Emede</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -340,10 +340,38 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 /* Agente de Cotações */
 .quote-layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}.quote-work{min-width:0}.quote-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow1)}.quote-card h3{font-size:14px;color:var(--navy);margin:0 0 12px}.quote-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.quote-actions h3{margin:0;margin-right:auto}.quote-muted{font-size:10px;color:var(--text3);line-height:1.55}.quote-list-item{display:block;width:100%;text-align:left;border:1px solid var(--border);background:#f8fbfe;padding:9px;border-radius:7px;margin:6px 0;cursor:pointer;color:var(--navy)}.quote-list-item small{display:block;font-size:9px;color:var(--text3);margin-top:4px}.quote-card label,.quote-actions label{display:block;font-size:10px;color:var(--text2);font-weight:700;flex:1;min-width:180px}.quote-card input,.quote-card textarea,.quote-card select{display:block;width:100%;padding:7px;border-radius:6px;border:1px solid var(--border);font:inherit;background:#fff;color:var(--text);margin-top:4px}.quote-card textarea{min-height:55px;resize:vertical}.quote-overflow{overflow:auto}.quote-table{border-collapse:collapse;width:100%;min-width:950px}.quote-table th{background:#e6f1fa;color:var(--navy);font-size:10px;text-align:left}.quote-table th,.quote-table td{border:1px solid var(--border);padding:7px;vertical-align:top;font-size:10px}.quote-table input,.quote-table textarea{min-width:78px}.quote-table td:nth-child(4) textarea{min-width:250px}.quote-preview{max-height:440px;overflow:auto;border:1px solid var(--border);padding:13px;background:#fff;font:13px Arial,sans-serif}.quote-preview table td{padding:7px}.quote-suppliers{display:grid;grid-template-columns:repeat(5,minmax(160px,1fr));gap:9px;overflow:auto;margin-bottom:12px}.quote-supplier{border:1px solid var(--border);padding:10px;border-radius:8px;background:#f8fbfe}.quote-supplier strong{font-size:11px;color:var(--navy)}.quote-supplier label{margin-top:7px;min-width:0}.quote-totals{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:8px;margin:12px 0;overflow:auto}.quote-totals>div{background:#eff7fa;border:1px solid #d9e4ec;border-radius:8px;padding:10px;font-size:10px;line-height:1.7}.q-item-total{display:block;color:#167d68;font-weight:700;margin-top:5px}@media(max-width:900px){.quote-layout{grid-template-columns:1fr}.quote-suppliers,.quote-totals{grid-template-columns:repeat(2,minmax(160px,1fr))}}
 .q-workflow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}.q-step{display:flex;align-items:center;gap:7px;padding:10px;border:1px solid var(--border);border-radius:9px;background:#f7f9fb;color:var(--text3);font-size:10px}.q-step span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#dce4eb;color:#506477;font-weight:800}.q-step.done{background:#eef8f4;border-color:#a7d8c8;color:#176b58}.q-step.done span{background:#167d68;color:#fff}.q-dispatch-row{display:grid;grid-template-columns:minmax(240px,1fr) 110px 180px 120px;gap:9px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:8px;margin:7px 0;background:#f8fbfe}.q-dispatch-row label{min-width:0;margin-top:6px}.q-dispatch-row input{min-width:0}.q-dispatch-row>small{grid-column:1/-1}.q-dispatch-row small{display:block;color:var(--text3);font-size:9px;margin-top:3px}.q-status{display:inline-block;padding:5px 8px;border-radius:999px;background:#e5eaf0;color:#536577;font-size:9px;font-weight:800;text-align:center}.q-enviado{background:#ddf5eb;color:#176b58}.q-abertonooutlook{background:#e7f0fc;color:#1558b0}.q-aprovado{background:#fff4d4;color:#8a6400}.ctrl-btn:disabled{opacity:.45;cursor:not-allowed}@media(max-width:900px){.q-workflow{grid-template-columns:1fr}.q-dispatch-row{grid-template-columns:1fr}}
+
+/* Central de Compras: identidade corporativa e navegação por empresa */
+header{background:linear-gradient(120deg,#0c2038,#173653);border-bottom:1px solid #294963;box-shadow:0 6px 24px rgba(11,31,58,.14)}
+.hdr-inner{padding:22px 32px;gap:24px}
+.hdr-left{gap:28px;flex:1;min-width:0;flex-wrap:wrap}
+.brand-gallery{display:flex;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:16px}
+.brand-tile{background:#fff;display:flex;align-items:center;justify-content:center;width:142px;height:66px;border-radius:10px;padding:10px}
+.brand-tile img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.hdr-title{font-size:30px;font-weight:700;letter-spacing:-1px}
+.hdr-badge{background:transparent;border:0;padding:0;margin-bottom:9px}
+.hdr-badge span{font-size:9px;letter-spacing:1px}
+.hdr-subtitle{color:#b6c8d9;font-size:11px;margin-top:8px}
+.hdr-kpi{border-radius:10px;padding:10px 14px;background:rgba(255,255,255,.06)}
+.hdr-kpi .l{color:#b6c8d9}
+.emp-strip{background:#fff;gap:4px;padding:8px 24px;border-top:1px solid #e2e8f0;scrollbar-width:thin}
+.es-btn{flex:0 0 auto;min-width:0;min-height:52px;border-radius:10px;padding:8px 14px;font-size:10px;color:#52637a;border-bottom:3px solid transparent;gap:9px;letter-spacing:.2px}
+.es-btn:hover{color:#173653;background:#f1f5f9}
+.es-btn.al,.es-btn.af,.es-btn.an,.es-btn.ac,.es-btn.ap,.es-btn.ad{color:#173653;background:#edf4fa;border-bottom-color:#4389b8}
+.es-btn:focus-visible{outline:2px solid #4389b8;outline-offset:-2px}
+.company-tab-logo{display:flex;align-items:center;justify-content:center;width:67px;height:34px;background:#fff;border:1px solid #e5ebf1;border-radius:6px;padding:4px;flex-shrink:0}
+.company-tab-logo img{display:block;width:100%;height:100%;object-fit:contain}
+.company-section-logo{width:144px;height:66px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.company-section-logo img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.emp-ph{background:#fff;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(11,31,58,.03);border-radius:14px;gap:18px}
+main{padding:26px 32px}
+@media(max-width:1100px){.hdr-left{gap:18px}.hdr-inner{padding:18px 24px}.brand-tile{width:115px;height:58px}.hdr-title{font-size:26px}}
+@media(max-width:640px){.hdr-inner{padding:16px;gap:16px}.hdr-left{width:100%;gap:16px}.brand-gallery{width:100%;justify-content:space-between;gap:6px}.brand-tile{width:calc((100% - 12px)/3);height:58px;padding:8px}.hdr-meta{width:100%}.hdr-title{font-size:28px}.hdr-right{width:100%;align-items:flex-start}.hdr-kpis{width:100%}.hdr-kpi{flex:1;min-width:0;padding:8px}.emp-strip{padding:6px 12px}.es-btn{padding:7px 10px}main{padding:20px 16px}.company-section-logo{width:110px;height:58px}}
+
 </style>
 </head>
 <body>
-<div id="auth-gate" class="auth-gate"><div class="auth-card"><div style="font-size:30px">🔐</div><h2>Acesso ao Painel de Compras</h2><p>Entre com seu usuário e senha individual.</p><form onsubmit="credentialLogin(event)"><input id="login-user" type="text" autocomplete="username" placeholder="nome.sobrenome" required><input id="login-password" type="password" autocomplete="current-password" placeholder="Senha" required><button id="login-button" type="submit">Entrar</button></form><p id="login-message"></p></div></div>
+<div id="auth-gate" class="auth-gate"><div class="auth-card"><div style="font-size:30px">🔐</div><h2>Acesso à Central de Compras</h2><p>Entre com seu usuário e senha individual.</p><form onsubmit="credentialLogin(event)"><input id="login-user" type="text" autocomplete="username" placeholder="nome.sobrenome" required><input id="login-password" type="password" autocomplete="current-password" placeholder="Senha" required><button id="login-button" type="submit">Entrar</button></form><p id="login-message"></p></div></div>
 
 <!-- TOAST CONTAINER -->
 <div id="toast"></div>
@@ -355,21 +383,15 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 <header>
   <div class="hdr-inner">
     <div class="hdr-left">
-      <!-- Logo Phal Ind: símbolo trifolha + wordmark branco -->
-      <div class="hdr-logo">
-        <svg width="34" height="34" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="57" cy="54" rx="20" ry="28" fill="#E8342A" transform="rotate(35 57 54)"/>
-          <ellipse cx="33" cy="54" rx="20" ry="28" fill="#3DBDE8" transform="rotate(-35 33 54)"/>
-          <ellipse cx="45" cy="30" rx="16" ry="23" fill="#F7C900"/>
-          <ellipse cx="45" cy="52" rx="13" ry="15" fill="white"/>
-        </svg>
-        <span class="hdr-logo-name">Phal Ind</span>
+      <div class="brand-gallery" aria-label="Empresas do grupo">
+        <div class="brand-tile"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica" width="148" height="35"></div>
+        <div class="brand-tile"><img src="/assets/pharmabag-logo.jpg" alt="Pharmabag" width="120" height="48"></div>
+        <div class="brand-tile"><img src="/assets/clinutri-logo.png" alt="Clinutri" width="88" height="62"></div>
       </div>
-      <div class="hdr-sep"></div>
       <div class="hdr-meta">
         <div class="hdr-badge"><div class="pulse"></div><span>Gestão Estratégica de Compras · Grupo Emede</span></div>
-        <div class="hdr-title">Painel de <em>SCs Abertas</em></div>
-        <div class="hdr-subtitle" id="hdr-sub">Grupo Emede · Somente SCs em Aberto · <span id="hdr-data"></span></div>
+        <div class="hdr-title">Central de <em>Compras</em></div>
+        <div class="hdr-subtitle" id="hdr-sub">Solicitações · Cotações · Pedidos · <span id="hdr-data"></span></div>
       </div>
     </div>
     <div class="hdr-right">
@@ -392,11 +414,11 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
     <button class="es-btn" id="strip-prioridades" onclick="showTab('prioridades',this,'ad')"><span class="dot" style="background:#F0B429"></span>Minhas Prioridades</button>
     <button class="es-btn" id="strip-list" onclick="showTab('listagem',this,'al')"><span class="dot" style="background:#60A5FA"></span>Listagem Completa</button>
     <button class="es-btn" onclick="showTab('dashboard',this,'ad')"><span class="dot" style="background:#C4B5FD"></span>Dashboard</button>
-    <button class="es-btn" onclick="showTab('phal',this,'af')"><span class="dot" style="background:#E8342A"></span>Phal Ind</button>
-    <button class="es-btn" onclick="showTab('phalspo',this,'af')"><span class="dot" style="background:#B91C1C"></span>Phal SPO</button>
-    <button class="es-btn" onclick="showTab('pharmabag',this,'ap')"><span class="dot" style="background:#1565C0"></span>Pharmabag</button>
-    <button class="es-btn" onclick="showTab('nutriente',this,'an')"><span class="dot" style="background:#1A3A6B"></span>Nutriente</button>
-    <button class="es-btn" onclick="showTab('clinutri',this,'ac')"><span class="dot" style="background:#0F7A4A"></span>Clinutri</button>
+    <button class="es-btn" onclick="showTab('phal',this,'af')"><span class="company-tab-logo"><img src="/assets/farmoterapica-logo.jpg" alt="" aria-hidden="true"></span><span>Phal Ind</span></button>
+    <button class="es-btn" onclick="showTab('phalspo',this,'af')"><span class="company-tab-logo"><img src="/assets/farmoterapica-logo.jpg" alt="" aria-hidden="true"></span><span>Phal SPO</span></button>
+    <button class="es-btn" onclick="showTab('pharmabag',this,'ap')"><span class="company-tab-logo"><img src="/assets/pharmabag-logo.jpg" alt="" aria-hidden="true"></span><span>Pharmabag</span></button>
+    <button class="es-btn" onclick="showTab('nutriente',this,'an')"><span class="company-tab-logo"><img src="/assets/farmoterapica-logo.jpg" alt="" aria-hidden="true"></span><span>Nutriente</span></button>
+    <button class="es-btn" onclick="showTab('clinutri',this,'ac')"><span class="company-tab-logo"><img src="/assets/clinutri-logo.png" alt="" aria-hidden="true"></span><span>Clinutri</span></button>
     <button class="es-btn" id="strip-cotacoes" onclick="showTab('cotacoes',this,'ap')"><span class="dot" style="background:#5284AF"></span>Agente de Cotações</button>
     <button class="es-btn" id="strip-pedidos" onclick="showTab('pedidos',this,'ap')"><span class="dot" style="background:#13BFBF"></span>Controle de Pedidos</button>
     <button class="es-btn" onclick="showTab('historico',this,'ad')"><span class="dot" style="background:#F0B429"></span>Encerradas</button>
@@ -574,23 +596,23 @@ td.desc{white-space:normal;max-width:240px;line-height:1.4;font-size:11px;color:
 
 <!-- ═══ SEÇÕES POR EMPRESA ═══ -->
 <section id="sec-phal" class="section">
-  <div class="emp-ph ep-f"><div class="ep-icon">🏭</div><div><h2>Phal Ind</h2><p id="cnt-phal-s">SCs abertas</p></div></div>
+  <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal Ind</h2><p id="cnt-phal-s">SCs abertas</p></div></div>
   <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
 </section>
 <section id="sec-phalspo" class="section">
-  <div class="emp-ph ep-f"><div class="ep-icon">🏭</div><div><h2>Phal SPO</h2><p id="cnt-phalspo-s">SCs abertas</p></div></div>
+  <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal SPO</h2><p id="cnt-phalspo-s">SCs abertas</p></div></div>
   <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phalspo"></tbody></table></div>
 </section>
 <section id="sec-pharmabag" class="section">
-  <div class="emp-ph ep-p"><div class="ep-icon">💊</div><div><h2>Pharmabag</h2><p id="cnt-pharma-s">SCs abertas</p></div></div>
+  <div class="emp-ph ep-p"><div class="company-section-logo"><img src="/assets/pharmabag-logo.jpg" alt="Pharmabag"></div><div><h2>Pharmabag</h2><p id="cnt-pharma-s">SCs abertas</p></div></div>
   <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
 </section>
 <section id="sec-nutriente" class="section">
-  <div class="emp-ph ep-n"><div class="ep-icon">🌿</div><div><h2>Nutriente</h2><p id="cnt-nutri-s">SCs abertas</p></div></div>
+  <div class="emp-ph ep-n"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Nutriente</h2><p id="cnt-nutri-s">SCs abertas</p></div></div>
   <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
 </section>
 <section id="sec-clinutri" class="section">
-  <div class="emp-ph ep-c"><div class="ep-icon">🌿</div><div><h2>Clinutri</h2><p id="cnt-clinu-s">SCs abertas</p></div></div>
+  <div class="emp-ph ep-c"><div class="company-section-logo"><img src="/assets/clinutri-logo.png" alt="Clinutri"></div><div><h2>Clinutri</h2><p id="cnt-clinu-s">SCs abertas</p></div></div>
   <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
 </section>
 
