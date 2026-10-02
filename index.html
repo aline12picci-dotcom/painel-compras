@@ -821,17 +821,23 @@ function clearSelection(){
 }
 function updateBatchBar(){
   var bar=document.getElementById('batch-bar'),count=document.getElementById('batch-count');
-  if(count)count.textContent=SELECTED_ITEMS.size;
+  if(count){var scoped=batchSelectionIndexes().length;count.textContent=scoped+(SELECTED_ITEMS.size>scoped?' ('+(SELECTED_ITEMS.size-scoped)+' em outras seleções)':'');}
   if(bar)bar.classList.toggle('open',SELECTED_ITEMS.size>0);
 }
 function selectedIndexes(){
   var out=[];DATA.forEach(function(r,idx){if(SELECTED_ITEMS.has(recordKey(r))&&isOpen(r))out.push(idx);});return out;
 }
+function batchSelectionIndexes(){
+  var indexes=selectedIndexes(),active=document.querySelector('.section.active'),id=active&&active.id;
+  var companies={'sec-phal':'Phal Ind','sec-phalspo':'Phal SPO','sec-pharmabag':'Pharmabag','sec-nutriente':'Nutriente','sec-clinutri':'Clinutri'};
+  var company=companies[id]||(id==='sec-listagem'?((document.getElementById('filter-empresa')||{}).value||''):'');
+  return company?indexes.filter(function(i){return DATA[i].empresa===company;}):indexes;
+}
 function openBatchOrderModal(){
-  var indexes=selectedIndexes();
-  if(!indexes.length){toast('Selecione pelo menos um item aberto.','err',3500);return;}
+  var indexes=batchSelectionIndexes();
+  if(!indexes.length){toast('Selecione pelo menos um item aberto da empresa exibida.','err',4500);return;}
   var companies=new Set(indexes.map(function(i){return DATA[i].empresa;}));
-  if(companies.size>1){toast('Selecione itens da mesma empresa para criar um único pedido.','err',4500);return;}
+  if(companies.size>1){toast('Há itens selecionados de empresas diferentes. Filtre a empresa desejada ou abra a aba dela para registrar o pedido.','err',6500);return;}
   openOrderModal(indexes);
 }
 
@@ -1017,6 +1023,7 @@ function showTab(name, btn, cls, preserveDrill){
   if(name==='dashboard') setTimeout(function(){ buildCharts(DATA.filter(isOpen)); renderOrders(); },50);
   if(name==='historico') renderHistory();
   if(name==='prioridades') renderPriorities();
+  updateBatchBar();
   if(name==='pedidos') renderOrders();
   if(name==='cotacoes'){renderQuoteAvailable();loadQuotes();}
   if(name==='dashboard'||name==='pedidos')loadQuotes();
