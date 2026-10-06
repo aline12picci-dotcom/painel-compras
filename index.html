@@ -368,6 +368,31 @@ main{padding:26px 32px}
 @media(max-width:1100px){.hdr-left{gap:18px}.hdr-inner{padding:18px 24px}.brand-tile{width:115px;height:58px}.hdr-title{font-size:26px}}
 @media(max-width:640px){.hdr-inner{padding:16px;gap:16px}.hdr-left{width:100%;gap:16px}.brand-gallery{width:100%;justify-content:space-between;gap:6px}.brand-tile{width:calc((100% - 12px)/3);height:58px;padding:8px}.hdr-meta{width:100%}.hdr-title{font-size:28px}.hdr-right{width:100%;align-items:flex-start}.hdr-kpis{width:100%}.hdr-kpi{flex:1;min-width:0;padding:8px}.emp-strip{padding:6px 12px}.es-btn{padding:7px 10px}main{padding:20px 16px}.company-section-logo{width:110px;height:58px}}
 
+
+/* Controle de Pedidos compacto */
+#sec-pedidos .order-more summary{cursor:pointer;font-size:9px;color:var(--blue);padding:2px 0}
+#sec-pedidos .order-more[open]{padding-bottom:4px}
+#sec-pedidos .order-supplier-short{max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sec-pedidos #orders-body td:nth-child(5),#sec-pedidos #orders-body td:nth-child(8){white-space:nowrap}
+#sec-pedidos .order-actions{min-height:42px}
+
+#sec-pedidos #orders-body td{padding:6px 8px;vertical-align:middle;line-height:1.3;font-size:10px}
+#sec-pedidos .tbl-wrap th{padding:8px;font-size:9px}
+#sec-pedidos .order-origin{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;color:var(--text3);margin-top:3px}
+#sec-pedidos .move-meta{font-size:8.5px;margin-top:3px;line-height:1.2;max-width:220px}
+#sec-pedidos .order-status{padding:3px 6px;font-size:8.5px}
+#sec-pedidos .order-obs{padding:5px 7px;min-width:160px;font-size:10px}
+#sec-pedidos .order-actions{display:flex;flex-direction:column;gap:4px;min-width:185px}
+#sec-pedidos .order-actions select{padding:4px 6px;font-size:9px;width:100%;border:1px solid var(--border);border-radius:5px;background:#fff}
+#sec-pedidos .order-work-controls{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:8.5px}
+#sec-pedidos .order-work-controls select{flex-basis:100%}
+#sec-pedidos .order-work-controls label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+#sec-pedidos .order-work-controls input{accent-color:var(--blue);width:12px;height:12px}
+#sec-pedidos .order-approval-date{width:146px;padding:4px;font-size:9px;border:1px solid var(--border);border-radius:5px;background:#fff;font-family:inherit}
+#sec-pedidos .order-date-note{display:block;font-size:8px;color:var(--text3);margin-top:2px}
+.order-waived{color:#64748b;font-size:9px}
+.order-mgmt-card small{display:block;font-size:9px;line-height:1.4;margin-top:5px}
+
 </style>
 </head>
 <body>
@@ -593,6 +618,7 @@ main{padding:26px 32px}
     <div class="order-mgmt-card clickable" onclick="dashboardOrderDrill('Aguarda aprovação')"><strong id="od-wait">0</strong><span>Aguardando aprovação</span></div>
     <div class="order-mgmt-card clickable" onclick="dashboardOrderDrill('Pedido enviado')"><strong id="od-sent">0</strong><span>Pedidos enviados</span></div>
     <div class="order-mgmt-card clickable" onclick="dashboardOrderDrill('Pedido confirmado pelo fornecedor')"><strong id="od-confirmed">0</strong><span>Confirmados pelo fornecedor</span></div>
+    <div class="order-mgmt-card"><strong id="od-approval-avg">—</strong><span>Tempo médio emissão → aprovação</span><small id="od-approval-sample" class="quote-muted"></small></div>
     <div class="order-mgmt-card"><strong id="od-avg">—</strong><span>Tempo médio emissão → confirmação</span></div>
   </div>
   <div class="order-mgmt-layout">
@@ -646,9 +672,9 @@ main{padding:26px 32px}
     <div class="order-alert info"><strong id="oa-confirm">0</strong><span>Enviados sem confirmação há 3+ dias úteis</span></div>
     <div class="order-alert danger"><strong id="oa-rejected">0</strong><span>Rejeitados sem observação</span></div>
   </div>
-  <div class="order-alert-note">As linhas destacadas indicam pedidos que exigem acompanhamento do comprador responsável.</div>
-  <div class="filter-bar"><input id="order-search" placeholder="Buscar pedido, fornecedor ou empresa..." oninput="renderOrders()"><select id="order-month" class="order-filter-select" onchange="ORDER_DASH_RANGE='';ORDER_MONTH_FILTER=this.value;renderOrders()"></select><select id="order-status-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os status</option><option>Aguarda aprovação</option><option>Pedido Aprovado</option><option>Pedido Rejeitado</option><option>Pedido enviado</option><option>Pedido confirmado pelo fornecedor</option></select><select id="order-work-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os tipos</option><option value="cotacao">Com cotação</option><option value="direta">Emissão direta</option><option value="urgent">Urgentes</option><option value="unknown">Não classificados</option></select><select id="order-owner-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os compradores</option><option>Aline Lima</option><option>Robert Santos</option><option>Jaqueline Paulino</option></select></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Pedido</th><th>Empresa / Origem</th><th>Fornecedor</th><th>Status</th><th>Emissão</th><th>Envio</th><th>Confirmação</th><th>Responsável</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="orders-body"></tbody></table></div>
+  <div class="order-mgmt-card" style="margin:12px 0"><strong id="oc-approval-avg">—</strong><span>Tempo médio emissão → aprovação · período do Controle de Pedidos</span><small id="oc-approval-sample" class="quote-muted"></small></div><div class="order-alert-note">As linhas destacadas indicam pedidos que exigem acompanhamento do comprador responsável.</div>
+  <div class="filter-bar"><input id="order-search" placeholder="Buscar pedido, fornecedor ou empresa..." oninput="renderOrders()"><select id="order-month" class="order-filter-select" onchange="ORDER_DASH_RANGE='';ORDER_MONTH_FILTER=this.value;renderOrders()"></select><select id="order-status-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os status</option><option>Aguarda aprovação</option><option>Pedido Aprovado</option><option>Pedido Rejeitado</option><option>Pedido enviado</option><option>Pedido confirmado pelo fornecedor</option></select><select id="order-confirm-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todas as confirmações</option><option value="required">Exigem confirmação</option><option value="waived">Confirmação dispensada</option></select><select id="order-work-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os tipos</option><option value="cotacao">Com cotação</option><option value="direta">Emissão direta</option><option value="urgent">Urgentes</option><option value="unknown">Não classificados</option></select><select id="order-owner-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os compradores</option><option>Aline Lima</option><option>Robert Santos</option><option>Jaqueline Paulino</option></select></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Pedido</th><th>Empresa / Origem</th><th>Fornecedor</th><th>Status</th><th>Emissão</th><th>Aprovação</th><th>Envio</th><th>Confirmação</th><th>Responsável</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="orders-body"></tbody></table></div>
 </section>
 <section id="sec-historico" class="section">
   <div class="sec-hdr"><div class="sec-title">Histórico de solicitações encerradas <span id="history-count"></span></div></div>
@@ -878,27 +904,34 @@ function orderWorkType(o){
   if(typeof QUOTES!=='undefined'&&QUOTES.some(function(q){return q.company===o.company&&q.status==='Finalizado'&&String(q.pcNumber||'').trim()===String(o.orderNumber||'').trim();}))return 'cotacao';
   return ['cotacao','direta'].includes(o.purchaseType)?o.purchaseType:'';
 }
-function orderWorkControls(o){var type=orderWorkType(o),linked=type==='cotacao'&&typeof QUOTES!=='undefined'&&QUOTES.some(function(q){return q.company===o.company&&q.status==='Finalizado'&&String(q.pcNumber||'').trim()===String(o.orderNumber||'').trim();});return '<div style="margin-top:8px"><select aria-label="Tipo do pedido" '+(linked?'disabled':'')+' onchange="updateOrderWork(\''+o.id+'\',\'purchaseType\',this.value)"><option value="">Não classificado</option><option value="cotacao" '+(type==='cotacao'?'selected':'')+'>Com cotação</option><option value="direta" '+(type==='direta'?'selected':'')+'>Emissão direta</option></select><label style="display:block;margin-top:5px"><input type="checkbox" '+(o.urgent?'checked':'')+' onchange="updateOrderWork(\''+o.id+'\',\'urgent\',this.checked)"> Urgente</label></div>';}
-function updateOrderWork(id,field,value){if(!['purchaseType','urgent'].includes(field))return;var o=ORDERS.find(function(x){return x.id===id;});if(!o)return;var before=o[field];o[field]=value;var now=new Date().toISOString();o.lastMovementAt=now;o.lastUpdatedBy=ACTIVE_USER;o.clientMutationAt=now;AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:field==='urgent'?'Urgência do pedido':'Tipo do pedido',before:String(before??'Não classificado'),after:String(value)});triggerSave();refreshAll();}
+function orderWorkControls(o){var type=orderWorkType(o),linked=type==='cotacao'&&typeof QUOTES!=='undefined'&&QUOTES.some(function(q){return q.company===o.company&&q.status==='Finalizado'&&String(q.pcNumber||'').trim()===String(o.orderNumber||'').trim();});return '<div class="order-work-controls"><select aria-label="Tipo do pedido" '+(linked?'disabled':'')+' onchange="updateOrderWork(\''+o.id+'\',\'purchaseType\',this.value)"><option value="">Não classificado</option><option value="cotacao" '+(type==='cotacao'?'selected':'')+'>Com cotação</option><option value="direta" '+(type==='direta'?'selected':'')+'>Emissão direta</option></select><label><input type="checkbox" '+(o.urgent?'checked':'')+' onchange="updateOrderWork(\''+o.id+'\',\'urgent\',this.checked)"> Urgente</label><label><input type="checkbox" '+(orderRequiresConfirmation(o)?'checked':'')+' onchange="updateOrderWork(\''+o.id+'\',\'requiresConfirmation\',this.checked)"> Exige confirmação</label></div>';}
+function updateOrderWork(id,field,value){if(!['purchaseType','urgent','requiresConfirmation'].includes(field))return;var o=ORDERS.find(function(x){return x.id===id;});if(!o)return;var before=o[field];o[field]=value;var now=new Date().toISOString();o.lastMovementAt=now;o.lastUpdatedBy=ACTIVE_USER;o.clientMutationAt=now;AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:field==='urgent'?'Urgência do pedido':field==='requiresConfirmation'?'Confirmação necessária':'Tipo do pedido',before:String(before??'Não classificado'),after:String(value)});triggerSave();refreshAll();}
 function renderPurchaseWorkload(base){base=Array.from(new Map(base.map(function(o){return [o.company+'|'+String(o.orderNumber).trim(),o];})).values());var n={cotacao:0,direta:0,unknown:0,urgent:0};base.forEach(function(o){n[orderWorkType(o)||'unknown']++;if(o.urgent)n.urgent++;});Object.keys(n).forEach(function(k){var el=document.getElementById('work-'+k);if(el)el.textContent=n[k];});}
 function orderStatusClass(s){return s==='Aguarda aprovação'?'wait':s==='Pedido Rejeitado'?'rejected':s==='Pedido enviado'?'sent':s==='Pedido confirmado pelo fornecedor'?'done':'approved';}
 function changeOrderAction(id,status){
   var o=ORDERS.find(function(x){return x.id===id;});if(!o||o.status===status)return;var now=new Date().toISOString(),before=o.status;o.status=status;
-  if(status==='Pedido Aprovado'){o.approvedAt=now;o.approvedBy=ACTIVE_USER;}
+  if(status==='Pedido Aprovado'&&!o.approvedAt){o.approvedAt=now;o.approvedBy=ACTIVE_USER;}
   if(status==='Pedido Rejeitado'){o.rejectedAt=now;o.rejectedBy=ACTIVE_USER;}
   if(status==='Pedido enviado'){o.sentAt=now;o.sentBy=ACTIVE_USER;}
   if(status==='Pedido confirmado pelo fornecedor'){o.confirmedAt=now;o.confirmedBy=ACTIVE_USER;}
   o.lastMovementAt=now;o.lastUpdatedBy=ACTIVE_USER;o.clientMutationAt=now;AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:'Ação do pedido',before:before,after:o.status});triggerSave();renderOrders();toast('Ação atualizada: '+o.status+'.','ok',2500);
 }
 function updateOrderObs(id,val){var o=ORDERS.find(function(x){return x.id===id;});if(!o)return;var now=new Date().toISOString();o.observation=val;o.lastMovementAt=now;o.lastUpdatedBy=ACTIVE_USER;o.clientMutationAt=now;var k='order_'+id;if(_updTimers[k])clearTimeout(_updTimers[k]);_updTimers[k]=setTimeout(function(){triggerSave();},600);}
-function orderItemsHTML(o){var items=Array.isArray(o.sourceItems)&&o.sourceItems.length?o.sourceItems:[{sc:o.sourceSC,item:o.sourceItem}];return items.map(function(x){return '<div class="move-meta">SC '+esc(x.sc||'—')+' / '+esc(x.item||'')+'</div>';}).join('');}
+function orderItemsHTML(o){var items=Array.isArray(o.sourceItems)&&o.sourceItems.length?o.sourceItems:[{sc:o.sourceSC,item:o.sourceItem}],groups=new Map();items.forEach(function(x){var sc=String(x.sc||'—'),item=String(x.item||'').trim();if(!groups.has(sc))groups.set(sc,new Set());if(item)groups.get(sc).add(item);});var text=Array.from(groups).map(function(entry){return 'SC '+entry[0]+' · itens '+Array.from(entry[1]).sort(function(a,b){return a.localeCompare(b,'pt-BR',{numeric:true});}).join(', ');}).join(' · ');return '<div class="order-origin" title="'+esc(text)+'">'+esc(text)+'</div>';}
+function orderRequiresConfirmation(o){return typeof o.requiresConfirmation==='boolean'?o.requiresConfirmation:!['Dispensado','Marketplace'].includes(o.channel);}
+function orderNeedsSend(o){return o.channel!=='Dispensado';}
+function orderApprovalStats(rows){var durations=rows.map(function(o){return o.issuedAt&&o.approvedAt?orderBusinessDaysBetween(o.issuedAt,o.approvedAt):null;}).filter(function(n){return n!==null;});return {count:durations.length,average:durations.length?durations.reduce(function(a,b){return a+b;},0)/durations.length:null};}
+function renderApprovalMetric(rows,prefix){var metric=orderApprovalStats(rows),number=document.getElementById(prefix+'-approval-avg'),sample=document.getElementById(prefix+'-approval-sample');if(number)number.textContent=metric.average===null?'—':metric.average.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' dias úteis';if(sample)sample.textContent=metric.count+' pedidos com datas válidas · segunda a sexta, sem descontar feriados';}
+function orderApprovalInput(o){var d=o.approvedAt?new Date(o.approvedAt):null,value='';if(d&&!isNaN(d)){var z=function(n){return String(n).padStart(2,'0');};value=d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes());}return '<input class="order-approval-date" type="datetime-local" aria-label="Data de aprovação do pedido '+esc(o.orderNumber)+'" value="'+value+'" onchange="updateOrderApproval(\\\''+o.id+'\\\',this.value)">'+(value?'':'<small class="order-date-note">Não registrada</small>');}
+function updateOrderApproval(id,value){var o=ORDERS.find(function(x){return x.id===id;});if(!o)return;var d=new Date(value),issued=new Date(o.issuedAt);if(!value||isNaN(d)||(!isNaN(issued)&&d<issued)||d>new Date()){toast('Informe uma aprovação entre a emissão registrada e o momento atual.','err',6500);renderOrders();return;}var before=o.approvedAt;o.approvedAt=d.toISOString();o.approvedBy=ACTIVE_USER;o.approvalDateRecordedAt=new Date().toISOString();o.lastMovementAt=o.approvalDateRecordedAt;o.lastUpdatedBy=ACTIVE_USER;o.clientMutationAt=o.approvalDateRecordedAt;AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:'Data de aprovação',before:before||'Não registrada',after:o.approvedAt});triggerSave();refreshAll();}
+
 function orderItemsText(o){var items=Array.isArray(o.sourceItems)&&o.sourceItems.length?o.sourceItems:[{sc:o.sourceSC,item:o.sourceItem}];return items.map(function(x){return [x.sc,x.item,x.descricao].join(' ');}).join(' ');}
 function orderMonthKey(v){var d=new Date(v);return isNaN(d)?'':d.toISOString().slice(0,7);}
 function orderMonthLabel(k){if(k==='all')return 'Todos os meses';var p=k.split('-');return new Date(+p[0],+p[1]-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});}
 function orderAlertInfo(o){
   var approval=o.status==='Aguarda aprovação'&&businessDaysSince(o.issuedAt||o.createdAt)>=3;
-  var send=o.status==='Pedido Aprovado'&&businessDaysSince(o.approvedAt||o.lastMovementAt||o.issuedAt)>=3;
-  var confirm=o.status==='Pedido enviado'&&businessDaysSince(o.sentAt||o.lastMovementAt||o.issuedAt)>=3;
+  var send=orderNeedsSend(o)&&o.status==='Pedido Aprovado'&&businessDaysSince(o.approvedAt||o.lastMovementAt||o.issuedAt)>=3;
+  var confirm=orderRequiresConfirmation(o)&&o.status==='Pedido enviado'&&businessDaysSince(o.sentAt||o.lastMovementAt||o.issuedAt)>=3;
   var rejected=o.status==='Pedido Rejeitado'&&!String(o.observation||'').trim();
   var label=approval?'Aprovação atrasada':send?'Envio pendente':confirm?'Confirmação pendente':rejected?'Rejeição sem observação':'';
   return {approval:approval,send:send,confirm:confirm,rejected:rejected,label:label,critical:approval||rejected,alert:approval||send||confirm||rejected};
@@ -906,6 +939,7 @@ function orderAlertInfo(o){
 function orderBusinessDaysBetween(a,b){var d1=new Date(a),d2=new Date(b);if(isNaN(d1)||isNaN(d2)||d2<d1)return null;var n=0,d=new Date(d1);d.setHours(0,0,0,0);d2.setHours(0,0,0,0);while(d<d2){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)n++;}return n;}
 function renderOrderManagement(base){
   base=base||[];var owners=Array.from(new Set(USERS.filter(isCurrentBuyer).map(function(u){return u.name;}).concat(['portfolio','current'].includes(MGMT_PERIOD)?[]:base.map(function(o){return o.owner;}).filter(Boolean)))),statuses=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'],colors=['#F0B429','#4A9EE0','#C0392B','#2979C9','#10A87A'];
+  renderApprovalMetric(base,'od');
   var confirmed=base.filter(function(o){return o.status==='Pedido confirmado pelo fornecedor';});
   var durations=confirmed.map(function(o){return orderBusinessDaysBetween(o.issuedAt,o.confirmedAt);}).filter(function(x){return x!==null;});
   var avg=durations.length?(durations.reduce(function(a,b){return a+b;},0)/durations.length).toFixed(1)+' dias úteis':'—';
@@ -917,7 +951,7 @@ function renderOrderManagement(base){
   if(ORDER_CHART)ORDER_CHART.destroy();ORDER_CHART=new Chart(canvas,{type:'bar',data:{labels:owners,datasets:statuses.map(function(st,i){return {label:st,data:owners.map(function(owner){return base.filter(function(o){return o.owner===owner&&o.status===st;}).length;}),backgroundColor:colors[i],borderRadius:5};})},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{precision:0}}}}});
 }
 function matchesWorkFilter(o){var f=document.getElementById('order-work-filter')?.value||'';return !f||(f==='urgent'?o.urgent===true:f==='unknown'?!orderWorkType(o):orderWorkType(o)===f);}
-function openWorkOrders(type){ORDER_DASH_RANGE=MGMT_PERIOD;document.getElementById('order-work-filter').value=type;document.getElementById('order-status-filter').value='';document.getElementById('order-owner-filter').value='';document.getElementById('order-search').value='';showTab('pedidos',document.getElementById('strip-pedidos'),'ap',true);renderOrders();}
+function openWorkOrders(type){ORDER_DASH_RANGE=MGMT_PERIOD;document.getElementById('order-work-filter').value=type;document.getElementById('order-status-filter').value='';document.getElementById('order-owner-filter').value='';document.getElementById('order-search').value='';document.getElementById('order-confirm-filter').value='';showTab('pedidos',document.getElementById('strip-pedidos'),'ap',true);renderOrders();}
 function renderOrders(){
   var normalized={'Aprovado':'Pedido Aprovado','Aguardando aprovação':'Aguarda aprovação','Aguardando envio':'Aguarda aprovação','Enviado':'Pedido enviado','Rejeitado':'Pedido Rejeitado','Confirmado':'Pedido confirmado pelo fornecedor','Marketplace':'Aguarda aprovação','Dispensado':'Aguarda aprovação'};
   ORDERS.forEach(function(o){if(normalized[o.status])o.status=normalized[o.status];});
@@ -925,18 +959,19 @@ function renderOrders(){
   if(monthSel){var before=ORDER_MONTH_FILTER;monthSel.innerHTML='<option value="all">Todos os meses</option>'+keys.map(function(k){return '<option value="'+k+'">'+orderMonthLabel(k)+'</option>';}).join('');monthSel.value=before;}
   var rangeSpec=ORDER_DASH_RANGE?mgmtPeriodSpec(ORDER_DASH_RANGE):null;
   var monthBase=ORDERS.filter(function(o){return rangeSpec?(rangeSpec.key==='portfolio'?orderMonthKey(o.issuedAt)===new Date().toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),rangeSpec.start,rangeSpec.end)):(ORDER_MONTH_FILTER==='all'||orderMonthKey(o.issuedAt)===ORDER_MONTH_FILTER);});
+  renderApprovalMetric(monthBase,'oc');
   var alerts={approval:0,send:0,confirm:0,rejected:0};monthBase.forEach(function(o){var a=orderAlertInfo(o);Object.keys(alerts).forEach(function(k){if(a[k])alerts[k]++;});});
   [['oa-approval',alerts.approval],['oa-send',alerts.send],['oa-confirm',alerts.confirm],['oa-rejected',alerts.rejected]].forEach(function(x){var e=document.getElementById(x[0]);if(e)e.textContent=x[1];});
   var mgSpec=mgmtPeriodSpec(MGMT_PERIOD),mgBase=ORDERS.filter(function(o){return mgSpec.key==='portfolio'?orderMonthKey(o.issuedAt)===new Date().toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),mgSpec.start,mgSpec.end);});
   renderOrderManagement(mgBase);
   var ownerSelect=document.getElementById('order-owner-filter');if(ownerSelect){var selectedOwner=ownerSelect.value;var historical=rangeSpec?!['portfolio','current'].includes(rangeSpec.key):(ORDER_MONTH_FILTER==='all'||ORDER_MONTH_FILTER!==orderMonthKey(new Date()));var ownerNames=Array.from(new Set(USERS.filter(isCurrentBuyer).map(function(u){return u.name;}).concat(historical?monthBase.map(function(o){return o.owner;}).filter(Boolean):[])));ownerSelect.innerHTML='<option value="">Todos os compradores</option>'+ownerNames.map(function(n){return '<option>'+esc(n)+'</option>';}).join('');ownerSelect.value=ownerNames.includes(selectedOwner)?selectedOwner:'';}
   var q=((document.getElementById('order-search')||{}).value||'').toLowerCase(),st=((document.getElementById('order-status-filter')||{}).value||''),owner=((document.getElementById('order-owner-filter')||{}).value||'');
-  var rows=monthBase.filter(function(o){return matchesWorkFilter(o)&&(!st||o.status===st)&&(!owner||o.owner===owner)&&[o.orderNumber,o.company,o.supplier,o.owner,o.status,o.observation,orderItemsText(o)].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){var rank={'Aguarda aprovação':0,'Pedido Aprovado':1,'Pedido Rejeitado':2,'Pedido enviado':3,'Pedido confirmado pelo fornecedor':4};return (rank[a.status]||0)-(rank[b.status]||0)||new Date(b.issuedAt)-new Date(a.issuedAt);});
+  var rows=monthBase.filter(function(o){return matchesWorkFilter(o)&&((document.getElementById('order-confirm-filter')||{}).value!=='required'||orderRequiresConfirmation(o))&&((document.getElementById('order-confirm-filter')||{}).value!=='waived'||!orderRequiresConfirmation(o))&&(!st||o.status===st)&&(!owner||o.owner===owner)&&[o.orderNumber,o.company,o.supplier,o.owner,o.status,o.observation,orderItemsText(o)].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){var rank={'Aguarda aprovação':0,'Pedido Aprovado':1,'Pedido Rejeitado':2,'Pedido enviado':3,'Pedido confirmado pelo fornecedor':4};return (rank[a.status]||0)-(rank[b.status]||0)||new Date(b.issuedAt)-new Date(a.issuedAt);});
   var body=document.getElementById('orders-body');if(!body)return;body.innerHTML=rows.length?rows.map(function(o){
     var opts=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'].map(function(x){return '<option'+(o.status===x?' selected':'')+'>'+x+'</option>';}).join('');
     var actions='<select class="reason-sel" onchange="changeOrderAction(\''+o.id+'\',this.value)">'+opts+'</select>',a=orderAlertInfo(o),flag=a.label?'<div class="order-flag '+(a.critical?'danger':'')+'">⚠ '+esc(a.label)+'</div>':'';
-    return '<tr class="'+(a.critical?'order-row-danger':a.alert?'order-row-alert':'')+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td>'+esc(o.supplier)+'</td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+orderWorkControls(o)+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+fmtDateTime(o.confirmedAt)+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'</div></td></tr>';
-  }).join(''):'<tr><td colspan="10" class="priority-empty">Nenhum pedido encontrado para os filtros selecionados.</td></tr>';
+    return '<tr class="'+(a.critical?'order-row-danger':a.alert?'order-row-alert':'')+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td><div class="order-supplier-short" title="'+esc(o.supplier)+'">'+esc(o.supplier)+'</div></td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+orderApprovalInput(o)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+(orderRequiresConfirmation(o)?fmtDateTime(o.confirmedAt):'<span class="order-waived">Dispensada</span>')+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'<details class="order-more"><summary>Ajustes do pedido</summary>'+orderWorkControls(o)+'</details></div></td></tr>';
+  }).join(''):'<tr><td colspan="11" class="priority-empty">Nenhum pedido encontrado para os filtros selecionados.</td></tr>';
 }
 
 function priorityInfo(r){
@@ -1087,6 +1122,7 @@ function dashboardOrderDrill(status){
   if(spec.key==='portfolio'||spec.key==='current')ORDER_MONTH_FILTER=new Date().toISOString().slice(0,7);
   else if(spec.key==='previous')ORDER_MONTH_FILTER=monthKeyDate(spec.start);
   else ORDER_MONTH_FILTER='all';
+  var cf=document.getElementById('order-confirm-filter');if(cf)cf.value=status==='__unconfirmed'?'required':'';
   var st=document.getElementById('order-status-filter');if(st)st.value=target||'';
   renderOrders();showTab('pedidos',null,'al');toast('Pedidos filtrados por '+spec.label,'info');
 }
@@ -1114,7 +1150,7 @@ function renderManagementDashboard(open){
   var prevMetric=function(fn){return previousOpen?previousOpen.filter(fn).length:null;};
   var isOverdue=function(r){var l=pD(r.limite);return l&&l<TODAY;},isStale=function(r){return businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;},isUnassigned=function(r){return !String(r.resp||'').trim();},isSupplier=function(r){return /fornecedor/i.test(r.reason||'');};
   setMgmtValue('mg-open',scopedOpen.length);setMgmtValue('mg-overdue',overdue.length);setMgmtValue('mg-stale',stale.length);setMgmtValue('mg-unassigned',unassigned.length);setMgmtValue('mg-supplier',supplier.length);
-  var ow=scopedOrders.filter(function(o){return o.status==='Aguarda aprovação';}).length,orr=scopedOrders.filter(function(o){return o.status==='Pedido Rejeitado';}).length,ouc=scopedOrders.filter(function(o){return o.status==='Pedido enviado';}).length;
+  var ow=scopedOrders.filter(function(o){return o.status==='Aguarda aprovação';}).length,orr=scopedOrders.filter(function(o){return o.status==='Pedido Rejeitado';}).length,ouc=scopedOrders.filter(function(o){return o.status==='Pedido enviado'&&orderRequiresConfirmation(o);}).length;
   setMgmtValue('mg-order-wait',ow);setMgmtValue('mg-order-rejected',orr);setMgmtValue('mg-order-unconfirmed',ouc);
   setMgmtValue('mgmt-updated-at',now.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}));setMgmtValue('mgmt-period-note',spec.note);
   var sel=document.getElementById('mgmt-period');if(sel)sel.value=MGMT_PERIOD;
@@ -1135,7 +1171,7 @@ function renderManagementDashboard(open){
   }
   mgmtTrend('mg-trend-order-wait',ow,previousOrders.filter(function(o){return o.status==='Aguarda aprovação';}).length,true);
   mgmtTrend('mg-trend-order-rejected',orr,previousOrders.filter(function(o){return o.status==='Pedido Rejeitado';}).length,true);
-  mgmtTrend('mg-trend-order-unconfirmed',ouc,previousOrders.filter(function(o){return o.status==='Pedido enviado';}).length,true);
+  mgmtTrend('mg-trend-order-unconfirmed',ouc,previousOrders.filter(function(o){return o.status==='Pedido enviado'&&orderRequiresConfirmation(o);}).length,true);
 
   var critical=scopedOpen.map(function(r){
     var bd=businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao),lim=pD(r.limite),ov=!!(lim&&lim<TODAY),score=(ov?100:0)+(bd>=3?bd:0)+(!r.resp?20:0);
