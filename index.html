@@ -393,6 +393,13 @@ main{padding:26px 32px}
 .order-waived{color:#64748b;font-size:9px}
 .order-mgmt-card small{display:block;font-size:9px;line-height:1.4;margin-top:5px}
 
+
+/* Status dos pedidos em cores suaves */
+#sec-pedidos #orders-body tr.order-state-wait,#sec-pedidos #orders-body tr.order-state-wait>td{background:#fff0f5!important}
+#sec-pedidos #orders-body tr.order-state-approved,#sec-pedidos #orders-body tr.order-state-approved>td{background:#effaf2!important}
+#sec-pedidos #orders-body tr.order-state-done,#sec-pedidos #orders-body tr.order-state-done>td{background:#edf5ff!important}
+.order-color-legend{display:flex;gap:8px;flex-wrap:wrap;font-size:10px;margin:10px 0}
+.order-color-legend span{padding:4px 9px;border-radius:6px;border:1px solid #e2e8f0;color:#334155}
 </style>
 </head>
 <body>
@@ -688,6 +695,7 @@ main{padding:26px 32px}
   </div>
   <div class="order-mgmt-card" style="margin:12px 0"><strong id="oc-approval-avg">—</strong><span>Tempo médio emissão → aprovação · período do Controle de Pedidos</span><small id="oc-approval-sample" class="quote-muted"></small></div><div class="order-alert-note">As linhas destacadas indicam pedidos que exigem acompanhamento do comprador responsável.</div>
   <div class="filter-bar"><input id="order-search" placeholder="Buscar pedido, fornecedor ou empresa..." oninput="renderOrders()"><select id="order-month" class="order-filter-select" onchange="ORDER_DASH_RANGE='';ORDER_MONTH_FILTER=this.value;renderOrders()"></select><select id="order-status-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os status</option><option>Aguarda aprovação</option><option>Pedido Aprovado</option><option>Pedido Rejeitado</option><option>Pedido enviado</option><option>Pedido confirmado pelo fornecedor</option></select><select id="order-confirm-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todas as confirmações</option><option value="required">Exigem confirmação</option><option value="waived">Confirmação dispensada</option></select><select id="order-work-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os tipos</option><option value="cotacao">Com cotação</option><option value="direta">Emissão direta</option><option value="urgent">Urgentes</option><option value="unknown">Não classificados</option></select><select id="order-owner-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os compradores</option><option>Aline Lima</option><option>Robert Santos</option><option>Jaqueline Paulino</option></select></div>
+  <div class="order-color-legend" aria-label="Legenda de status"><span style="background:#fff0f5">Aguardando aprovação</span><span style="background:#effaf2">Aprovado</span><span style="background:#edf5ff">Confirmado / dispensado</span></div>
   <div class="tbl-wrap"><table><thead><tr><th>Pedido</th><th>Empresa / Origem</th><th>Fornecedor</th><th>Status</th><th>Emissão</th><th>Aprovação</th><th>Envio</th><th>Confirmação</th><th>Responsável</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="orders-body"></tbody></table></div>
 </section>
 <section id="sec-historico" class="section">
@@ -978,6 +986,7 @@ function saveManualOrder(event){
  }catch(e){toast(e.message,'err',7000);}
 }
 
+function orderRowVisualClass(o){if(o.status==='Aguarda aprovação')return 'order-state-wait';if(o.status==='Pedido confirmado pelo fornecedor'||o.status==='Dispensado'||((o.channel==='Dispensado'||!orderRequiresConfirmation(o))&&['Pedido Aprovado','Pedido enviado'].includes(o.status)))return 'order-state-done';if(o.status==='Pedido Aprovado')return 'order-state-approved';return '';}
 function orderStatusClass(s){return s==='Aguarda aprovação'?'wait':s==='Pedido Rejeitado'?'rejected':s==='Pedido enviado'?'sent':s==='Pedido confirmado pelo fornecedor'?'done':'approved';}
 function changeOrderAction(id,status){
   var o=ORDERS.find(function(x){return x.id===id;});if(!o||o.status===status)return;var now=new Date().toISOString(),before=o.status;o.status=status;
@@ -1041,7 +1050,7 @@ function renderOrders(){
   var body=document.getElementById('orders-body');if(!body)return;body.innerHTML=rows.length?rows.map(function(o){
     var opts=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'].map(function(x){return '<option'+(o.status===x?' selected':'')+'>'+x+'</option>';}).join('');
     var actions='<select class="reason-sel" onchange="changeOrderAction(\''+o.id+'\',this.value)">'+opts+'</select>',a=orderAlertInfo(o),flag=a.label?'<div class="order-flag '+(a.critical?'danger':'')+'">⚠ '+esc(a.label)+'</div>':'';
-    return '<tr class="'+(a.critical?'order-row-danger':a.alert?'order-row-alert':'')+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td><div class="order-supplier-short" title="'+esc(o.supplier)+'">'+esc(o.supplier)+'</div></td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+orderApprovalInput(o)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+(orderRequiresConfirmation(o)?fmtDateTime(o.confirmedAt):'<span class="order-waived">Dispensada</span>')+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'<details class="order-more"><summary>Ajustes do pedido</summary>'+orderWorkControls(o)+'</details></div></td></tr>';
+    return '<tr class="'+(orderRowVisualClass(o)||(a.critical?'order-row-danger':a.alert?'order-row-alert':''))+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td><div class="order-supplier-short" title="'+esc(o.supplier)+'">'+esc(o.supplier)+'</div></td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+orderApprovalInput(o)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+(orderRequiresConfirmation(o)?fmtDateTime(o.confirmedAt):'<span class="order-waived">Dispensada</span>')+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'<details class="order-more"><summary>Ajustes do pedido</summary>'+orderWorkControls(o)+'</details></div></td></tr>';
   }).join(''):'<tr><td colspan="11" class="priority-empty">Nenhum pedido encontrado para os filtros selecionados.</td></tr>';
 }
 
