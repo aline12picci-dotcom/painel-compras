@@ -400,6 +400,9 @@ main{padding:26px 32px}
 #sec-pedidos #orders-body tr.order-state-done,#sec-pedidos #orders-body tr.order-state-done>td{background:#edf5ff!important}
 .order-color-legend{display:flex;gap:8px;flex-wrap:wrap;font-size:10px;margin:10px 0}
 .order-color-legend span{padding:4px 9px;border-radius:6px;border:1px solid #e2e8f0;color:#334155}
+
+/* Follow-up de workflows */
+.fu-kpis{display:grid;grid-template-columns:repeat(6,minmax(125px,1fr));gap:10px;margin:14px 0}.fu-kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;box-shadow:var(--shadow1)}.fu-kpi strong{display:block;font-size:22px;color:var(--navy)}.fu-kpi span{font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:700}.fu-import{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.fu-preview{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin:12px 0}.fu-preview-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}.fu-table{min-width:800px}.fu-pill{display:inline-block;padding:4px 7px;border-radius:999px;font-size:8.5px;font-weight:750;white-space:nowrap}.fu-pill.new{background:#DBEAFE;color:#1D4ED8}.fu-pill.persistent{background:#FEF3C7;color:#92400E}.fu-pill.worse{background:#FEE2E2;color:#B91C1C}.fu-pill.changed{background:#EDE9FE;color:#6D28D9}.fu-pill.reopened{background:#FFE4E6;color:#BE123C}.fu-pill.closed{background:#D1FAE5;color:#047857}.fu-warning,.fu-error{padding:10px;border-radius:8px;margin-top:10px;font-size:10px}.fu-warning{background:#FFF7ED;color:#9A3412}.fu-error{background:#FEF2F2;color:#991B1B}.fu-stale{display:inline-block;margin-top:4px;color:#B91C1C;font-size:8px;font-weight:700}.fu-treatment{min-width:230px;min-height:50px;padding:6px;border:1px solid var(--border);border-radius:6px;font:10px Sora,sans-serif}.fu-filter{margin:12px 0}.fu-table-main{min-width:1250px}@media(max-width:900px){.fu-kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -466,6 +469,7 @@ main{padding:26px 32px}
     <button class="es-btn" onclick="showTab('clinutri',this,'ac')"><span class="company-tab-logo"><img src="/assets/clinutri-logo.png" alt="" aria-hidden="true"></span><span>Clinutri</span></button>
     <button class="es-btn" id="strip-cotacoes" onclick="showTab('cotacoes',this,'ap')"><span class="dot" style="background:#5284AF"></span>Agente de Cotações</button>
     <button class="es-btn" id="strip-pedidos" onclick="showTab('pedidos',this,'ap')"><span class="dot" style="background:#13BFBF"></span>Controle de Pedidos</button>
+    <button class="es-btn" id="strip-followup" onclick="showTab('followup',this,'ap')"><span class="dot" style="background:#F97316"></span>Follow-up</button>
     <button class="es-btn" onclick="showTab('historico',this,'ad')"><span class="dot" style="background:#F0B429"></span>Encerradas</button>
   </div>
     <div class="auth-user" id="auth-user" style="display:none"><span id="auth-user-name"></span><button onclick="signOut()">Sair</button></div>
@@ -698,6 +702,14 @@ main{padding:26px 32px}
   <div class="order-color-legend" aria-label="Legenda de status"><span style="background:#fff0f5">Aguardando aprovação</span><span style="background:#effaf2">Aprovado</span><span style="background:#edf5ff">Confirmado / dispensado</span></div>
   <div class="tbl-wrap"><table><thead><tr><th>Pedido</th><th>Empresa / Origem</th><th>Fornecedor</th><th>Status</th><th>Emissão</th><th>Aprovação</th><th>Envio</th><th>Confirmação</th><th>Responsável</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="orders-body"></tbody></table></div>
 </section>
+<section id="sec-followup" class="section">
+  <div class="sec-hdr"><div><div class="sec-title">Follow-up de pedidos · Workflow diário</div><div class="quote-muted">Importe o arquivo enviado pelo sistema. A Central compara com o workflow anterior e preserva todo o histórico.</div></div></div>
+  <div class="fu-import"><label class="imp-btn primary"><input type="file" accept=".msg,.xlsx,.xls,.csv,.html,.htm,.txt" onchange="importFollowupWorkflow(this)">📨 Importar workflow</label><div><strong>Primeiro a prévia, depois a gravação.</strong><br><span id="fu-last-import" class="quote-muted">Nenhum workflow importado ainda.</span></div></div>
+  <div id="fu-preview" class="fu-preview" hidden></div>
+  <div class="fu-kpis"><div class="fu-kpi"><strong id="fu-current">0</strong><span>Atrasos atuais</span></div><div class="fu-kpi"><strong id="fu-new">0</strong><span>Novos atrasos</span></div><div class="fu-kpi"><strong id="fu-persistent">0</strong><span>Persistentes / agravados</span></div><div class="fu-kpi"><strong id="fu-closed">0</strong><span>Baixados pelo workflow</span></div><div class="fu-kpi"><strong id="fu-reopened">0</strong><span>Reabertos</span></div><div class="fu-kpi"><strong id="fu-untreated">0</strong><span>Sem tratativa 3+ d.u.</span></div></div>
+  <div class="filter-bar fu-filter"><input id="fu-search" placeholder="Buscar pedido, fornecedor, material ou comprador..." oninput="renderFollowup()"><select id="fu-filter" onchange="renderFollowup()"><option value="active">Pendências ativas</option><option value="">Todos os registros</option><option>Novo atraso</option><option>Permanece atrasado</option><option>Atraso agravado</option><option>Previsão alterada</option><option>Reaberto</option><option value="closed">Baixados / regularizados</option></select></div>
+  <div class="tbl-wrap"><table class="fu-table-main"><thead><tr><th>Comparativo</th><th>Pedido / item</th><th>Fornecedor</th><th>Descrição</th><th>Previsão / atraso</th><th>Comprador</th><th>Tratativa</th><th>Origem</th></tr></thead><tbody id="fu-body"></tbody></table></div>
+</section>
 <section id="sec-historico" class="section">
   <div class="sec-hdr"><div class="sec-title">Histórico de solicitações encerradas <span id="history-count"></span></div></div>
   <div class="filter-bar"><input id="history-search" placeholder="Buscar empresa, SC, descrição ou responsável..." oninput="renderHistory()"></div>
@@ -742,6 +754,7 @@ let ACTIVE_USER='';
 let CURRENT_SESSION=null, CURRENT_PROFILE=null, CURRENT_BASIC=sessionStorage.getItem('painel_basic')||'';
 let AUDIT=[];
 let ORDERS=[];
+let FOLLOWUP={items:[],imports:[]};
 let PENDING_FINALIZE=[];
 let SELECTED_ITEMS=new Set();
 let ORDER_MONTH_FILTER=new Date().toISOString().slice(0,7);
@@ -1102,6 +1115,7 @@ function refreshAll(){
   renderHistory();
   renderPriorities();
   renderOrders();
+  if(typeof renderFollowup==='function')renderFollowup();
 }
 function applyFilters(){
   var q=(document.getElementById('search-input')||{}).value||'';q=q.toLowerCase();
@@ -1140,6 +1154,7 @@ function showTab(name, btn, cls, preserveDrill){
   if(name==='prioridades') renderPriorities();
   updateBatchBar();
   if(name==='pedidos') renderOrders();
+  if(name==='followup'&&typeof renderFollowup==='function')renderFollowup();
   if(name==='cotacoes'){renderQuoteAvailable();loadQuotes();}
   if(name==='dashboard'||name==='pedidos')loadQuotes();
 }
@@ -1362,7 +1377,7 @@ function renderRespSummary(open){
 
 // ── PERSISTÊNCIA LOCAL ───────────────────────────────────
 function saveLocal(){
-  try{ localStorage.setItem(SK_LOCAL, JSON.stringify({data:DATA,users:USERS,audit:AUDIT,orders:ORDERS,ts:Date.now()})); }
+  try{ localStorage.setItem(SK_LOCAL, JSON.stringify({data:DATA,users:USERS,audit:AUDIT,orders:ORDERS,followup:FOLLOWUP,ts:Date.now()})); }
   catch(e){ console.warn('localStorage error:',e); }
 }
 function loadLocal(){
@@ -1370,7 +1385,7 @@ function loadLocal(){
     var raw=localStorage.getItem(SK_LOCAL);
     if(!raw) return false;
     var p=JSON.parse(raw);
-    if(p&&p.data&&Array.isArray(p.data)&&p.data.length>0){ DATA=p.data; USERS=Array.isArray(p.users)&&p.users.length?p.users:USERS; AUDIT=Array.isArray(p.audit)?p.audit:[]; ORDERS=Array.isArray(p.orders)?p.orders:[]; _lastTs=p.ts||0; return true; }
+    if(p&&p.data&&Array.isArray(p.data)&&p.data.length>0){ DATA=p.data; USERS=Array.isArray(p.users)&&p.users.length?p.users:USERS; AUDIT=Array.isArray(p.audit)?p.audit:[]; ORDERS=Array.isArray(p.orders)?p.orders:[]; FOLLOWUP=p.followup&&Array.isArray(p.followup.items)?p.followup:FOLLOWUP; _lastTs=p.ts||0; return true; }
   }catch(e){}
   return false;
 }
@@ -1380,7 +1395,7 @@ const PROXY_URL = '/api/sync';
 function authHeaders(extra){var h=extra||{};if(CURRENT_BASIC)h.Authorization='Basic '+CURRENT_BASIC;return h;}
 async function apiJson(resp){var out=await resp.json().catch(function(){return {};});if(!resp.ok)throw new Error(out.error||('HTTP '+resp.status));return out;}
 async function jbRead(){return apiJson(await fetch(PROXY_URL,{headers:authHeaders({}),cache:'no-store'}));}
-async function jbWrite(payload){return apiJson(await fetch(PROXY_URL,{method:'POST',headers:authHeaders({'Content-Type':'application/json'}),body:JSON.stringify({payload:JSON.stringify({data:payload.data,users:payload.users,audit:payload.audit,orders:payload.orders})})}));}
+async function jbWrite(payload){return apiJson(await fetch(PROXY_URL,{method:'POST',headers:authHeaders({'Content-Type':'application/json'}),body:JSON.stringify({payload:JSON.stringify({data:payload.data,users:payload.users,audit:payload.audit,orders:payload.orders,followup:payload.followup})})}));}
 
 // ── SYNC ────────────────────────────────────────────────
 function setSyncBar(msg){ var el=document.getElementById('sync-status-bar'); if(el) el.textContent=msg; }
@@ -1442,6 +1457,7 @@ function mergeServerState(p){
   if(!p)return;
   DATA=mergeByFreshest(p.data,DATA,function(r){return [r.empresa||'',r.sc||'',r.item||''].join('|');});
   ORDERS=mergeByFreshest(p.orders,ORDERS,function(o){return String(o.id||[o.company||'',o.orderNumber||'',o.sourceSC||''].join('|'));});
+  if(p.followup&&Array.isArray(p.followup.items))FOLLOWUP=p.followup;
   if(Array.isArray(p.users)&&p.users.length)USERS=p.users;
   if(Array.isArray(p.audit))AUDIT=p.audit;
 }
@@ -1449,6 +1465,7 @@ function loadAuthoritativeServerState(p){
   if(!p)return;
   DATA=Array.isArray(p.data)?p.data:[];
   ORDERS=Array.isArray(p.orders)?p.orders:[];
+  FOLLOWUP=p.followup&&Array.isArray(p.followup.items)?p.followup:{items:[],imports:[]};
   if(Array.isArray(p.users)&&p.users.length)USERS=p.users;
   AUDIT=Array.isArray(p.audit)?p.audit:[];
 }
@@ -1466,7 +1483,7 @@ async function saveShared(){
   setReliableSync('saving');
   try{
     var ts=Date.now();
-    var saved=await jbWrite({data:DATA,users:USERS,audit:AUDIT,orders:ORDERS,ts:ts});
+    var saved=await jbWrite({data:DATA,users:USERS,audit:AUDIT,orders:ORDERS,followup:FOLLOWUP,ts:ts});
     var hasNewerChanges=_changeVersion!==saveVersion;
     // Preserva a ordem da tela enquanto o usuário edita. Trocar o array aqui
     // invalidava os índices das linhas e podia aplicar a próxima digitação em outra SC.
@@ -1577,7 +1594,7 @@ async function testarStorage(manual){
     var p=await jbRead();
     if(!p||typeof p!=='object') throw new Error('Resposta inválida');
     var ts=Date.now();
-    await jbWrite({data:p.data||DATA,ts:ts});
+    await jbWrite({data:p.data||DATA,users:p.users||USERS,audit:p.audit||AUDIT,orders:p.orders||ORDERS,followup:p.followup||FOLLOWUP,ts:ts});
     _lastTs=ts;
     setSyncChip('🟢 base protegida ativo','ok');
     setBannerState('ok','Sincronização ativa — base protegida funcionando','Edições salvas localmente (imediato) e sincronizadas com a equipe em até '+DEBOUNCE+'ms. Polling a cada '+Math.round(POLL_MS/1000)+'s.');
@@ -1728,6 +1745,7 @@ window.addEventListener('offline',function(){if(_pendingSave)setReliableSync('of
 window.addEventListener('online',function(){if(_pendingSave)retryPendingSave();});
 initCredentials();
 </script>
+<script src="/followup.js?v=20261019-workflow"></script>
 <script src="/cotacoes.js?v=20261001-multi-awards"></script>
 </body>
 </html>
