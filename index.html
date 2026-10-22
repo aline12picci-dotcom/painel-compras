@@ -404,6 +404,7 @@ main{padding:26px 32px}
 /* Follow-up de workflows */
 .fu-import input[type=file]{display:none}.fu-week{font-size:10px;color:var(--text3);margin:-6px 0 12px}.fu-agent-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.fu-agent{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin:12px 0}.fu-draft{background:#f8fbfe;border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:10px}.fu-draft-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:9px}.fu-draft label{display:block;font-size:9px;font-weight:700;color:var(--text3);margin-top:8px}.fu-draft input,.fu-draft textarea{display:block;width:100%;border:1px solid var(--border);border-radius:6px;padding:7px;font:10px Sora,sans-serif;margin-top:3px}.fu-draft textarea{min-height:210px;line-height:1.5}.fu-route{min-width:135px;padding:5px;border:1px solid var(--border);border-radius:6px;font:9px Sora,sans-serif}.fu-system-note{max-width:280px;font-size:9px;color:var(--text3);line-height:1.45;margin-top:5px}.fu-pill.ontime{background:#E2E8F0;color:#475569}
 .fu-kpis{display:grid;grid-template-columns:repeat(6,minmax(125px,1fr));gap:10px;margin:14px 0}.fu-kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;box-shadow:var(--shadow1)}.fu-kpi strong{display:block;font-size:22px;color:var(--navy)}.fu-kpi span{font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:700}.fu-import{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.fu-preview{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin:12px 0}.fu-preview-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}.fu-table{min-width:800px}.fu-pill{display:inline-block;padding:4px 7px;border-radius:999px;font-size:8.5px;font-weight:750;white-space:nowrap}.fu-pill.new{background:#DBEAFE;color:#1D4ED8}.fu-pill.persistent{background:#FEF3C7;color:#92400E}.fu-pill.worse{background:#FEE2E2;color:#B91C1C}.fu-pill.changed{background:#EDE9FE;color:#6D28D9}.fu-pill.reopened{background:#FFE4E6;color:#BE123C}.fu-pill.closed{background:#D1FAE5;color:#047857}.fu-warning,.fu-error{padding:10px;border-radius:8px;margin-top:10px;font-size:10px}.fu-warning{background:#FFF7ED;color:#9A3412}.fu-error{background:#FEF2F2;color:#991B1B}.fu-stale{display:inline-block;margin-top:4px;color:#B91C1C;font-size:8px;font-weight:700}.fu-treatment{min-width:230px;min-height:50px;padding:6px;border:1px solid var(--border);border-radius:6px;font:10px Sora,sans-serif}.fu-filter{margin:12px 0}.fu-table-main{min-width:1250px}@media(max-width:900px){.fu-kpis{grid-template-columns:repeat(2,1fr)}}
+.sc-sla-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.sc-sla-age{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.sc-age-cell{background:#f3f7fb;border:1px solid #dce6ee;border-radius:8px;padding:10px}.sc-age-cell strong{display:block;font-size:22px;color:#193855}.sc-age-cell span{font-size:10px;color:#64748b}.sc-age-cell:last-child{background:#fff0f5}@media(max-width:800px){.sc-sla-summary{grid-template-columns:1fr}.sc-sla-age{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -550,10 +551,10 @@ main{padding:26px 32px}
         <th onclick="sortBy(3)">Descrição <span class="si">↕</span></th>
         <th onclick="sortBy(4)">Aprovação <span class="si">↕</span></th>
         <th onclick="sortBy(5)">Entrega SC <span class="si">↕</span></th>
-        <th onclick="sortBy(6)">Limite Compra <span class="si">↕</span></th>
+        <th onclick="sortBy(6)">Vencimento · 5 d.u. <span class="si">↕</span></th>
         <th>Observação</th>
         <th onclick="sortBy(7)">Solicitante <span class="si">↕</span></th>
-        <th onclick="sortBy(8)">Dias <span class="si">↕</span></th>
+        <th onclick="sortBy(8)">Dias úteis <span class="si">↕</span></th>
         <th>Responsável</th>
         <th>Motivo / Pendência</th>
       </tr></thead>
@@ -578,6 +579,8 @@ main{padding:26px 32px}
       <div class="mgmt-updated"><span id="mgmt-period-note">SCs abertas · pedidos do mês</span><br>Atualizado em <strong id="mgmt-updated-at">—</strong></div>
     </div>
   </div>
+
+<div class="card" id="sc-sla-dashboard"><div class="card-hdr"><div><div class="card-title">Atendimento das SCs · aprovação → emissão do PC</div><div class="card-sub">Meta: 5 dias úteis · calendário da unidade · período pela emissão do PC</div></div></div><div id="sc-sla-summary" class="sc-sla-summary"></div><div style="height:260px"><canvas id="sc-sla-chart" aria-label="Tempo médio de atendimento por tipo" role="img"></canvas></div><h3 style="font-size:12px;margin:18px 0 10px">Idade da fila aberta</h3><div id="sc-sla-age" class="sc-sla-age"></div><p id="sc-sla-note" class="quote-muted" style="margin-top:12px"></p><details style="margin-top:12px"><summary>Calendários e critérios</summary><p class="quote-muted">Phal Ind: Indaiatuba · Phal SPO: São Paulo · Pharmabag: Ribeirão Preto · Nutriente: Rio de Janeiro · Clinutri: Recife. Exclui fins de semana e feriados legais; pontos facultativos não são descontados. Aprovação é dia zero. Vencimento até o final do 5º dia útil. Calendários recorrentes conferidos em 22/10/2026. Não usa encerramento, confirmação do fornecedor ou aprovação do PC como fim do atendimento. Prazo original do Excel permanece preservado.</p><p class="quote-muted">Fontes: <a target="_blank" rel="noopener" href="https://www.indaiatuba.sp.gov.br/juridico/tecnica-legislativa/feriados/">Indaiatuba</a> · <a target="_blank" rel="noopener" href="https://sapl.indaiatuba.sp.leg.br/consultas/norma_juridica/norma_juridica_mostrar_proc?cod_norma=8271">Lei 8.592/2026</a> · <a target="_blank" rel="noopener" href="https://prefeitura.sp.gov.br/web/gestao/w/calendario_2026">São Paulo</a> · <a target="_blank" rel="noopener" href="https://www.ribeiraopreto.sp.gov.br/portal/principal/feriados">Ribeirão Preto</a> · <a target="_blank" rel="noopener" href="https://www2.recife.pe.gov.br/servico/feriados-municipais">Recife</a> · <a target="_blank" rel="noopener" href="https://www.alerj.rj.gov.br/Visualizar/Noticia/80212">Rio de Janeiro</a>.</p></details></div>
   <div class="mgmt-executive">
     <div class="mgmt-exec-icon">✨</div>
     <div><span>RESUMO EXECUTIVO AUTOMÁTICO</span><p id="mgmt-executive-text">Analisando os dados do período selecionado…</p></div>
@@ -656,23 +659,23 @@ main{padding:26px 32px}
 <!-- ═══ SEÇÕES POR EMPRESA ═══ -->
 <section id="sec-phal" class="section">
   <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal Ind</h2><p id="cnt-phal-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
 </section>
 <section id="sec-phalspo" class="section">
   <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal SPO</h2><p id="cnt-phalspo-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phalspo"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phalspo"></tbody></table></div>
 </section>
 <section id="sec-pharmabag" class="section">
   <div class="emp-ph ep-p"><div class="company-section-logo"><img src="/assets/pharmabag-logo.jpg" alt="Pharmabag"></div><div><h2>Pharmabag</h2><p id="cnt-pharma-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
 </section>
 <section id="sec-nutriente" class="section">
   <div class="emp-ph ep-n"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Nutriente</h2><p id="cnt-nutri-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
 </section>
 <section id="sec-clinutri" class="section">
   <div class="emp-ph ep-c"><div class="company-section-logo"><img src="/assets/clinutri-logo.png" alt="Clinutri"></div><div><h2>Clinutri</h2><p id="cnt-clinu-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Limite Compra</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
 </section>
 
 
@@ -721,6 +724,7 @@ main{padding:26px 32px}
 </section>
 </main>
 
+<script src="/sc-sla.js?v=20261022"></script>
 <script>
 // ═══════════════════════════════════════════════════════
 //  PAINEL SC COMPRAS — Grupo Emede
@@ -801,7 +805,7 @@ function empTag(e){
 
 // ── RENDERIZAÇÃO DE LINHA ────────────────────────────────
 function rowHTML(r, showEmp){
-  var idx=DATA.indexOf(r), days=dO(r.aprovacao||r.emissao), sol=resSOL(r.solicitante);
+  var idx=DATA.indexOf(r), days=scSlaElapsed(r), sol=resSOL(r.solicitante);
   var scC={'Phal Ind':'#C41E1E','Pharmabag':'#1558B0','Nutriente':'#1A3A6B','Clinutri':'#0F7A4A','Phal SPO':'#C41E1E'}[r.empresa]||'#1A3A6B';
   var rv=r.resp||'', reason=r.reason||'', obs=r.obs||[r.f1,r.f2,r.f3].filter(function(x){return x;}).join(' | ');
   var respOpts='<option value=""'+(!rv?' selected':'')+'>— Responsável —</option>'+USERS.filter(function(u){return isCurrentBuyer(u)||u.name===rv;}).map(function(u){return '<option value="'+u.name+'"'+(rv===u.name?' selected':'')+'>'+u.name+'</option>';}).join('');
@@ -821,12 +825,12 @@ function rowHTML(r, showEmp){
     +'<option'+(r.status==='Rejeitada'?' selected':'')+'>Rejeitada</option>'
     +'</select></td>'
     +'<td class="desc">'+r.descricao+'</td>'
-    +'<td class="dc">'+(r.aprovacao||r.emissao||'')+'</td>'
+    +'<td class="dc">'+(r.aprovacao||'Sem aprovação')+'</td>'
     +'<td class="dc">'+r.entrega+'</td>'
-    +'<td class="dc">'+r.limite+'</td>'
+    +'<td class="dc" title="5 dias úteis após aprovação · '+esc(SC_SLA_CITIES[r.empresa]||'Calendário não definido')+'">'+scDateBR(scSlaDue(r))+'</td>'
     +'<td><input class="forn-c" placeholder="Registre retornos, negociações e próximos passos..." value="'+obs.replace(/"/g,'&quot;')+'" oninput="upd('+idx+',\'obs\',this.value)"><div class="move-meta">'+movementLabel(r)+(stale?'<br><span class="stale-badge">⚠ '+businessDaysSince(r.lastMovementAt)+' dias úteis sem atualização</span>':'')+'</div></td>'
     +'<td class="sol-nm">'+sol+'</td>'
-    +'<td>'+dB(days)+'</td>'
+    +'<td>'+(days===null?'—':dB(days))+'</td>'
     +'<td><select class="resp-sel" onchange="upd('+idx+',\'resp\',this.value)">'+respOpts+'</select></td>'
     +'<td><select class="reason-sel" onchange="upd('+idx+',\'reason\',this.value)">'+reasonOpts+'</select></td>'
     +'</tr>';
@@ -1072,34 +1076,36 @@ function renderOrders(){
 }
 
 function priorityInfo(r){
-  var tags=[],lim=pD(r.limite),now=new Date(TODAY),soon=new Date(TODAY);soon.setDate(soon.getDate()+7);
-  var overdue=!!(lim&&lim<TODAY),due=!!(lim&&lim>=TODAY&&lim<=soon),stale=businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;
+  var tags=[],lim=scSlaDueDate(r),now=new Date(TODAY),soon=scAddBusinessDays(scTodayDay(),2,r.empresa);
+  var overdue=!!(lim&&lim<TODAY),due=!!(lim&&scSlaDue(r)>=scTodayDay()&&scSlaDue(r)<=soon),stale=businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;
   var third=/fornecedor|solicitante|aprova/i.test(r.reason||'');
-  if(overdue)tags.push({t:'Prazo vencido',c:'danger'});if(stale)tags.push({t:'Sem atualização',c:'warn'});if(due)tags.push({t:'Vence em breve',c:'warn'});if(third)tags.push({t:'Terceiros',c:''});
+  if(scDay(r.aprovacao)===null)tags.push({t:'Sem aprovação',c:'warn'});else if(scSlaDue(r)===scTodayDay())tags.push({t:'Vence hoje',c:'warn'});if(overdue)tags.push({t:'Prazo vencido',c:'danger'});if(stale)tags.push({t:'Sem atualização',c:'warn'});if(due)tags.push({t:'Vence em breve',c:'warn'});if(third)tags.push({t:'Terceiros',c:''});
   return {overdue:overdue,due:due,stale:stale,third:third,tags:tags,score:(overdue?8:0)+(stale?4:0)+(due?2:0)+(third?1:0)};
 }
 function setPriorityFilter(f,btn){PRIORITY_FILTER=f;document.querySelectorAll('.priority-card').forEach(function(x){x.classList.remove('active');});if(btn)btn.classList.add('active');renderPriorities();}
-function priorityRowHTML(r){
+function priorityRowHTML(r,rank){
   var idx=DATA.indexOf(r),p=priorityInfo(r),obs=r.obs||'',reason=r.reason||'',tags=p.tags.length?p.tags.map(function(x){return '<span class="priority-tag '+x.c+'">'+x.t+'</span>';}).join(''):'<span class="priority-tag">Acompanhar</span>';
   var reasonOpts='<option value=""'+(!reason?' selected':'')+'>— Motivo —</option>'+REASONS.map(function(x){return '<option value="'+x+'"'+(reason===x?' selected':'')+'>'+x+'</option>';}).join('');
-  return '<tr class="'+(p.overdue||p.stale?'stale-row':'')+'"><td><div class="priority-tags">'+tags+'</div></td><td>'+empTag(r.empresa)+'</td><td><span class="sc-num">'+esc(r.sc)+'</span><br><span style="font-size:9px">'+esc(r.item)+'</span></td><td><select class="ssel '+sCls(r.status)+'" onchange="chSt('+idx+',this)"><option'+(r.status==='Aguarda cotação'?' selected':'')+'>Aguarda cotação</option><option'+(r.status==='Em cotação'?' selected':'')+'>Em cotação</option><option'+(r.status==='Emitir PC'?' selected':'')+'>Emitir PC</option><option>Finalizada</option><option>Rejeitada</option></select></td><td class="desc">'+esc(r.descricao)+'</td><td class="dc">'+esc(r.limite||'—')+'</td><td><input class="forn-c" placeholder="Registre retornos, negociações e próximos passos..." value="'+esc(obs)+'" oninput="upd('+idx+',\'obs\',this.value)"><div class="move-meta">'+movementLabel(r)+'</div></td><td><select class="reason-sel" onchange="upd('+idx+',\'reason\',this.value)">'+reasonOpts+'</select></td></tr>';
+  return '<tr class="'+(p.overdue||p.stale?'stale-row':'')+'"><td><strong>#'+rank+'</strong><div class="priority-tags">'+tags+'</div><label class="quote-muted"><input type="checkbox" '+(r.urgent===true?'checked':'')+' onchange="upd('+idx+',\'urgent\',this.checked);refreshAll()"> Urgente</label></td><td>'+empTag(r.empresa)+'</td><td><span class="sc-num">'+esc(r.sc)+'</span><br><span style="font-size:9px">'+esc(r.item)+'</span><div class="move-meta">Aprovação: '+esc(r.aprovacao||'não informada')+'</div></td><td><select class="ssel '+sCls(r.status)+'" onchange="chSt('+idx+',this)"><option'+(r.status==='Aguarda cotação'?' selected':'')+'>Aguarda cotação</option><option'+(r.status==='Em cotação'?' selected':'')+'>Em cotação</option><option'+(r.status==='Emitir PC'?' selected':'')+'>Emitir PC</option><option>Finalizada</option><option>Rejeitada</option></select></td><td class="desc">'+esc(r.descricao)+'</td><td class="dc">'+scDateBR(scSlaDue(r))+'</td><td><input class="forn-c" placeholder="Registre retornos, negociações e próximos passos..." value="'+esc(obs)+'" oninput="upd('+idx+',\'obs\',this.value)"><div class="move-meta">'+movementLabel(r)+'</div></td><td><select class="reason-sel" onchange="upd('+idx+',\'reason\',this.value)">'+reasonOpts+'</select></td></tr>';
 }
 function renderPriorities(){
   var mine=DATA.filter(function(r){return isOpen(r)&&r.resp===ACTIVE_USER;});
   var groups={overdue:0,stale:0,due:0,third:0};mine.forEach(function(r){var p=priorityInfo(r);Object.keys(groups).forEach(function(k){if(p[k])groups[k]++;});});
   var ids={all:mine.length,overdue:groups.overdue,stale:groups.stale,due:groups.due,third:groups.third};Object.keys(ids).forEach(function(k){var e=document.getElementById('pk-'+k);if(e)e.textContent=ids[k];});
-  var rows=mine.filter(function(r){return PRIORITY_FILTER==='all'||priorityInfo(r)[PRIORITY_FILTER];}).sort(function(a,b){var pa=priorityInfo(a),pb=priorityInfo(b);return pb.score-pa.score||(pD(a.limite)||9999999999999)-(pD(b.limite)||9999999999999);});
-  var body=document.getElementById('priority-body');if(body)body.innerHTML=rows.length?rows.map(priorityRowHTML).join(''):'<tr><td colspan="8" class="priority-empty">Nenhuma SC nesta categoria. ✓</td></tr>';
-  var sub=document.getElementById('priority-subtitle');if(sub)sub.textContent=ACTIVE_USER+' · '+rows.length+' item(ns) exibido(s)';
+  var ranking=mine.slice().sort(scRankCompare);
+  var rows=mine.filter(function(r){return PRIORITY_FILTER==='all'||priorityInfo(r)[PRIORITY_FILTER];}).sort(function(a,b){return scRankCompare(a,b);});
+  var body=document.getElementById('priority-body');if(body)body.innerHTML=rows.length?rows.map(function(r){return priorityRowHTML(r,ranking.indexOf(r)+1);}).join(''):'<tr><td colspan="8" class="priority-empty">Nenhuma SC nesta categoria. ✓</td></tr>';
+  var sub=document.getElementById('priority-subtitle');if(sub)sub.textContent=ACTIVE_USER+' · '+rows.length+' itens · aprovação mais antiga primeiro; urgências destacadas no topo';
 }
 
 function renderHistory(){var q=((document.getElementById('history-search')||{}).value||'').toLowerCase();var rows=DATA.filter(function(r){return !isOpen(r);}).filter(function(r){return [r.empresa,r.sc,r.item,r.descricao,r.resp,r.closedBy,r.obs].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){return new Date(b.closedAt||b.lastMovementAt||0)-new Date(a.closedAt||a.lastMovementAt||0);});var body=document.getElementById('history-body');if(body)body.innerHTML=rows.map(function(r){return '<tr><td>'+empTag(r.empresa)+'</td><td><span class="sc-num">'+esc(r.sc)+'</span><br>'+esc(r.item)+'</td><td><span class="'+sCls(r.status)+'">'+esc(r.status)+'</span></td><td class="desc">'+esc(r.descricao)+'</td><td>'+esc(r.resp||'—')+'</td><td>'+fmtDateTime(r.closedAt||r.lastMovementAt)+'</td><td>'+esc(r.closedBy||r.lastUpdatedBy||'—')+'</td><td>'+esc(r.obs||'—')+'</td></tr>';}).join('');var c=document.getElementById('history-count');if(c)c.textContent=rows.length+' registros';}
 
 // ── REFRESH GERAL ────────────────────────────────────────
 function refreshAll(){
+  TODAY.setTime(new Date().setHours(0,0,0,0));
   DATA.forEach(function(r){ if(!r.obs){ r.obs=[r.f1,r.f2,r.f3].filter(function(x){return x;}).join(' | '); } });
   setupControls();
-  var open=DATA.filter(isOpen).sort(function(a,b){ return (pD(a.aprovacao||a.emissao)||0)-(pD(b.aprovacao||b.emissao)||0); });
+  var open=DATA.filter(isOpen).sort(function(a,b){ return scRankCompare(a,b); });
   var cot=open.filter(function(r){ return r.status.trim().toLowerCase()==='em cotação'; }).length;
   var pc=open.filter(function(r){ return r.status.trim().toLowerCase()==='emitir pc'; }).length;
   document.getElementById('kpi-total').textContent=open.length;
@@ -1124,7 +1130,7 @@ function refreshAll(){
 function applyFilters(){
   var q=(document.getElementById('search-input')||{}).value||'';q=q.toLowerCase();
   var emp=(document.getElementById('filter-empresa')||{}).value||'',st=(document.getElementById('filter-status')||{}).value||'',rsp=(document.getElementById('filter-resp')||{}).value||'',rsn=(document.getElementById('filter-reason')||{}).value||'';
-  var open=DATA.filter(isOpen).sort(function(a,b){return (pD(a.aprovacao||a.emissao)||0)-(pD(b.aprovacao||b.emissao)||0);});
+  var open=DATA.filter(isOpen).sort(function(a,b){return scRankCompare(a,b);});
   var f=open.filter(function(r){
     var mq=!q||(r.sc+r.descricao+resSOL(r.solicitante)+r.solicitante+(r.obs||'')+(r.reason||'')).toLowerCase().indexOf(q)>=0;
     return dashboardMatches(r,DASH_FILTER)&&mq&&(!emp||r.empresa===emp)&&(!st||r.status.trim().toLowerCase()===st.toLowerCase())&&(!rsp||(rsp==='__none'?!r.resp:(r.resp||'')===rsp))&&(!rsn||(rsn==='__none'?!r.reason:(r.reason||'')===rsn));
@@ -1137,7 +1143,7 @@ var _sKeys=['empresa','sc','status','descricao','aprovacao','entrega','limite','
 function sortBy(col){
   _sD[col]=(_sD[col]||1)*-1; var k=_sKeys[col];
   DATA.sort(function(a,b){
-    var av=a[k]||'',bv=b[k]||'';
+    var av=k==='limite'?scDateBR(scSlaDue(a)):(a[k]||''),bv=k==='limite'?scDateBR(scSlaDue(b)):(b[k]||'');
     if(['aprovacao','entrega','limite'].indexOf(k)>=0){ av=pD(av)||new Date(0); bv=pD(bv)||new Date(0); return(av-bv)*_sD[col]; }
     return av.localeCompare(bv)*_sD[col];
   });
@@ -1199,7 +1205,7 @@ function dashboardMatches(r,f){
     if(spec.key!=='portfolio'&&spec.key!=='all'&&!inMgmtRange(mgmtEntryDate(r),spec.start,spec.end))return false;
   }
   if(!f||f==='all')return true;
-  if(f==='overdue'){var l=pD(r.limite);return !!(l&&l<TODAY);}
+  if(f==='overdue'){var l=scSlaDueDate(r);return !!(l&&l<TODAY);}
   if(f==='stale')return businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;
   if(f==='unassigned')return !String(r.resp||'').trim();
   if(f==='supplier')return /fornecedor/i.test(r.reason||'');
@@ -1239,15 +1245,16 @@ function renderManagementDashboard(open){
   var now=new Date(),spec=mgmtPeriodSpec(MGMT_PERIOD);
   var scopedOpen=(spec.key==='portfolio'||spec.key==='all')?open:open.filter(function(r){return inMgmtRange(mgmtEntryDate(r),spec.start,spec.end);});
   renderPurchaseWorkload(ORDERS.filter(function(o){return spec.key==='portfolio'?orderMonthKey(o.issuedAt)===now.toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),spec.start,spec.end);}));
+  renderScSlaDashboard(DATA,ORDERS,spec);
   var previousOpen=spec.prevStart?open.filter(function(r){return inMgmtRange(mgmtEntryDate(r),spec.prevStart,spec.prevEnd);}):null;
   var scopedOrders=ORDERS.filter(function(o){return spec.key==='portfolio'?orderMonthKey(o.issuedAt)===now.toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),spec.start,spec.end);});
   var previousOrders=ORDERS.filter(function(o){return inMgmtRange(mgmtOrderDate(o),spec.prevStart,spec.prevEnd);});
-  var overdue=scopedOpen.filter(function(r){var l=pD(r.limite);return l&&l<TODAY;});
+  var overdue=scopedOpen.filter(function(r){var l=scSlaDueDate(r);return l&&l<TODAY;});
   var stale=scopedOpen.filter(function(r){return businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;});
   var unassigned=scopedOpen.filter(function(r){return !String(r.resp||'').trim();});
   var supplier=scopedOpen.filter(function(r){return /fornecedor/i.test(r.reason||'');});
   var prevMetric=function(fn){return previousOpen?previousOpen.filter(fn).length:null;};
-  var isOverdue=function(r){var l=pD(r.limite);return l&&l<TODAY;},isStale=function(r){return businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;},isUnassigned=function(r){return !String(r.resp||'').trim();},isSupplier=function(r){return /fornecedor/i.test(r.reason||'');};
+  var isOverdue=function(r){var l=scSlaDueDate(r);return l&&l<TODAY;},isStale=function(r){return businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;},isUnassigned=function(r){return !String(r.resp||'').trim();},isSupplier=function(r){return /fornecedor/i.test(r.reason||'');};
   setMgmtValue('mg-open',scopedOpen.length);setMgmtValue('mg-overdue',overdue.length);setMgmtValue('mg-stale',stale.length);setMgmtValue('mg-unassigned',unassigned.length);setMgmtValue('mg-supplier',supplier.length);
   var ow=scopedOrders.filter(function(o){return o.status==='Aguarda aprovação';}).length,orr=scopedOrders.filter(function(o){return o.status==='Pedido Rejeitado';}).length,ouc=scopedOrders.filter(function(o){return o.status==='Pedido enviado'&&orderRequiresConfirmation(o);}).length;
   setMgmtValue('mg-order-wait',ow);setMgmtValue('mg-order-rejected',orr);setMgmtValue('mg-order-unconfirmed',ouc);
@@ -1273,7 +1280,7 @@ function renderManagementDashboard(open){
   mgmtTrend('mg-trend-order-unconfirmed',ouc,previousOrders.filter(function(o){return o.status==='Pedido enviado'&&orderRequiresConfirmation(o);}).length,true);
 
   var critical=scopedOpen.map(function(r){
-    var bd=businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao),lim=pD(r.limite),ov=!!(lim&&lim<TODAY),score=(ov?100:0)+(bd>=3?bd:0)+(!r.resp?20:0);
+    var bd=businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao),lim=scSlaDueDate(r),ov=!!(lim&&lim<TODAY),score=(ov?100:0)+(bd>=3?bd:0)+(!r.resp?20:0);
     return {r:r,bd:bd,ov:ov,score:score};
   }).filter(function(x){return x.ov||x.bd>=3||!x.r.resp;}).sort(function(a,b){return b.score-a.score;});
   var criticalKeys={},uniqueCritical=[];critical.forEach(function(x){var k=(x.r.empresa||'')+'|'+x.r.sc+'|'+x.r.item;if(!criticalKeys[k]){criticalKeys[k]=1;uniqueCritical.push(x);}});
@@ -1297,9 +1304,9 @@ function renderManagementDashboard(open){
   var buyerStart=doneStart,buyerEnd=doneEnd,names=Array.from(new Set(USERS.filter(isCurrentBuyer).map(function(u){return u.name;}).concat(['portfolio','current'].includes(MGMT_PERIOD)?[]:DATA.filter(function(r){return !isOpen(r);}).map(function(r){return r.responsavel;}).filter(Boolean)))),buyer=document.getElementById('mg-buyer-body');
   if(buyer)buyer.innerHTML=names.map(function(name){
     var cart=scopedOpen.filter(function(r){return r.resp===name;}),venc=cart.filter(isOverdue).length,sem=cart.filter(isStale).length;
-    var finished=DATA.filter(function(r){var c=dateFromRecord(r.closedAt);return r.resp===name&&inMgmtRange(c,buyerStart,buyerEnd)&&String(r.status).toLowerCase()==='finalizada';});
-    var durations=finished.map(function(r){return orderBusinessDaysBetween(dateFromRecord(r.aprovacao||r.emissao),dateFromRecord(r.closedAt));}).filter(function(n){return n!==null;}),avg=durations.length?(durations.reduce(function(a,b){return a+b;},0)/durations.length).toFixed(1)+' d.u.':'—';
-    var withLimit=finished.filter(function(r){return pD(r.limite);}),inside=withLimit.filter(function(r){return dateFromRecord(r.closedAt)<=pD(r.limite);}).length,pct=withLimit.length?Math.round(inside/withLimit.length*100)+'%':'—';
+    var issued=scIssueRecords(DATA,ORDERS).filter(function(x){return (x.r.resp||x.order.owner)===name&&inMgmtRange(new Date(x.issue*SC_SLA_DAY+12*3600000),buyerStart,buyerEnd);});
+    var finished=issued.map(function(x){return x.r;}),durations=issued.map(function(x){return x.days;}),avg=durations.length?(durations.reduce(function(a,b){return a+b;},0)/durations.length).toFixed(1)+' d.u.':'—';
+    var inside=issued.filter(function(x){return x.onTime;}).length,pct=issued.length?Math.round(inside/issued.length*100)+'%':'—';
     return '<tr><td><strong>'+esc(name)+'</strong></td><td>'+cart.length+'</td><td class="'+(venc?'danger-num':'')+'">'+venc+'</td><td class="'+(sem?'danger-num':'')+'">'+sem+'</td><td class="ok-num">'+finished.length+'</td><td>'+avg+'</td><td class="ok-num">'+pct+'</td></tr>';
   }).join('');
 
@@ -1373,7 +1380,7 @@ function renderRespSummary(open){
   el.innerHTML=names.map(function(n){
     var rows=open.filter(function(r){return n==='Sem responsável'?!r.resp:r.resp===n;});
     var cot=rows.filter(function(r){return String(r.status).toLowerCase()==='em cotação';}).length;
-    var venc=rows.filter(function(r){var l=pD(r.limite);return l&&l<TODAY;}).length;
+    var venc=rows.filter(function(r){var l=scSlaDueDate(r);return l&&l<TODAY;}).length;
     var sem=rows.filter(function(r){return !r.reason;}).length;
     return '<div class="resp-card"><div class="rn">'+n+'</div><div class="rv">'+rows.length+'</div><div class="rs">'+cot+' em cotação · '+venc+' vencidas · '+sem+' sem motivo</div></div>';
   }).join('');
