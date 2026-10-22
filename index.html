@@ -554,7 +554,7 @@ main{padding:26px 32px}
         <th onclick="sortBy(6)">Vencimento · 5 d.u. <span class="si">↕</span></th>
         <th>Observação</th>
         <th onclick="sortBy(7)">Solicitante <span class="si">↕</span></th>
-        <th onclick="sortBy(8)">Dias <span class="si">↕</span></th>
+        <th onclick="sortBy(8)">Dias úteis <span class="si">↕</span></th>
         <th>Responsável</th>
         <th>Motivo / Pendência</th>
       </tr></thead>
@@ -580,7 +580,7 @@ main{padding:26px 32px}
     </div>
   </div>
 
-<div class="card" id="sc-sla-dashboard"><div class="card-hdr"><div><div class="card-title">Atendimento das SCs · aprovação → emissão do PC</div><div class="card-sub">Meta: 5 dias úteis · calendário da unidade · período pela emissão do PC</div></div></div><div id="sc-sla-summary" class="sc-sla-summary"></div><div style="height:260px"><canvas id="sc-sla-chart" aria-label="Tempo médio de atendimento por tipo" role="img"></canvas></div><h3 style="font-size:12px;margin:18px 0 10px">Idade da fila aberta</h3><div id="sc-sla-age" class="sc-sla-age"></div><p id="sc-sla-note" class="quote-muted" style="margin-top:12px"></p><details style="margin-top:12px"><summary>Calendários e critérios</summary><p class="quote-muted">Phal Ind: Indaiatuba · Phal SPO: São Paulo · Pharmabag: Ribeirão Preto · Nutriente: Rio de Janeiro · Clinutri: Recife. Exclui fins de semana e feriados legais; pontos facultativos não são descontados. Aprovação é dia zero. Vencimento até o final do 5º dia útil. Calendários recorrentes conferidos em 22/10/2026. Não usa encerramento, confirmação do fornecedor ou aprovação do PC como fim do atendimento. Prazo original do Excel permanece preservado.</p></details></div>
+<div class="card" id="sc-sla-dashboard"><div class="card-hdr"><div><div class="card-title">Atendimento das SCs · aprovação → emissão do PC</div><div class="card-sub">Meta: 5 dias úteis · calendário da unidade · período pela emissão do PC</div></div></div><div id="sc-sla-summary" class="sc-sla-summary"></div><div style="height:260px"><canvas id="sc-sla-chart" aria-label="Tempo médio de atendimento por tipo" role="img"></canvas></div><h3 style="font-size:12px;margin:18px 0 10px">Idade da fila aberta</h3><div id="sc-sla-age" class="sc-sla-age"></div><p id="sc-sla-note" class="quote-muted" style="margin-top:12px"></p><details style="margin-top:12px"><summary>Calendários e critérios</summary><p class="quote-muted">Phal Ind: Indaiatuba · Phal SPO: São Paulo · Pharmabag: Ribeirão Preto · Nutriente: Rio de Janeiro · Clinutri: Recife. Exclui fins de semana e feriados legais; pontos facultativos não são descontados. Aprovação é dia zero. Vencimento até o final do 5º dia útil. Calendários recorrentes conferidos em 22/10/2026. Não usa encerramento, confirmação do fornecedor ou aprovação do PC como fim do atendimento. Prazo original do Excel permanece preservado.</p><p class="quote-muted">Fontes: <a target="_blank" rel="noopener" href="https://www.indaiatuba.sp.gov.br/juridico/tecnica-legislativa/feriados/">Indaiatuba</a> · <a target="_blank" rel="noopener" href="https://sapl.indaiatuba.sp.leg.br/consultas/norma_juridica/norma_juridica_mostrar_proc?cod_norma=8271">Lei 8.592/2026</a> · <a target="_blank" rel="noopener" href="https://prefeitura.sp.gov.br/web/gestao/w/calendario_2026">São Paulo</a> · <a target="_blank" rel="noopener" href="https://www.ribeiraopreto.sp.gov.br/portal/principal/feriados">Ribeirão Preto</a> · <a target="_blank" rel="noopener" href="https://www2.recife.pe.gov.br/servico/feriados-municipais">Recife</a> · <a target="_blank" rel="noopener" href="https://www.alerj.rj.gov.br/Visualizar/Noticia/80212">Rio de Janeiro</a>.</p></details></div>
   <div class="mgmt-executive">
     <div class="mgmt-exec-icon">✨</div>
     <div><span>RESUMO EXECUTIVO AUTOMÁTICO</span><p id="mgmt-executive-text">Analisando os dados do período selecionado…</p></div>
@@ -659,23 +659,23 @@ main{padding:26px 32px}
 <!-- ═══ SEÇÕES POR EMPRESA ═══ -->
 <section id="sec-phal" class="section">
   <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal Ind</h2><p id="cnt-phal-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
 </section>
 <section id="sec-phalspo" class="section">
   <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal SPO</h2><p id="cnt-phalspo-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phalspo"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phalspo"></tbody></table></div>
 </section>
 <section id="sec-pharmabag" class="section">
   <div class="emp-ph ep-p"><div class="company-section-logo"><img src="/assets/pharmabag-logo.jpg" alt="Pharmabag"></div><div><h2>Pharmabag</h2><p id="cnt-pharma-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
 </section>
 <section id="sec-nutriente" class="section">
   <div class="emp-ph ep-n"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Nutriente</h2><p id="cnt-nutri-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
 </section>
 <section id="sec-clinutri" class="section">
   <div class="emp-ph ep-c"><div class="company-section-logo"><img src="/assets/clinutri-logo.png" alt="Clinutri"></div><div><h2>Clinutri</h2><p id="cnt-clinu-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
 </section>
 
 
