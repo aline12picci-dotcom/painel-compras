@@ -406,6 +406,7 @@ main{padding:26px 32px}
 .fu-kpis{display:grid;grid-template-columns:repeat(6,minmax(125px,1fr));gap:10px;margin:14px 0}.fu-kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;box-shadow:var(--shadow1)}.fu-kpi strong{display:block;font-size:22px;color:var(--navy)}.fu-kpi span{font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:700}.fu-import{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.fu-preview{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin:12px 0}.fu-preview-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}.fu-table{min-width:800px}.fu-pill{display:inline-block;padding:4px 7px;border-radius:999px;font-size:8.5px;font-weight:750;white-space:nowrap}.fu-pill.new{background:#DBEAFE;color:#1D4ED8}.fu-pill.persistent{background:#FEF3C7;color:#92400E}.fu-pill.worse{background:#FEE2E2;color:#B91C1C}.fu-pill.changed{background:#EDE9FE;color:#6D28D9}.fu-pill.reopened{background:#FFE4E6;color:#BE123C}.fu-pill.closed{background:#D1FAE5;color:#047857}.fu-warning,.fu-error{padding:10px;border-radius:8px;margin-top:10px;font-size:10px}.fu-warning{background:#FFF7ED;color:#9A3412}.fu-error{background:#FEF2F2;color:#991B1B}.fu-stale{display:inline-block;margin-top:4px;color:#B91C1C;font-size:8px;font-weight:700}.fu-treatment{min-width:230px;min-height:50px;padding:6px;border:1px solid var(--border);border-radius:6px;font:10px Sora,sans-serif}.fu-filter{margin:12px 0}.fu-table-main{min-width:1250px}@media(max-width:900px){.fu-kpis{grid-template-columns:repeat(2,1fr)}}
 .sc-sla-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.sc-sla-age{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.sc-age-cell{background:#f3f7fb;border:1px solid #dce6ee;border-radius:8px;padding:10px}.sc-age-cell strong{display:block;font-size:22px;color:#193855}.sc-age-cell span{font-size:10px;color:#64748b}.sc-age-cell:last-child{background:#fff0f5}@media(max-width:800px){.sc-sla-summary{grid-template-columns:1fr}.sc-sla-age{grid-template-columns:repeat(2,1fr)}}
 .sc-rank-cell{width:62px;text-align:center;color:#193855;font-family:JetBrains Mono,monospace;font-size:12px;background:#edf4fa}
+.undo-item{padding:10px 0;border-bottom:1px solid #e2e8f0;display:flex;flex-direction:column;gap:6px}.undo-item label{font-size:11px}.undo-item select{padding:5px;border:1px solid #cbd5e1;border-radius:5px}
 </style>
 </head>
 <body>
@@ -430,6 +431,7 @@ main{padding:26px 32px}
 <div class="order-field"><label>Envio (se conhecido)</label><input id="manual-sent" type="datetime-local"></div>
 <div class="order-field"><label>Confirmação (se conhecida)</label><input id="manual-confirmed" type="datetime-local"></div>
 <div class="order-field full"><label>Observação</label><textarea id="manual-observation"></textarea></div></div><p class="quote-muted" style="margin:10px 0">Responsável: usuário conectado. Este registro entra no controle sem baixar solicitações de compras.</p><button class="ctrl-btn" type="submit" style="width:100%">Salvar pedido manual</button></form></div></div></div>
+<div class="modal-bg" id="undo-order-modal"><div class="modal"><div class="modal-h"><h3 id="undo-order-title">Desfazer ação</h3><button class="modal-close" type="button" onclick="if(!UNDO_ORDER_BUSY)closeModal('undo-order-modal')">✕</button></div><div class="modal-b"><form onsubmit="confirmUndoOrder(event)"><p class="quote-muted">Selecione somente os itens baixados por engano. A correção retira o vínculo com este pedido e devolve os itens à fila do painel. Não altera o Protheus.</p><div id="undo-order-items" style="max-height:300px;overflow:auto;margin:12px 0"></div><label>Motivo da correção *<textarea id="undo-order-reason" required style="width:100%;min-height:65px;border:1px solid #cbd5e1;border-radius:6px;padding:8px"></textarea></label><button id="undo-order-submit" type="submit" class="ctrl-btn" style="margin-top:12px">Desfazer ação dos itens selecionados</button></form></div></div></div>
 <!-- ═══ HEADER ═══ -->
 <header>
   <div class="hdr-inner">
@@ -725,6 +727,7 @@ main{padding:26px 32px}
 </section>
 </main>
 
+<script src="/order-undo.js?v=20261027"></script>
 <script src="/sc-sla.js?v=20261027-ranking"></script>
 <script>
 // ═══════════════════════════════════════════════════════
@@ -936,7 +939,7 @@ function openOrderModal(value){
   document.getElementById('order-company').value=r.empresa||'';document.getElementById('order-owner').value=ACTIVE_USER;document.getElementById('order-number').value='';document.getElementById('order-supplier').value='';document.getElementById('order-channel').value='Fornecedor';document.getElementById('order-observation').value='';
   document.getElementById('order-supplier').readOnly=false;delete document.getElementById('order-supplier').dataset.existingOrder;document.getElementById('order-channel').disabled=false;document.getElementById('order-purchase-type').disabled=false;
   document.getElementById('existing-order-note').textContent='';
-  document.getElementById('existing-order-numbers').innerHTML=ORDERS.filter(function(o){return o.company===r.empresa;}).map(function(o){return '<option value="'+esc(o.orderNumber)+'">'+esc(o.supplier||'Pedido existente')+'</option>';}).join('');
+  document.getElementById('existing-order-numbers').innerHTML=ORDERS.filter(function(o){return !o.voidedAt;}).filter(function(o){return o.company===r.empresa;}).map(function(o){return '<option value="'+esc(o.orderNumber)+'">'+esc(o.supplier||'Pedido existente')+'</option>';}).join('');
   document.getElementById('order-modal-title').textContent='📦 Finalizar '+items.length+' item'+(items.length>1?'s':'')+' em um único pedido';
   document.getElementById('order-items-summary').textContent=items.length>1?'Preencha os dados uma única vez. Todos os itens abaixo serão agrupados no mesmo pedido.':'O pedido será incluído automaticamente no Controle de Pedidos.';
   document.getElementById('order-selected-items').innerHTML=items.map(function(x){return '<div><strong>SC '+esc(x.sc)+' / '+esc(x.item)+'</strong> — '+esc(x.descricao||'')+'</div>';}).join('');
@@ -951,6 +954,7 @@ function confirmFinalization(){
   var existing=findExistingOrder(r.empresa,num);
   if(existing&&supplier&&existing.supplier&&String(existing.supplier).trim().toLowerCase()!==supplier.toLowerCase()){toast('Esse pedido já pertence a outro fornecedor. Confira o número informado.','err',5500);return;}
   if(existing){
+    if(existing.voidedAt){delete existing.voidedAt;existing.status='Aguarda aprovação';existing.issuedAt=now;existing.approvedAt=null;existing.sentAt=null;existing.confirmedAt=null;}
     var items=Array.isArray(existing.sourceItems)?existing.sourceItems.slice():(existing.sourceSC?[{sc:existing.sourceSC,item:existing.sourceItem,descricao:existing.sourceDescription||''}]:[]);
     selected.forEach(function(row){if(!items.some(function(x){return String(x.sc)===String(row.sc)&&String(x.item)===String(row.item);})){items.push({sc:row.sc,item:row.item,descricao:row.descricao||'',addedAt:now,addedBy:ACTIVE_USER,additionOrigin:'Inclusão posterior sem processo de cotação'});logAudit(row,'Item acrescentado ao pedido','—','PC '+existing.orderNumber+' · inclusão posterior sem processo de cotação');}});
     existing.sourceItems=items;
@@ -970,7 +974,7 @@ function orderWorkType(o){
 }
 function orderWorkControls(o){var type=orderWorkType(o),linked=type==='cotacao'&&typeof QUOTES!=='undefined'&&QUOTES.some(function(q){return q.company===o.company&&q.status==='Finalizado'&&String(q.pcNumber||'').trim()===String(o.orderNumber||'').trim();});return '<div class="order-work-controls"><select aria-label="Tipo do pedido" '+(linked?'disabled':'')+' onchange="updateOrderWork(\''+o.id+'\',\'purchaseType\',this.value)"><option value="">Não classificado</option><option value="cotacao" '+(type==='cotacao'?'selected':'')+'>Com cotação</option><option value="direta" '+(type==='direta'?'selected':'')+'>Emissão direta</option></select><label><input type="checkbox" '+(o.urgent?'checked':'')+' onchange="updateOrderWork(\''+o.id+'\',\'urgent\',this.checked)"> Urgente</label><label><input type="checkbox" '+(orderRequiresConfirmation(o)?'checked':'')+' onchange="updateOrderWork(\''+o.id+'\',\'requiresConfirmation\',this.checked)"> Exige confirmação</label></div>';}
 function updateOrderWork(id,field,value){if(!['purchaseType','urgent','requiresConfirmation'].includes(field))return;var o=ORDERS.find(function(x){return x.id===id;});if(!o)return;var before=o[field];o[field]=value;var now=new Date().toISOString();o.lastMovementAt=now;o.lastUpdatedBy=ACTIVE_USER;o.clientMutationAt=now;AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:field==='urgent'?'Urgência do pedido':field==='requiresConfirmation'?'Confirmação necessária':'Tipo do pedido',before:String(before??'Não classificado'),after:String(value)});triggerSave();refreshAll();}
-function renderPurchaseWorkload(base){base=Array.from(new Map(base.map(function(o){return [o.company+'|'+String(o.orderNumber).trim(),o];})).values());var n={cotacao:0,direta:0,unknown:0,urgent:0};base.forEach(function(o){n[orderWorkType(o)||'unknown']++;if(o.urgent)n.urgent++;});Object.keys(n).forEach(function(k){var el=document.getElementById('work-'+k);if(el)el.textContent=n[k];});}
+function renderPurchaseWorkload(base){base=base.filter(function(o){return !o.voidedAt;});base=Array.from(new Map(base.map(function(o){return [o.company+'|'+String(o.orderNumber).trim(),o];})).values());var n={cotacao:0,direta:0,unknown:0,urgent:0};base.forEach(function(o){n[orderWorkType(o)||'unknown']++;if(o.urgent)n.urgent++;});Object.keys(n).forEach(function(k){var el=document.getElementById('work-'+k);if(el)el.textContent=n[k];});}
 
 function manualDateValue(d){var z=function(n){return String(n).padStart(2,'0');};return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes());}
 function openManualOrder(){
@@ -1061,11 +1065,11 @@ function renderOrders(){
   var monthSel=document.getElementById('order-month'),keys=Array.from(new Set(ORDERS.map(function(o){return orderMonthKey(o.issuedAt);}).filter(Boolean)));if(keys.indexOf(ORDER_MONTH_FILTER)<0)keys.push(ORDER_MONTH_FILTER);keys.sort().reverse();
   if(monthSel){var before=ORDER_MONTH_FILTER;monthSel.innerHTML='<option value="all">Todos os meses</option>'+keys.map(function(k){return '<option value="'+k+'">'+orderMonthLabel(k)+'</option>';}).join('');monthSel.value=before;}
   var rangeSpec=ORDER_DASH_RANGE?mgmtPeriodSpec(ORDER_DASH_RANGE):null;
-  var monthBase=ORDERS.filter(function(o){return rangeSpec?(rangeSpec.key==='portfolio'?orderMonthKey(o.issuedAt)===new Date().toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),rangeSpec.start,rangeSpec.end)):(ORDER_MONTH_FILTER==='all'||orderMonthKey(o.issuedAt)===ORDER_MONTH_FILTER);});
+  var monthBase=ORDERS.filter(function(o){return !o.voidedAt;}).filter(function(o){return rangeSpec?(rangeSpec.key==='portfolio'?orderMonthKey(o.issuedAt)===new Date().toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),rangeSpec.start,rangeSpec.end)):(ORDER_MONTH_FILTER==='all'||orderMonthKey(o.issuedAt)===ORDER_MONTH_FILTER);});
   renderApprovalMetric(monthBase,'oc');
   var alerts={approval:0,send:0,confirm:0,rejected:0};monthBase.forEach(function(o){var a=orderAlertInfo(o);Object.keys(alerts).forEach(function(k){if(a[k])alerts[k]++;});});
   [['oa-approval',alerts.approval],['oa-send',alerts.send],['oa-confirm',alerts.confirm],['oa-rejected',alerts.rejected]].forEach(function(x){var e=document.getElementById(x[0]);if(e)e.textContent=x[1];});
-  var mgSpec=mgmtPeriodSpec(MGMT_PERIOD),mgBase=ORDERS.filter(function(o){return mgSpec.key==='portfolio'?orderMonthKey(o.issuedAt)===new Date().toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),mgSpec.start,mgSpec.end);});
+  var mgSpec=mgmtPeriodSpec(MGMT_PERIOD),mgBase=ORDERS.filter(function(o){return !o.voidedAt;}).filter(function(o){return mgSpec.key==='portfolio'?orderMonthKey(o.issuedAt)===new Date().toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),mgSpec.start,mgSpec.end);});
   renderOrderManagement(mgBase);
   var ownerSelect=document.getElementById('order-owner-filter');if(ownerSelect){var selectedOwner=ownerSelect.value;var historical=rangeSpec?!['portfolio','current'].includes(rangeSpec.key):(ORDER_MONTH_FILTER==='all'||ORDER_MONTH_FILTER!==orderMonthKey(new Date()));var ownerNames=Array.from(new Set(USERS.filter(isCurrentBuyer).map(function(u){return u.name;}).concat(historical?monthBase.map(function(o){return o.owner;}).filter(Boolean):[])));ownerSelect.innerHTML='<option value="">Todos os compradores</option>'+ownerNames.map(function(n){return '<option>'+esc(n)+'</option>';}).join('');ownerSelect.value=ownerNames.includes(selectedOwner)?selectedOwner:'';}
   var q=((document.getElementById('order-search')||{}).value||'').toLowerCase(),st=((document.getElementById('order-status-filter')||{}).value||''),owner=((document.getElementById('order-owner-filter')||{}).value||'');
@@ -1073,7 +1077,7 @@ function renderOrders(){
   var body=document.getElementById('orders-body');if(!body)return;body.innerHTML=rows.length?rows.map(function(o){
     var opts=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'].map(function(x){return '<option'+(o.status===x?' selected':'')+'>'+x+'</option>';}).join('');
     var actions='<select class="reason-sel" onchange="changeOrderAction(\''+o.id+'\',this.value)">'+opts+'</select>',a=orderAlertInfo(o),flag=a.label?'<div class="order-flag '+(a.critical?'danger':'')+'">⚠ '+esc(a.label)+'</div>':'';
-    return '<tr class="'+(orderRowVisualClass(o)||(a.critical?'order-row-danger':a.alert?'order-row-alert':''))+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td><div class="order-supplier-short" title="'+esc(o.supplier)+'">'+esc(o.supplier)+'</div></td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+orderApprovalInput(o)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+(orderRequiresConfirmation(o)?fmtDateTime(o.confirmedAt):'<span class="order-waived">Dispensada</span>')+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'<details class="order-more"><summary>Ajustes do pedido</summary>'+orderWorkControls(o)+'</details></div></td></tr>';
+    return '<tr class="'+(orderRowVisualClass(o)||(a.critical?'order-row-danger':a.alert?'order-row-alert':''))+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td><div class="order-supplier-short" title="'+esc(o.supplier)+'">'+esc(o.supplier)+'</div></td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+orderApprovalInput(o)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+(orderRequiresConfirmation(o)?fmtDateTime(o.confirmedAt):'<span class="order-waived">Dispensada</span>')+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'<details class="order-more"><summary>Ajustes do pedido</summary>'+orderWorkControls(o)+(undoOrderItems(o).length?'<button type="button" class="ctrl-btn" onclick="openUndoOrder(\''+o.id+'\')">Desfazer ação</button>':'')+'</details></div></td></tr>';
   }).join(''):'<tr><td colspan="11" class="priority-empty">Nenhum pedido encontrado para os filtros selecionados.</td></tr>';
 }
 
@@ -1246,11 +1250,11 @@ function renderManagementDashboard(open){
   open=open||DATA.filter(isOpen);
   var now=new Date(),spec=mgmtPeriodSpec(MGMT_PERIOD);
   var scopedOpen=(spec.key==='portfolio'||spec.key==='all')?open:open.filter(function(r){return inMgmtRange(mgmtEntryDate(r),spec.start,spec.end);});
-  renderPurchaseWorkload(ORDERS.filter(function(o){return spec.key==='portfolio'?orderMonthKey(o.issuedAt)===now.toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),spec.start,spec.end);}));
+  renderPurchaseWorkload(ORDERS.filter(function(o){return !o.voidedAt;}).filter(function(o){return spec.key==='portfolio'?orderMonthKey(o.issuedAt)===now.toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),spec.start,spec.end);}));
   renderScSlaDashboard(DATA,ORDERS,spec);
   var previousOpen=spec.prevStart?open.filter(function(r){return inMgmtRange(mgmtEntryDate(r),spec.prevStart,spec.prevEnd);}):null;
-  var scopedOrders=ORDERS.filter(function(o){return spec.key==='portfolio'?orderMonthKey(o.issuedAt)===now.toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),spec.start,spec.end);});
-  var previousOrders=ORDERS.filter(function(o){return inMgmtRange(mgmtOrderDate(o),spec.prevStart,spec.prevEnd);});
+  var scopedOrders=ORDERS.filter(function(o){return !o.voidedAt;}).filter(function(o){return spec.key==='portfolio'?orderMonthKey(o.issuedAt)===now.toISOString().slice(0,7):inMgmtRange(mgmtOrderDate(o),spec.start,spec.end);});
+  var previousOrders=ORDERS.filter(function(o){return !o.voidedAt;}).filter(function(o){return inMgmtRange(mgmtOrderDate(o),spec.prevStart,spec.prevEnd);});
   var overdue=scopedOpen.filter(function(r){var l=scSlaDueDate(r);return l&&l<TODAY;});
   var stale=scopedOpen.filter(function(r){return businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;});
   var unassigned=scopedOpen.filter(function(r){return !String(r.resp||'').trim();});
@@ -1759,6 +1763,6 @@ window.addEventListener('online',function(){if(_pendingSave)retryPendingSave();}
 initCredentials();
 </script>
 <script src="/followup.js?v=20261019-br-template"></script>
-<script src="/cotacoes.js?v=20261001-multi-awards"></script>
+<script src="/cotacoes.js?v=20261027-undo"></script>
 </body>
 </html>
