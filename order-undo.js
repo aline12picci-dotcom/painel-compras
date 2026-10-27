@@ -29,7 +29,7 @@ function buildOrderUndo(state,id,keys,statuses,reason,actor){
  o.undoHistory??=[];o.undoHistory.push({at:now,by:actor,reason:reason.trim(),items:selected,previousOrderStatus:original.status});
  o.clientMutationAt=now;o.lastMovementAt=now;o.lastUpdatedBy=actor;
  for(const x of selected){const r=state.data.find(r=>r.empresa===o.company&&String(r.sc)===String(x.sc)&&String(r.item)===String(x.item));delete r.closedAt;delete r.closedBy;r.status=statuses[undoItemKey(x)];r.clientMutationAt=now;r.lastMovementAt=now;r.lastUpdatedBy=actor;
- state.audit.unshift({ts:Date.now(),user:actor,empresa:o.company,sc:x.sc,item:x.item,field:'Desfazer ação',before:'Finalizada — PC '+o.orderNumber,after:r.status,reason:reason.trim()});}
+ state.audit.unshift({ts:Date.now(),user:actor,empresa:o.company,sc:x.sc,item:x.item,field:'Desfazer ação',before:'Finalizada — PC '+o.orderNumber,after:r.status+' · Motivo: '+reason.trim(),reason:reason.trim()});}
  state.audit.unshift({ts:Date.now(),user:actor,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:'Desfazer ação — vínculos',before:JSON.stringify(original.sourceItems||[]),after:JSON.stringify(o.sourceItems),reason:reason.trim()});
  return {state,order:o,selected,original,at:now};
 }
