@@ -43,7 +43,7 @@ function scBusinessBetween(start,end,company){if(start===null||end===null||end<s
 function scSlaDue(r){return scAddBusinessDays(scDay(r.aprovacao),5,r.empresa);}
 function scSlaDueDate(r){const d=scSlaDue(r);if(d===null)return null;const civil=new Date(d*SC_SLA_DAY);return new Date(civil.getUTCFullYear(),civil.getUTCMonth(),civil.getUTCDate());}
 function scSlaElapsed(r,end=scTodayDay()){return scBusinessBetween(scDay(r.aprovacao),end,r.empresa);}
-function scRankCompare(a,b){const ua=a.urgent===true?1:0,ub=b.urgent===true?1:0;return ub-ua||(scDay(a.aprovacao)??Infinity)-(scDay(b.aprovacao)??Infinity)||String(a.sc).localeCompare(String(b.sc),'pt-BR',{numeric:true})||String(a.item).localeCompare(String(b.item),'pt-BR',{numeric:true})||String(a.empresa).localeCompare(String(b.empresa));}
+function scRankCompare(a,b){return (scDay(a.aprovacao)??Infinity)-(scDay(b.aprovacao)??Infinity)||(scDay(a.entrega)??Infinity)-(scDay(b.entrega)??Infinity)||String(a.sc).localeCompare(String(b.sc),'pt-BR',{numeric:true})||String(a.item).localeCompare(String(b.item),'pt-BR',{numeric:true})||String(a.empresa).localeCompare(String(b.empresa));}
 function scIssueRecords(data,orders){
  const rows=new Map(data.map(r=>[[r.empresa,r.sc,r.item].join('|'),r])),out=new Map();
  for(const order of orders){const items=Array.isArray(order.sourceItems)&&order.sourceItems.length?order.sourceItems:(order.sourceSC?[{sc:order.sourceSC,item:order.sourceItem}]:[]);
