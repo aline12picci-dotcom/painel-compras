@@ -405,6 +405,7 @@ main{padding:26px 32px}
 .fu-import input[type=file]{display:none}.fu-week{font-size:10px;color:var(--text3);margin:-6px 0 12px}.fu-agent-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.fu-agent{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin:12px 0}.fu-draft{background:#f8fbfe;border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:10px}.fu-draft-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:9px}.fu-draft label{display:block;font-size:9px;font-weight:700;color:var(--text3);margin-top:8px}.fu-draft input,.fu-draft textarea{display:block;width:100%;border:1px solid var(--border);border-radius:6px;padding:7px;font:10px Sora,sans-serif;margin-top:3px}.fu-draft textarea{min-height:210px;line-height:1.5}.fu-route{min-width:135px;padding:5px;border:1px solid var(--border);border-radius:6px;font:9px Sora,sans-serif}.fu-system-note{max-width:280px;font-size:9px;color:var(--text3);line-height:1.45;margin-top:5px}.fu-pill.ontime{background:#E2E8F0;color:#475569}
 .fu-kpis{display:grid;grid-template-columns:repeat(6,minmax(125px,1fr));gap:10px;margin:14px 0}.fu-kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;box-shadow:var(--shadow1)}.fu-kpi strong{display:block;font-size:22px;color:var(--navy)}.fu-kpi span{font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:700}.fu-import{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}.fu-preview{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px;margin:12px 0}.fu-preview-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}.fu-table{min-width:800px}.fu-pill{display:inline-block;padding:4px 7px;border-radius:999px;font-size:8.5px;font-weight:750;white-space:nowrap}.fu-pill.new{background:#DBEAFE;color:#1D4ED8}.fu-pill.persistent{background:#FEF3C7;color:#92400E}.fu-pill.worse{background:#FEE2E2;color:#B91C1C}.fu-pill.changed{background:#EDE9FE;color:#6D28D9}.fu-pill.reopened{background:#FFE4E6;color:#BE123C}.fu-pill.closed{background:#D1FAE5;color:#047857}.fu-warning,.fu-error{padding:10px;border-radius:8px;margin-top:10px;font-size:10px}.fu-warning{background:#FFF7ED;color:#9A3412}.fu-error{background:#FEF2F2;color:#991B1B}.fu-stale{display:inline-block;margin-top:4px;color:#B91C1C;font-size:8px;font-weight:700}.fu-treatment{min-width:230px;min-height:50px;padding:6px;border:1px solid var(--border);border-radius:6px;font:10px Sora,sans-serif}.fu-filter{margin:12px 0}.fu-table-main{min-width:1250px}@media(max-width:900px){.fu-kpis{grid-template-columns:repeat(2,1fr)}}
 .sc-sla-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.sc-sla-age{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}.sc-age-cell{background:#f3f7fb;border:1px solid #dce6ee;border-radius:8px;padding:10px}.sc-age-cell strong{display:block;font-size:22px;color:#193855}.sc-age-cell span{font-size:10px;color:#64748b}.sc-age-cell:last-child{background:#fff0f5}@media(max-width:800px){.sc-sla-summary{grid-template-columns:1fr}.sc-sla-age{grid-template-columns:repeat(2,1fr)}}
+.sc-rank-cell{width:62px;text-align:center;color:#193855;font-family:JetBrains Mono,monospace;font-size:12px;background:#edf4fa}
 </style>
 </head>
 <body>
@@ -659,23 +660,23 @@ main{padding:26px 32px}
 <!-- ═══ SEÇÕES POR EMPRESA ═══ -->
 <section id="sec-phal" class="section">
   <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal Ind</h2><p id="cnt-phal-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
 </section>
 <section id="sec-phalspo" class="section">
   <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal SPO</h2><p id="cnt-phalspo-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phalspo"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phalspo"></tbody></table></div>
 </section>
 <section id="sec-pharmabag" class="section">
   <div class="emp-ph ep-p"><div class="company-section-logo"><img src="/assets/pharmabag-logo.jpg" alt="Pharmabag"></div><div><h2>Pharmabag</h2><p id="cnt-pharma-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
 </section>
 <section id="sec-nutriente" class="section">
   <div class="emp-ph ep-n"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Nutriente</h2><p id="cnt-nutri-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
 </section>
 <section id="sec-clinutri" class="section">
   <div class="emp-ph ep-c"><div class="company-section-logo"><img src="/assets/clinutri-logo.png" alt="Clinutri"></div><div><h2>Clinutri</h2><p id="cnt-clinu-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
 </section>
 
 
@@ -724,7 +725,7 @@ main{padding:26px 32px}
 </section>
 </main>
 
-<script src="/sc-sla.js?v=20261022"></script>
+<script src="/sc-sla.js?v=20261027-ranking"></script>
 <script>
 // ═══════════════════════════════════════════════════════
 //  PAINEL SC COMPRAS — Grupo Emede
@@ -804,7 +805,7 @@ function empTag(e){
 }
 
 // ── RENDERIZAÇÃO DE LINHA ────────────────────────────────
-function rowHTML(r, showEmp){
+function rowHTML(r, showEmp, rank){
   var idx=DATA.indexOf(r), days=scSlaElapsed(r), sol=resSOL(r.solicitante);
   var scC={'Phal Ind':'#C41E1E','Pharmabag':'#1558B0','Nutriente':'#1A3A6B','Clinutri':'#0F7A4A','Phal SPO':'#C41E1E'}[r.empresa]||'#1A3A6B';
   var rv=r.resp||'', reason=r.reason||'', obs=r.obs||[r.f1,r.f2,r.f3].filter(function(x){return x;}).join(' | ');
@@ -814,6 +815,7 @@ function rowHTML(r, showEmp){
   var stale=businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;
   var checked=SELECTED_ITEMS.has(recordKey(r))?' checked':'';
   return '<tr data-idx="'+idx+'" class="'+(stale?'stale-row':'')+'">'
+    +(!showEmp?'<td class="sc-rank-cell"><strong>#'+rank+'</strong></td>':'')
     +'<td class="check-col"><input class="row-check" type="checkbox" data-item-idx="'+idx+'"'+checked+' onchange="toggleSelection('+idx+',this.checked)"></td>'
     +empCol
     +'<td><span class="sc-num" style="color:'+scC+'">'+r.sc+'</span><br><span style="font-size:9px;color:var(--text4);font-family:JetBrains Mono,monospace">'+r.item+'</span></td>'
@@ -866,7 +868,7 @@ function upd(idx, field, val){
 }
 function renderBody(id, rows, showEmp){
   var tb=document.getElementById(id);
-  if(tb) tb.innerHTML = rows.map(function(r){ return rowHTML(r,showEmp); }).join('');
+  if(tb) tb.innerHTML = rows.slice().sort(scRankCompare).map(function(r,i){ return rowHTML(r,showEmp,i+1); }).join('');
 }
 
 
@@ -1095,7 +1097,7 @@ function renderPriorities(){
   var ranking=mine.slice().sort(scRankCompare);
   var rows=mine.filter(function(r){return PRIORITY_FILTER==='all'||priorityInfo(r)[PRIORITY_FILTER];}).sort(function(a,b){return scRankCompare(a,b);});
   var body=document.getElementById('priority-body');if(body)body.innerHTML=rows.length?rows.map(function(r){return priorityRowHTML(r,ranking.indexOf(r)+1);}).join(''):'<tr><td colspan="8" class="priority-empty">Nenhuma SC nesta categoria. ✓</td></tr>';
-  var sub=document.getElementById('priority-subtitle');if(sub)sub.textContent=ACTIVE_USER+' · '+rows.length+' itens · aprovação mais antiga primeiro; urgências destacadas no topo';
+  var sub=document.getElementById('priority-subtitle');if(sub)sub.textContent=ACTIVE_USER+' · '+rows.length+' itens · aprovação mais antiga → entrega mais próxima; urgências sinalizadas';
 }
 
 function renderHistory(){var q=((document.getElementById('history-search')||{}).value||'').toLowerCase();var rows=DATA.filter(function(r){return !isOpen(r);}).filter(function(r){return [r.empresa,r.sc,r.item,r.descricao,r.resp,r.closedBy,r.obs].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){return new Date(b.closedAt||b.lastMovementAt||0)-new Date(a.closedAt||a.lastMovementAt||0);});var body=document.getElementById('history-body');if(body)body.innerHTML=rows.map(function(r){return '<tr><td>'+empTag(r.empresa)+'</td><td><span class="sc-num">'+esc(r.sc)+'</span><br>'+esc(r.item)+'</td><td><span class="'+sCls(r.status)+'">'+esc(r.status)+'</span></td><td class="desc">'+esc(r.descricao)+'</td><td>'+esc(r.resp||'—')+'</td><td>'+fmtDateTime(r.closedAt||r.lastMovementAt)+'</td><td>'+esc(r.closedBy||r.lastUpdatedBy||'—')+'</td><td>'+esc(r.obs||'—')+'</td></tr>';}).join('');var c=document.getElementById('history-count');if(c)c.textContent=rows.length+' registros';}
