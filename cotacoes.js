@@ -128,6 +128,7 @@ function applyQuoteClosingPlan(q,plan){const appliedAt=new Date().toISOString();
  for(const g of plan.groups){
   let o=ORDERS.find(o=>o.company===q.company&&String(o.orderNumber).trim()===g.pc);
   if(!o){const first=g.items[0];o={id:'PED-COT-'+q.id+'-'+g.pc,orderNumber:g.pc,company:q.company,sourceSC:first.sc,sourceItem:first.item,sourceDescription:first.description,sourceItems:[],supplier:g.name,channel:'Fornecedor',status:'Aguarda aprovação',issuedAt:plan.at,sentAt:null,confirmedAt:null,owner:plan.by,createdAt:plan.at,createdBy:plan.by,observation:''};ORDERS.unshift(o);}
+  if(o.voidedAt){delete o.voidedAt;o.status='Aguarda aprovação';o.issuedAt=plan.at;o.approvedAt=null;o.sentAt=null;o.confirmedAt=null;}
   o.sourceItems??=[{sc:o.sourceSC,item:o.sourceItem,descricao:o.sourceDescription||''}];
   for(const x of g.items){
    if(!o.sourceItems.some(t=>String(t.sc)===String(x.sc)&&String(t.item)===String(x.item)))o.sourceItems.push({sc:x.sc,item:x.item,descricao:x.description,quantidade:x.quantity,um:x.unit});
