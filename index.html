@@ -742,7 +742,7 @@ const GS_URL   = 'https://script.google.com/macros/s/AKfycbybIU803gqhHNSE_n27tKI
 // usuários prevaleçam sobre a base compartilhada após uma publicação.
 const SK_LOCAL = 'painel_sc_local_v4';
 const DEBOUNCE = 800;
-const POLL_MS  = 8000;
+const POLL_MS  = 120000;
 
 // ── DADOS ORIGINAIS ─────────────────────────────────────
 const DATA_ORIGINAL = [];
@@ -1582,13 +1582,24 @@ function mergeSharedIntoFull(mini){
   }
   return changed;
 }
+let _pollInFlight = false;
+function startSharedPolling(){
+  if(_pollTimer) clearInterval(_pollTimer);
+  _pollTimer=document.hidden ? null : setInterval(pollShared,POLL_MS);
+  document.addEventListener('visibilitychange', onSharedVisibilityChange);
+}
+function onSharedVisibilityChange(){
+  startSharedPolling();
+  if(!document.hidden) void pollShared();
+}
 async function pollShared(){
-  if(_isSaving||_pendingSave) return;
+  if(document.hidden||_pollInFlight||_isSaving||_pendingSave) return;
   var focused=document.activeElement;
   if(focused&&/^(INPUT|SELECT|TEXTAREA)$/.test(focused.tagName)&&focused.closest('table'))return;
+  _pollInFlight=true;
   try{
     var p=await jbRead();
-    if(!p||!p.ts) return;
+    if(document.hidden||_isSaving||_pendingSave||!p||!p.ts) return;
     if(p.ts !== _lastTs && p.ts > _lastSaveTs){
       _lastTs=p.ts;
       if(p.v==='full' && p.data && Array.isArray(p.data) && p.data.length>0){
@@ -1603,6 +1614,7 @@ async function pollShared(){
       }
     }
   }catch(e){ console.warn('pollShared error:',e); }
+  finally{ _pollInFlight=false; }
 }
 async function testarStorage(manual){
   setSyncChip('Testando…','loading');
@@ -1614,11 +1626,10 @@ async function testarStorage(manual){
     await jbWrite({data:p.data||DATA,users:p.users||USERS,audit:p.audit||AUDIT,orders:p.orders||ORDERS,followup:p.followup||FOLLOWUP,ts:ts});
     _lastTs=ts;
     setSyncChip('🟢 base protegida ativo','ok');
-    setBannerState('ok','Sincronização ativa — base protegida funcionando','Edições salvas localmente (imediato) e sincronizadas com a equipe em até '+DEBOUNCE+'ms. Polling a cada '+Math.round(POLL_MS/1000)+'s.');
+    setBannerState('ok','Sincronização ativa — base protegida funcionando','Edições salvas localmente (imediato) e sincronizadas com a equipe em até '+DEBOUNCE+'ms. Polling a cada '+Math.round(POLL_MS/1000)+'s com a aba visível.');
     setSyncBar('✓ Leitura + Escrita OK — '+fTime(new Date()));
     if(manual) toast('base protegida funcionando ✓','ok',3000);
-    if(_pollTimer) clearInterval(_pollTimer);
-    _pollTimer=setInterval(pollShared,POLL_MS);
+    startSharedPolling();
   }catch(e){
     setSyncChip('🔴 Erro','err');
     setBannerState('err','base protegida indisponível — modo local','Erro: '+e.message+'. Dados salvos localmente. Clique em "↺ Testar" para reconectar.');
@@ -1755,7 +1766,7 @@ async function startCredentialApp(basic){
   loadAuthoritativeServerState(p);_lastTs=p.ts||0;_lastSaveTs=p.ts||0;_pendingSave=false;saveLocal();
   document.getElementById('auth-gate').style.display='none';var au=document.getElementById('auth-user');if(au)au.style.display='flex';var nm=document.getElementById('auth-user-name');if(nm)nm.textContent=ACTIVE_USER;
   setupControls();refreshAll();var lb=document.getElementById('strip-list');showTab('listagem',lb,'al');setSyncChip('🟢 Protegido','ok');setSyncBar('✓ Acesso verificado — '+fTime(new Date()));setReliableSync('saved','Conexão confirmada. Nenhuma alteração pendente.');setBannerState('ok','Conexão protegida ativa','Alterações identificadas e sincronizadas.');
-  if(_pollTimer)clearInterval(_pollTimer);_pollTimer=setInterval(pollShared,POLL_MS);
+  startSharedPolling();
 }
 async function initCredentials(){if(!CURRENT_BASIC)return;try{await startCredentialApp(CURRENT_BASIC);}catch(e){sessionStorage.removeItem('painel_basic');CURRENT_BASIC='';}}
 window.addEventListener('offline',function(){if(_pendingSave)setReliableSync('offline');});
