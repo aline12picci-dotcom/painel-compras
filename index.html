@@ -414,6 +414,19 @@ main{padding:26px 32px}
 .sc-list-table tbody tr:nth-child(even),.sc-list-table tbody tr.stale-row:nth-child(even){background:#f7fafd!important}
 .sc-list-table tbody tr:hover,.sc-list-table tbody tr:focus-within{background:#edf5fc!important}
 .sc-list-table tbody tr.stale-row>td:first-child{box-shadow:inset 3px 0 #b97716}
+
+/* Grade compacta de solicitações */
+.sc-list-table th,.sc-list-table td{padding:5px 8px;font-size:11px;vertical-align:middle;white-space:nowrap}
+.sc-list-table thead th{background:#e7ebef;color:#23374d;text-transform:none;letter-spacing:0}
+.sc-list-table tbody tr:nth-child(even){background:#f0f2f4!important}
+.sc-list-table tbody tr:hover,.sc-list-table tbody tr:focus-within{background:#dceefe!important}
+.sc-list-table td.desc{min-width:280px;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.sc-list-table td.sc-qty{text-align:right;font-variant-numeric:tabular-nums}
+.sc-list-table .sc-num{font-size:11px;white-space:nowrap}
+.sc-list-table input:not([type=checkbox]),.sc-list-table select{font-size:10px;padding:3px 6px;min-height:25px;margin:0}
+.sc-list-table .move-meta{display:none}
+.sc-list-table .forn-c{min-width:210px}
+.sc-list-table tr:has(.row-check:checked),.sc-list-table tr:has(.row-check:checked):nth-child(even){background:#cce6fb!important}
 </style>
 </head>
 <body>
@@ -553,21 +566,7 @@ main{padding:26px 32px}
   <div class="batch-bar" id="batch-bar"><strong id="batch-count">0</strong><span>itens selecionados para o mesmo pedido</span><button class="batch-primary" onclick="openBatchOrderModal()">Finalizar em um único pedido</button><button class="batch-clear" onclick="clearSelection()">Limpar seleção</button></div>
   <div class="tbl-wrap">
     <table id="main-table" class="sc-list-table">
-      <thead><tr>
-        <th class="check-col"><input class="row-check" type="checkbox" title="Selecionar itens visíveis" onchange="toggleVisibleSelection(this.checked)"></th>
-        <th onclick="sortBy(0)">Empresa <span class="si">↕</span></th>
-        <th onclick="sortBy(1)">SC / Item <span class="si">↕</span></th>
-        <th onclick="sortBy(2)">Status <span class="si">↕</span></th>
-        <th onclick="sortBy(3)">Descrição <span class="si">↕</span></th>
-        <th onclick="sortBy(4)">Aprovação <span class="si">↕</span></th>
-        <th onclick="sortBy(5)">Entrega SC <span class="si">↕</span></th>
-        <th onclick="sortBy(6)">Vencimento · 5 d.u. <span class="si">↕</span></th>
-        <th>Observação</th>
-        <th onclick="sortBy(7)">Solicitante <span class="si">↕</span></th>
-        <th onclick="sortBy(8)">Dias úteis <span class="si">↕</span></th>
-        <th>Responsável</th>
-        <th>Motivo / Pendência</th>
-      </tr></thead>
+      <thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col"><input class="row-check" type="checkbox" title="Selecionar itens visíveis" onchange="toggleVisibleSelection(this.checked)"></th><th>Empresa</th><th>Número da SC</th><th>Item</th><th>Produto</th><th>Descrição</th><th>Quantidade</th><th>UM</th><th>Aprovação ↑</th><th>Entrega SC</th><th>Status</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead>
       <tbody id="table-body"></tbody>
     </table>
   </div>
@@ -669,23 +668,23 @@ main{padding:26px 32px}
 <!-- ═══ SEÇÕES POR EMPRESA ═══ -->
 <section id="sec-phal" class="section">
   <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal Ind</h2><p id="cnt-phal-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
+  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>Número da SC</th><th>Item</th><th>Produto</th><th>Descrição</th><th>Quantidade</th><th>UM</th><th>Aprovação ↑</th><th>Entrega SC</th><th>Status</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phal"></tbody></table></div>
 </section>
 <section id="sec-phalspo" class="section">
   <div class="emp-ph ep-f"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Phal SPO</h2><p id="cnt-phalspo-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phalspo"></tbody></table></div>
+  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>Número da SC</th><th>Item</th><th>Produto</th><th>Descrição</th><th>Quantidade</th><th>UM</th><th>Aprovação ↑</th><th>Entrega SC</th><th>Status</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-phalspo"></tbody></table></div>
 </section>
 <section id="sec-pharmabag" class="section">
   <div class="emp-ph ep-p"><div class="company-section-logo"><img src="/assets/pharmabag-logo.jpg" alt="Pharmabag"></div><div><h2>Pharmabag</h2><p id="cnt-pharma-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
+  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>Número da SC</th><th>Item</th><th>Produto</th><th>Descrição</th><th>Quantidade</th><th>UM</th><th>Aprovação ↑</th><th>Entrega SC</th><th>Status</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-pharma"></tbody></table></div>
 </section>
 <section id="sec-nutriente" class="section">
   <div class="emp-ph ep-n"><div class="company-section-logo"><img src="/assets/farmoterapica-logo.jpg" alt="Farmoterápica"></div><div><h2>Nutriente</h2><p id="cnt-nutri-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
+  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>Número da SC</th><th>Item</th><th>Produto</th><th>Descrição</th><th>Quantidade</th><th>UM</th><th>Aprovação ↑</th><th>Entrega SC</th><th>Status</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-nutri"></tbody></table></div>
 </section>
 <section id="sec-clinutri" class="section">
   <div class="emp-ph ep-c"><div class="company-section-logo"><img src="/assets/clinutri-logo.png" alt="Clinutri"></div><div><h2>Clinutri</h2><p id="cnt-clinu-s">SCs abertas</p></div></div>
-  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>SC/Item</th><th>Status</th><th>Descrição</th><th>Aprovação</th><th>Entrega SC</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
+  <div class="tbl-wrap"><table class="sc-list-table"><thead><tr><th title="Aprovação mais antiga; desempate pela entrega mais próxima">Ranking</th><th class="check-col">✓</th><th>Número da SC</th><th>Item</th><th>Produto</th><th>Descrição</th><th>Quantidade</th><th>UM</th><th>Aprovação ↑</th><th>Entrega SC</th><th>Status</th><th>Vencimento · 5 d.u.</th><th>Observação</th><th>Solicitante</th><th>Dias úteis</th><th>Responsável</th><th>Motivo / Pendência</th></tr></thead><tbody id="tb-clinu"></tbody></table></div>
 </section>
 
 
@@ -825,10 +824,17 @@ function rowHTML(r, showEmp, rank){
   var stale=businessDaysSince(r.lastMovementAt||r.aprovacao||r.emissao)>=3;
   var checked=SELECTED_ITEMS.has(recordKey(r))?' checked':'';
   return '<tr data-idx="'+idx+'" class="'+(stale?'stale-row':'')+'">'
-    +(!showEmp?'<td class="sc-rank-cell"><strong>#'+rank+'</strong></td>':'')
+    +'<td class="sc-rank-cell"><strong>#'+rank+'</strong></td>'
     +'<td class="check-col"><input class="row-check" type="checkbox" data-item-idx="'+idx+'"'+checked+' onchange="toggleSelection('+idx+',this.checked)"></td>'
     +empCol
-    +'<td><span class="sc-num" style="color:'+scC+'">'+r.sc+'</span><br><span style="font-size:9px;color:var(--text4);font-family:JetBrains Mono,monospace">'+r.item+'</span></td>'
+    +'<td class="sc-num">'+esc(r.sc)+'</td>'
+    +'<td class="dc">'+esc(r.item)+'</td>'
+    +'<td class="dc">'+esc(r.codigoProduto||'—')+'</td>'
+    +'<td class="desc" title="'+esc(r.descricao)+'">'+esc(r.descricao)+'</td>'
+    +'<td class="sc-qty">'+esc(r.quantidade||'—')+'</td>'
+    +'<td class="dc">'+esc(r.um||'—')+'</td>'
+    +'<td class="dc">'+esc(r.aprovacao||'Sem aprovação')+'</td>'
+    +'<td class="dc">'+esc(r.entrega||'—')+'</td>'
     +'<td><select class="ssel '+sCls(r.status)+'" onchange="chSt('+idx+',this)">'
     +'<option'+(r.status==='Aguarda cotação'?' selected':'')+'>Aguarda cotação</option>'
     +'<option'+(r.status==='Em cotação'?' selected':'')+'>Em cotação</option>'
@@ -836,9 +842,6 @@ function rowHTML(r, showEmp, rank){
     +'<option'+(r.status==='Finalizada'?' selected':'')+'>Finalizada</option>'
     +'<option'+(r.status==='Rejeitada'?' selected':'')+'>Rejeitada</option>'
     +'</select></td>'
-    +'<td class="desc">'+r.descricao+'</td>'
-    +'<td class="dc">'+(r.aprovacao||'Sem aprovação')+'</td>'
-    +'<td class="dc">'+r.entrega+'</td>'
     +'<td class="dc" title="5 dias úteis após aprovação · '+esc(SC_SLA_CITIES[r.empresa]||'Calendário não definido')+'">'+scDateBR(scSlaDue(r))+'</td>'
     +'<td><input class="forn-c" placeholder="Registre retornos, negociações e próximos passos..." value="'+obs.replace(/"/g,'&quot;')+'" oninput="upd('+idx+',\'obs\',this.value)"><div class="move-meta">'+movementLabel(r)+(stale?'<br><span class="stale-badge">⚠ '+businessDaysSince(r.lastMovementAt)+' dias úteis sem atualização</span>':'')+'</div></td>'
     +'<td class="sol-nm">'+sol+'</td>'
