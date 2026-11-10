@@ -427,6 +427,8 @@ main{padding:26px 32px}
 .sc-list-table .move-meta{display:none}
 .sc-list-table .forn-c{min-width:210px}
 .sc-list-table tr:has(.row-check:checked),.sc-list-table tr:has(.row-check:checked):nth-child(even){background:#cce6fb!important}
+
+.volume-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0 20px}.volume-stat{background:#f2f7fc;border:1px solid var(--border);border-radius:10px;padding:15px}.volume-stat strong{display:block;font-size:28px;color:var(--navy)}.volume-stat span{font-size:11px}.volume-two{display:grid;grid-template-columns:1fr 1fr;gap:20px}.volume-two h3,#purchasing-volume h3{font-size:12px;margin:12px 0}.volume-requesters{max-height:300px;overflow:auto}#purchasing-volume td:not(:first-child){font-variant-numeric:tabular-nums}#volume-note{line-height:1.6;margin-top:14px}@media(max-width:850px){.volume-two{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -589,6 +591,7 @@ main{padding:26px 32px}
     </div>
   </div>
 
+<div class="card" id="purchasing-volume"><div class="card-hdr"><div><div class="card-title">Produção de Compras · solicitações e pedidos</div><div class="card-sub">Histórico por empresa, solicitante e mês</div></div><label>Ano <select id="volume-year" onchange="renderPurchasingVolume()"></select></label></div><div id="volume-summary" class="volume-summary"></div><div class="volume-two"><div><h3>Atendimento por empresa</h3><div class="tbl-wrap"><table class="mgmt-table"><thead><tr><th>Empresa</th><th>SCs atendidas</th><th>Itens atendidos</th><th>Pedidos</th></tr></thead><tbody id="volume-company"></tbody></table></div></div><div><h3>SCs atendidas por solicitante</h3><div class="tbl-wrap volume-requesters"><table class="mgmt-table"><thead><tr><th>Empresa</th><th>Solicitante</th><th>SCs atendidas</th></tr></thead><tbody id="volume-requester"></tbody></table></div></div></div><div class="card-hdr"><h3>Evolução mensal por empresa</h3><select id="volume-metric" onchange="renderPurchasingVolume()"><option value="orders">Pedidos emitidos</option><option value="sc">SCs atendidas</option></select></div><div style="height:280px"><canvas id="volume-chart"></canvas></div><div class="tbl-wrap"><table class="mgmt-table"><thead><tr><th>Empresa</th><th>Jan</th><th>Fev</th><th>Mar</th><th>Abr</th><th>Mai</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Set</th><th>Out</th><th>Nov</th><th>Dez</th><th>Total</th></tr></thead><tbody id="volume-monthly"></tbody></table></div><p id="volume-note" class="quote-muted"></p></div>
 <div class="card" id="sc-sla-dashboard"><div class="card-hdr"><div><div class="card-title">Atendimento das SCs · aprovação → emissão do PC</div><div class="card-sub">Meta: 5 dias úteis · calendário da unidade · período pela emissão do PC</div></div></div><div id="sc-sla-summary" class="sc-sla-summary"></div><div style="height:260px"><canvas id="sc-sla-chart" aria-label="Tempo médio de atendimento por tipo" role="img"></canvas></div><h3 style="font-size:12px;margin:18px 0 10px">Idade da fila aberta</h3><div id="sc-sla-age" class="sc-sla-age"></div><p id="sc-sla-note" class="quote-muted" style="margin-top:12px"></p><details style="margin-top:12px"><summary>Calendários e critérios</summary><p class="quote-muted">Phal Ind: Indaiatuba · Phal SPO: São Paulo · Pharmabag: Ribeirão Preto · Nutriente: Rio de Janeiro · Clinutri: Recife. Exclui fins de semana e feriados legais; pontos facultativos não são descontados. Aprovação é dia zero. Vencimento até o final do 5º dia útil. Calendários recorrentes conferidos em 22/10/2026. Não usa encerramento, confirmação do fornecedor ou aprovação do PC como fim do atendimento. Prazo original do Excel permanece preservado.</p><p class="quote-muted">Fontes: <a target="_blank" rel="noopener" href="https://www.indaiatuba.sp.gov.br/juridico/tecnica-legislativa/feriados/">Indaiatuba</a> · <a target="_blank" rel="noopener" href="https://sapl.indaiatuba.sp.leg.br/consultas/norma_juridica/norma_juridica_mostrar_proc?cod_norma=8271">Lei 8.592/2026</a> · <a target="_blank" rel="noopener" href="https://prefeitura.sp.gov.br/web/gestao/w/calendario_2026">São Paulo</a> · <a target="_blank" rel="noopener" href="https://www.ribeiraopreto.sp.gov.br/portal/principal/feriados">Ribeirão Preto</a> · <a target="_blank" rel="noopener" href="https://www2.recife.pe.gov.br/servico/feriados-municipais">Recife</a> · <a target="_blank" rel="noopener" href="https://www.alerj.rj.gov.br/Visualizar/Noticia/80212">Rio de Janeiro</a>.</p></details></div>
   <div class="mgmt-executive">
     <div class="mgmt-exec-icon">✨</div>
@@ -1257,7 +1260,59 @@ function mgmtBars(id,entries,colors){
   el.innerHTML=entries.length?entries.map(function(x,i){var c=(colors&&colors[i])||'#3B82F6';return '<div class="mgmt-bar-row"><span>'+esc(x[0])+'</span><div class="mgmt-bar-track"><div class="mgmt-bar-fill" style="width:'+Math.round(x[1]/max*100)+'%;background:'+c+'"></div></div><span class="mgmt-bar-val">'+x[1]+'</span></div>';}).join(''):'<div class="priority-empty">Sem dados para exibir.</div>';
 }
 function updateDash(open){renderManagementDashboard(open);}
+
+function purchasingVolumeData(data,orders,audit){
+  var key=function(c,s,i){return [c,s,i].map(function(v){return String(v||'');}).join('|');};
+  var date=function(v){if(!v)return null;var d;if(typeof v==='number')d=new Date(v);else if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){var p=v.split('/');d=new Date(+p[2],+p[1]-1,+p[0]);}else d=new Date(v);return isNaN(d)?null:d;};
+  var issued=new Map(),hist=new Map(),pcs=new Map();
+  (audit||[]).forEach(function(a){if(!/^Finalizada/.test(a.after||''))return;var d=date(a.ts),k=key(a.empresa,a.sc,a.item);if(d&&(!hist.has(k)||d>hist.get(k)))hist.set(k,d);});
+  (orders||[]).filter(function(o){return !o.voidedAt&&o.status!=='Pedido Rejeitado';}).forEach(function(o){
+    var d=date(o.issuedAt),pk=key(o.company,o.orderNumber||o.id,'');
+    if(!pcs.has(pk))pcs.set(pk,{company:o.company||'Sem empresa',date:d});
+    else if(d&&(!pcs.get(pk).date||d<pcs.get(pk).date))pcs.get(pk).date=d;
+    var items=Array.isArray(o.sourceItems)&&o.sourceItems.length?o.sourceItems:(o.sourceSC?[{sc:o.sourceSC,item:o.sourceItem}]:[]);
+    items.forEach(function(it){var t=date(it.pcIssuedAt||it.addedAt||o.issuedAt),k=key(o.company,it.sc,it.item);if(t&&(!issued.has(k)||t>issued.get(k)))issued.set(k,t);});
+  });
+  var groups=new Map();
+  (data||[]).forEach(function(r){var k=key(r.empresa,r.sc,'');if(!groups.has(k))groups.set(k,new Map());groups.get(k).set(String(r.item),r);});
+  var completed=[],items=[],missing=0,partial=0;
+  groups.forEach(function(g){var rows=Array.from(g.values()),done=rows.filter(function(r){return r.status==='Finalizada';});
+    if(!done.length)return;
+    var records=done.map(function(r){var d=issued.get(key(r.empresa,r.sc,r.item))||date(r.pcIssuedAt||r.closedAt)||hist.get(key(r.empresa,r.sc,r.item));return {company:r.empresa||'Sem empresa',requester:r.solicitante||'Não informado',date:d};});
+    records.forEach(function(r){items.push(r);});
+    if(rows.some(function(r){return r.status!=='Finalizada'&&r.status!=='Rejeitada';})){partial++;return;}
+    if(records.some(function(r){return !r.date;})){missing++;return;}
+    var latest=records.reduce(function(a,b){return a.date>b.date?a:b;});
+    completed.push({company:latest.company,date:latest.date,requesters:Array.from(new Set(records.map(function(r){return r.requester;})))});
+  });
+  return {completed:completed,items:items,orders:Array.from(pcs.values()),missing:missing,partial:partial};
+}
+var VOLUME_CHART=null;
+function renderPurchasingVolume(){
+  var root=document.getElementById('purchasing-volume');if(!root)return;
+  var v=purchasingVolumeData(DATA,ORDERS,AUDIT),select=document.getElementById('volume-year'),chosen=select.value;
+  var years=Array.from(new Set(v.completed.concat(v.orders,v.items).filter(function(x){return x.date;}).map(function(x){return x.date.getFullYear();}))).sort(function(a,b){return b-a;});
+  if(!years.length)years=[new Date().getFullYear()];
+  select.innerHTML=years.map(function(y){return '<option value="'+y+'">'+y+'</option>';}).join('');
+  select.value=years.indexOf(+chosen)>=0?chosen:String(years[0]);var year=+select.value;
+  var inYear=function(x){return x.date&&x.date.getFullYear()===year;},sc=v.completed.filter(inYear),pcs=v.orders.filter(inYear),items=v.items.filter(inYear);
+  var companies=Array.from(new Set(sc.concat(pcs,items).map(function(x){return x.company;}))).sort();
+  var e=function(x){return String(x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+  document.getElementById('volume-summary').innerHTML=[['SCs atendidas',sc.length],['Itens atendidos',items.length],['Pedidos emitidos',pcs.length]].map(function(x){return '<div class="volume-stat"><strong>'+x[1]+'</strong><span>'+x[0]+'</span></div>';}).join('');
+  document.getElementById('volume-company').innerHTML=companies.map(function(c){return '<tr><td>'+e(c)+'</td><td>'+sc.filter(function(x){return x.company===c;}).length+'</td><td>'+items.filter(function(x){return x.company===c;}).length+'</td><td>'+pcs.filter(function(x){return x.company===c;}).length+'</td></tr>';}).join('')||'<tr><td colspan="4">Sem registros datados neste ano.</td></tr>';
+  var requesters=new Map();
+  sc.forEach(function(x){x.requesters.forEach(function(r){var k=JSON.stringify([x.company,r]);if(!requesters.has(k))requesters.set(k,{company:x.company,name:r,count:0});requesters.get(k).count++;});});
+  document.getElementById('volume-requester').innerHTML=Array.from(requesters.values()).sort(function(a,b){return b.count-a.count||a.name.localeCompare(b.name);}).map(function(x){return '<tr><td>'+e(x.company)+'</td><td>'+e(x.name)+'</td><td>'+x.count+'</td></tr>';}).join('')||'<tr><td colspan="3">Sem SCs atendidas neste ano.</td></tr>';
+  var metric=document.getElementById('volume-metric').value,base=metric==='orders'?pcs:sc,months=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var values=function(c){return months.map(function(_,m){return base.filter(function(x){return x.company===c&&x.date.getMonth()===m;}).length;});};
+  document.getElementById('volume-monthly').innerHTML=companies.map(function(c){var vals=values(c);return '<tr><td>'+e(c)+'</td>'+vals.map(function(n){return '<td>'+n+'</td>';}).join('')+'<td><strong>'+vals.reduce(function(a,b){return a+b;},0)+'</strong></td></tr>';}).join('')||'<tr><td colspan="14">Sem registros neste ano.</td></tr>';
+  if(VOLUME_CHART){VOLUME_CHART.destroy();VOLUME_CHART=null;}
+  if(typeof Chart!=='undefined'){var colors={'Phal Ind':'#c64d64','Phal SPO':'#e59caa','Pharmabag':'#3186bf','Nutriente':'#7666b1','Clinutri':'#3e9c79'};VOLUME_CHART=new Chart(document.getElementById('volume-chart'),{type:'bar',data:{labels:months,datasets:companies.map(function(c){return {label:c,data:values(c),backgroundColor:colors[c]||'#63758a',borderRadius:3};})},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{precision:0}}}}});}
+  document.getElementById('volume-note').textContent='SC atendida = todos os itens da solicitação finalizados ou rejeitados, com pelo menos um finalizado. Mês da SC = última emissão dos itens atendidos; na falta do vínculo, usa encerramento ou histórico de finalização. Pedidos contados uma vez por empresa/número, inclusive sem SC. Solicitação com mais de um solicitante aparece para cada um; não some essas linhas. Histórico disponível no painel: '+v.partial+' SC(s) parcialmente atendida(s), '+v.missing+' SC(s) concluída(s) sem data e '+v.orders.filter(function(x){return !x.date;}).length+' pedido(s) sem data fora dos totais mensais.';
+}
+
 function renderManagementDashboard(open){
+  renderPurchasingVolume();
   open=open||DATA.filter(isOpen);
   var now=new Date(),spec=mgmtPeriodSpec(MGMT_PERIOD);
   var scopedOpen=(spec.key==='portfolio'||spec.key==='all')?open:open.filter(function(r){return inMgmtRange(mgmtEntryDate(r),spec.start,spec.end);});
