@@ -1185,7 +1185,7 @@ function renderMarketplaceDashboard(){
  var all=marketplaceOrders(),month=document.getElementById('market-month'),company=document.getElementById('market-company'),monthValue=month?month.value:'all',companyValue=company?company.value:'';
  var keys=Array.from(new Set(all.map(function(o){return orderMonthKey(o.issuedAt);}).filter(Boolean))).sort().reverse();if(month){var keep=month.value||'all';month.innerHTML='<option value="all">Todos os meses</option>'+keys.map(function(k){return '<option value="'+k+'">'+orderMonthLabel(k)+'</option>';}).join('');month.value=keys.indexOf(keep)>=0?keep:'all';monthValue=month.value;}
  var rows=all.filter(function(o){return (monthValue==='all'||orderMonthKey(o.issuedAt)===monthValue)&&(!companyValue||o.company===companyValue);});
- var known=rows.filter(function(o){return Number.isFinite(Number(o.totalValue));}),sum=known.reduce(function(a,o){return a+Number(o.totalValue||0);},0);
+ var known=rows.filter(function(o){return o.totalValue!==null&&o.totalValue!==undefined&&o.totalValue!==''&&Number.isFinite(Number(o.totalValue));}),sum=known.reduce(function(a,o){return a+Number(o.totalValue||0);},0);
  [['market-orders',rows.length],['market-value',moneyBR(sum)],['market-pending',rows.filter(function(o){return o.status==='Aguarda aprovação';}).length],['market-no-value',rows.length-known.length]].forEach(function(x){var e=document.getElementById(x[0]);if(e)e.textContent=x[1];});
  var supplierMap={};rows.forEach(function(o){var k=String(o.supplier||'Não informado').trim()||'Não informado';supplierMap[k]=supplierMap[k]||{count:0,value:0};supplierMap[k].count++;supplierMap[k].value+=Number(o.totalValue||0);});
  var suppliers=document.getElementById('market-suppliers');if(suppliers)suppliers.innerHTML=Object.keys(supplierMap).sort(function(a,b){return supplierMap[b].value-supplierMap[a].value||supplierMap[b].count-supplierMap[a].count;}).map(function(k){return '<tr><td>'+esc(k)+'</td><td>'+supplierMap[k].count+'</td><td>'+moneyBR(supplierMap[k].value)+'</td></tr>';}).join('')||'<tr><td colspan="3">Sem dados.</td></tr>';
@@ -1811,10 +1811,10 @@ function importExcel(input){
       wb.SheetNames.forEach(function(rawSN){
         var empresa=EMP_MAP[rawSN.trim().toLowerCase()];
         if(!empresa) return;
-        importedCompanies.add(empresa);
         var ws=wb.Sheets[rawSN];
         var json=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
         if(!json.length) return;
+        importedCompanies.add(empresa);
         var hdrs=Object.keys(json[0]);
         var cSC=findCol(hdrs,['numero','nº','num']),cIt=findCol(hdrs,['item']),cSt=findCol(hdrs,['status']);
         var cDs=findCol(hdrs,['descricao','descrição','descri']),cAp=findCol(hdrs,['aprovação','aprovacao','data aprov']);
