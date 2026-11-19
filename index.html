@@ -679,8 +679,8 @@ main{padding:26px 32px}
       <div id="mg-reasons" class="mgmt-bars"></div>
     </div>
     <div class="card mgmt-card">
-      <div class="card-hdr"><div><div class="card-title">Evolução mensal da carteira</div><div class="card-sub">SCs recebidas, concluídas e saldo acumulado nos últimos 6 meses</div></div></div>
-      <div class="mgmt-chart"><canvas id="mg-evolution-chart"></canvas></div>
+      <div class="card-hdr"><div><div class="card-title">Evolução mensal da carteira</div><div class="card-sub">Itens recebidos, encerrados e saldo aberto por mês</div></div></div>
+      <div class="mgmt-chart"><canvas id="mg-evolution-chart"></canvas></div><p id="mg-evolution-note" class="quote-muted" style="padding:0 14px 12px;line-height:1.5"></p>
     </div>
   </div>
 
@@ -1469,6 +1469,33 @@ function renderManagementDashboard(open){
   if(ring)ring.innerHTML='<div class="mgmt-ring" style="background:conic-gradient(#1558B0 0 '+pctCot+'%,#7C3AED '+pctCot+'% '+(pctCot+pctPc)+'%,#F0B429 '+(pctCot+pctPc)+'% 100%)"><strong>'+pct+'%</strong></div><div class="mgmt-ring-legend"><div><i style="background:#1558B0"></i>Em cotação: <strong>'+cot+'</strong></div><div><i style="background:#7C3AED"></i>Emitir PC: <strong>'+pc+'</strong></div><div><i style="background:#F0B429"></i>Aguarda: <strong>'+aguarda+'</strong></div><div><small>% já em andamento</small></div></div>';
   buildCharts(scopedOpen,spec);
 }
+function assignDefaultBuyer(rows){
+  var count=0;
+  rows.forEach(function(r){if(isOpen(r)&&!String(r.resp||'').trim()){
+    r.resp='Aline Lima';r.clientMutationAt=new Date().toISOString();
+    logAudit(r,'resp','',r.resp);count++;
+  }});return count;
+}
+function portfolioEvolution(data,orders,audit,months,now){
+  var key=function(c,s,i){return [c,s,i].join('|');},ends=new Map();
+  var remember=function(k,v){var d=dateFromRecord(v);if(d&&(!ends.has(k)||d>ends.get(k)))ends.set(k,d);};
+  (audit||[]).forEach(function(a){if(/^(Finalizada|Rejeitada)/i.test(a.after||''))remember(key(a.empresa,a.sc,a.item),a.ts);});
+  (orders||[]).filter(function(o){return !o.voidedAt&&o.status!=='Pedido Rejeitado';}).forEach(function(o){
+    var items=o.sourceItems&&o.sourceItems.length?o.sourceItems:(o.sourceSC?[{sc:o.sourceSC,item:o.sourceItem}]:[]);
+    items.forEach(function(i){remember(key(o.company,i.sc,i.item),i.pcIssuedAt||i.addedAt||o.issuedAt);});
+  });
+  var unique=new Map();data.forEach(function(r){unique.set(key(r.empresa,r.sc,r.item),r);});
+  var rows=Array.from(unique.values()).map(function(r){return {open:isOpen(r),entry:dateFromRecord(r.firstSeenAt)||dateFromRecord(r.aprovacao)||dateFromRecord(r.emissao),end:isOpen(r)?null:(dateFromRecord(r.closedAt)||ends.get(key(r.empresa,r.sc,r.item))||null)};});
+  var current=monthKeyDate(now),received=[],closed=[],balance=[];
+  months.forEach(function(k){
+    var p=k.split('-'),cut=new Date(+p[0],+p[1],1);
+    received.push(rows.filter(function(r){return monthKeyDate(r.entry)===k;}).length);
+    closed.push(rows.filter(function(r){return monthKeyDate(r.end)===k;}).length);
+    balance.push(k===current?rows.filter(function(r){return r.open;}).length:rows.filter(function(r){return r.entry&&r.entry<cut&&(r.open||(r.end&&r.end>=cut));}).length);
+  });
+  return {received:received,closed:closed,balance:balance,undated:rows.filter(function(r){return !r.entry||(!r.open&&!r.end);}).length};
+}
+
 function buildCharts(open,spec){
   var canvas=document.getElementById('mg-evolution-chart');if(!canvas||typeof Chart==='undefined')return;
   if(_ch.mgmtEvolution)_ch.mgmtEvolution.destroy();
@@ -1480,9 +1507,9 @@ function buildCharts(open,spec){
   }
   var base=new Date(anchor.getFullYear(),anchor.getMonth()-count+1,1);
   for(var i=0;i<count;i++){var d=new Date(base.getFullYear(),base.getMonth()+i,1);months.push(monthKeyDate(d));}
-  var first=new Date(base),initial=DATA.filter(function(r){var rec=dateFromRecord(r.aprovacao||r.emissao),cl=dateFromRecord(r.closedAt);return rec&&rec<first&&(!cl||cl>=first);}).length,running=initial,received=[],closed=[],balance=[];
-  months.forEach(function(k){var rec=DATA.filter(function(r){return monthKeyDate(dateFromRecord(r.aprovacao||r.emissao))===k;}).length,cl=DATA.filter(function(r){return monthKeyDate(dateFromRecord(r.closedAt))===k;}).length;running+=rec-cl;received.push(rec);closed.push(cl);balance.push(Math.max(0,running));});
-  _ch.mgmtEvolution=new Chart(canvas,{type:'bar',data:{labels:months.map(monthLabelShort),datasets:[{label:'Recebidas',data:received,backgroundColor:'#60A5FA',borderRadius:5},{label:'Concluídas',data:closed,backgroundColor:'#10B981',borderRadius:5},{label:'Saldo da carteira',data:balance,type:'line',borderColor:'#0B1F3A',backgroundColor:'#0B1F3A',tension:.3,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:9,family:'Sora'},boxWidth:10}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0}}}}});
+  var evolution=portfolioEvolution(DATA,ORDERS,AUDIT,months,new Date()),received=evolution.received,closed=evolution.closed,balance=evolution.balance;
+  var note=document.getElementById('mg-evolution-note');if(note)note.textContent='Contagem por item de SC. Mês atual: saldo real de itens abertos, sem depender de datas. Novos itens: entrada pela primeira importação; histórico anterior: aprovação/emissão. Saídas incluem finalizadas e rejeitadas. '+evolution.undated+' registro(s) sem datas suficientes para reconstruir todo o histórico.';
+  _ch.mgmtEvolution=new Chart(canvas,{type:'bar',data:{labels:months.map(monthLabelShort),datasets:[{label:'Recebidas',data:received,backgroundColor:'#60A5FA',borderRadius:5},{label:'Encerradas',data:closed,backgroundColor:'#10B981',borderRadius:5},{label:'Saldo da carteira',data:balance,type:'line',borderColor:'#0B1F3A',backgroundColor:'#0B1F3A',tension:.3,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:9,family:'Sora'},boxWidth:10}}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0}}}}});
 }
 
 // ── USUÁRIOS, MOTIVOS E AUDITORIA ─────────────────────────
@@ -1835,7 +1862,7 @@ function importExcel(input){
             codigoProduto:String(row[cProd]||'').trim(),quantidade:String(row[cQtd]||'').trim(),um:String(row[cUm]||'').trim(),
             aprovacao:fmtDate(row[cAp]),entrega:fmtDate(row[cEn]),solicitante:String(row[cSol]||'').trim(),
             limite:fmtDate(row[cLm]),obs:String(row[cObs]||'').trim()||[row[cF1],row[cF2],row[cF3]].filter(function(x){return x;}).join(' | '),
-            resp:String(row[cRsp]||'').trim(),reason:''});
+            resp:'Aline Lima',reason:''});
         });
       });
       if(!nr.length){ toast('Nenhuma SC aberta encontrada.','err',5000); input.value=''; return; }
@@ -1853,12 +1880,12 @@ function importExcel(input){
           if(merged.reconciliationState||merged.reconciliationDetectedAt){delete merged.reconciliationState;delete merged.reconciliationDetectedAt;sourceChanged=true;}
           ['descricao','codigoProduto','quantidade','um','aprovacao','entrega','solicitante','limite'].forEach(function(field){if(r[field]&&r[field]!==old[field]){merged[field]=r[field];sourceChanged=true;}});
           if(!merged.obs&&r.obs){merged.obs=r.obs;sourceChanged=true;}
-          if(!merged.resp&&r.resp){merged.resp=r.resp;sourceChanged=true;}
+          if(isOpen(merged)&&!String(merged.resp||'').trim()){merged.resp='Aline Lima';sourceChanged=true;}
           if(sourceChanged){merged.clientMutationAt=nowIso;merged.lastMovementAt=nowIso;merged.lastUpdatedBy=ACTIVE_USER;updated++;}
           reconciled.push(merged);
           preserved++;
         }else{
-          r.clientMutationAt=nowIso;r.lastMovementAt=nowIso;r.lastUpdatedBy=ACTIVE_USER;
+          r.firstSeenAt=nowIso;r.clientMutationAt=nowIso;r.lastMovementAt=nowIso;r.lastUpdatedBy=ACTIVE_USER;
           reconciled.push(r);included++;
         }
       });
@@ -1872,6 +1899,7 @@ function importExcel(input){
         reconciled.push(old);
       });
       DATA=reconciled;
+      assignDefaultBuyer(DATA);
       var sub=document.getElementById('hdr-sub');
       if(sub) sub.textContent='Grupo Emede · Somente SCs Abertas · '+String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
       refreshAll(); triggerSave();
@@ -1916,7 +1944,9 @@ async function startCredentialApp(basic){
   // diferente para cada usuário.
   loadAuthoritativeServerState(p);_lastTs=p.ts||0;_lastSaveTs=p.ts||0;_pendingSave=false;saveLocal();
   document.getElementById('auth-gate').style.display='none';var au=document.getElementById('auth-user');if(au)au.style.display='flex';var nm=document.getElementById('auth-user-name');if(nm)nm.textContent=ACTIVE_USER;
+  var assignedDefaults=assignDefaultBuyer(DATA);
   setupControls();refreshAll();var lb=document.getElementById('strip-list');showTab('listagem',lb,'al');setSyncChip('🟢 Protegido','ok');setSyncBar('✓ Acesso verificado — '+fTime(new Date()));setReliableSync('saved','Conexão confirmada. Nenhuma alteração pendente.');setBannerState('ok','Conexão protegida ativa','Alterações identificadas e sincronizadas.');
+  if(assignedDefaults)triggerSave();
   startSharedPolling();
 }
 async function initCredentials(){if(!CURRENT_BASIC)return;try{await startCredentialApp(CURRENT_BASIC);}catch(e){sessionStorage.removeItem('painel_basic');CURRENT_BASIC='';}}
