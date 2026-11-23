@@ -591,7 +591,8 @@ main{padding:26px 32px}
     <div class="ops-kpi info"><strong id="recon-closed">0</strong><span>Finalizadas sem PC vinculado</span></div>
     <div class="ops-kpi ok"><strong id="recon-total">0</strong><span>Divergências para tratar</span></div>
   </div>
-  <div class="filter-bar"><input id="recon-search" placeholder="Buscar empresa, SC, item ou descrição..." oninput="renderReconciliation()"><select id="recon-type" onchange="renderReconciliation()"><option value="">Todas as divergências</option><option value="missing">Ausente da importação</option><option value="rejected">Rejeitada</option><option value="closed">Finalizada sem PC</option></select></div>
+  <div class="filter-bar"><input id="recon-search" placeholder="Buscar empresa, SC, item ou descrição..." oninput="renderReconciliation()"><select id="recon-type" onchange="renderReconciliation()"><option value="">Todas as divergências</option><option value="missing">Ausente da importação</option><option value="rejected">Rejeitada</option><option value="closed">Finalizada sem PC</option><option value="buyer">Responsável inativo</option></select></div>
+  <div id="recon-import-summary" role="status"></div><div id="recon-buyer-summary"></div>
   <div class="tbl-wrap"><table><thead><tr><th>Tipo</th><th>Empresa</th><th>SC / item</th><th>Status atual</th><th>Descrição</th><th>Última detecção</th><th>Ação</th></tr></thead><tbody id="recon-body"></tbody></table></div>
 </section>
 
@@ -808,6 +809,7 @@ let _retryTimer  = null;
 let _changeVersion = 0;
 const _updTimers = {};
 const _auditBefore = {};
+const DEFAULT_BUYER='Aline Lima';
 let USERS=[{name:'Aline Lima',active:true},{name:'Robert Santos',active:false},{name:'Jaqueline Paulino',active:false}];
 let ACTIVE_USER='';
 let CURRENT_SESSION=null, CURRENT_PROFILE=null, CURRENT_BASIC=sessionStorage.getItem('painel_basic')||'';
@@ -1054,7 +1056,7 @@ function buildManualOrder(fields,orders,actor){
  if(dates.sent&&dates.confirmed&&dates.confirmed<dates.sent)throw Error('A confirmação não pode ser anterior ao envio.');
  const statuses=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'];if(!statuses.includes(fields.status))throw Error('Status inválido.');
  const now=new Date().toISOString();
- return {id:'PED-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),orderNumber:number,company:fields.company,sourceSC:'',sourceItem:'',sourceItems:[],sourceDescription:fields.description.trim(),manualEntry:true,supplier:fields.supplier.trim(),channel:fields.channel,totalValue:parseMoneyInput(fields.totalValue),purchaseType:fields.type,urgent:fields.urgent,requiresConfirmation:fields.requiresConfirmation,status:fields.status,issuedAt:issued.toISOString(),approvedAt:dates.approved,sentAt:dates.sent,confirmedAt:dates.confirmed,owner:actor,observation:fields.observation.trim(),createdAt:now,createdBy:actor,lastMovementAt:now,lastUpdatedBy:actor,clientMutationAt:now};
+ return {id:'PED-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),orderNumber:number,company:fields.company,sourceSC:'',sourceItem:'',sourceItems:[],sourceDescription:fields.description.trim(),manualEntry:true,supplier:fields.supplier.trim(),channel:fields.channel,totalValue:parseMoneyInput(fields.totalValue),purchaseType:fields.type,urgent:fields.urgent,requiresConfirmation:fields.requiresConfirmation,status:fields.status,issuedAt:issued.toISOString(),approvedAt:dates.approved,sentAt:dates.sent,confirmedAt:dates.confirmed,owner:DEFAULT_BUYER,observation:fields.observation.trim(),createdAt:now,createdBy:actor,lastMovementAt:now,lastUpdatedBy:actor,clientMutationAt:now};
 }
 function saveManualOrder(event){
  event.preventDefault();const value=function(k){return document.getElementById('manual-'+k).value;};
@@ -1158,8 +1160,19 @@ function renderPriorities(){
   var sub=document.getElementById('priority-subtitle');if(sub)sub.textContent=ACTIVE_USER+' · '+rows.length+' itens · aprovação mais antiga → entrega mais próxima; urgências sinalizadas';
 }
 
-function reactivateRejected(idx){var r=DATA[idx];if(!r||!['rejeitada','finalizada'].includes(String(r.status).trim().toLowerCase()))return;var before=r.status;if(!confirm('Reativar SC '+r.sc+' item '+r.item+' (status atual: '+before+')? Confirme apenas se o encerramento foi indevido e não houver pedido válido para este item.'))return;var now=new Date().toISOString();r.status='Aguarda cotação';r.clientMutationAt=now;r.lastMovementAt=now;r.lastUpdatedBy=ACTIVE_USER;logAudit(r,'status',before,r.status);triggerSave();refreshAll();renderHistory();toast('SC '+r.sc+' item '+r.item+' reativado.','ok',5000);}
+function reactivateRejected(idx){var r=DATA[idx];if(!r||!['rejeitada','finalizada'].includes(String(r.status).trim().toLowerCase()))return;var before=r.status;if(!confirm('Reativar SC '+r.sc+' item '+r.item+' (status atual: '+before+')? Confirme apenas se o encerramento foi indevido e não houver pedido válido para este item.'))return;var now=new Date().toISOString(),previousBuyer=r.resp;r.status='Aguarda cotação';r.resp=DEFAULT_BUYER;if(previousBuyer!==r.resp)logAudit(r,'resp',previousBuyer||'',r.resp);r.clientMutationAt=now;r.lastMovementAt=now;r.lastUpdatedBy=ACTIVE_USER;logAudit(r,'status',before,r.status);triggerSave();refreshAll();renderHistory();toast('SC '+r.sc+' item '+r.item+' reativado.','ok',5000);}
 function orderHasSCItem(o,r){if(!o||o.voidedAt)return false;var items=Array.isArray(o.sourceItems)?o.sourceItems:[];if(!items.length&&o.sourceSC)items=[{sc:o.sourceSC,item:o.sourceItem}];return o.company===r.empresa&&items.some(function(x){return String(x.sc)===String(r.sc)&&String(x.item)===String(r.item);});}
+function inactiveBuyer(name){
+ var key=String(name||'').trim().toLowerCase();
+ return !!key&&key!==DEFAULT_BUYER.toLowerCase()&&USERS.some(function(u){return u.active===false&&String(u.name).trim().toLowerCase()===key;});
+}
+function renderImportSummary(){
+ var el=document.getElementById('recon-import-summary');if(!el)return;
+ var batch=AUDIT.find(function(a){return a.field==='Resumo por empresa · importação';});
+ if(!batch){el.textContent='O resumo por empresa estará disponível após a próxima importação.';return;}
+ var lines=String(batch.after||'').split('\n');
+ el.innerHTML='<details open><summary>Última importação · '+esc(fmtDateTime(new Date(batch.ts).toISOString()))+'</summary><ul>'+lines.map(function(line){return '<li>'+esc(line)+'</li>';}).join('')+'</ul></details>';
+}
 function reconciliationItems(){
  var rows=[];
  DATA.forEach(function(r){
@@ -1168,16 +1181,20 @@ function reconciliationItems(){
   else if(String(r.status).trim().toLowerCase()==='rejeitada'){type='rejected';label='Rejeitada';}
   else if(String(r.status).trim().toLowerCase()==='finalizada'&&!ORDERS.some(function(o){return orderHasSCItem(o,r);})){type='closed';label='Finalizada sem PC';}
   if(type)rows.push({r:r,type:type,label:label,detected:detected});
+  if(isOpen(r)&&inactiveBuyer(r.resp))rows.push({r:r,type:'buyer',label:'Responsável inativo: '+r.resp,detected:r.lastMovementAt||''});
  });
  return rows;
 }
 function focusReconciliationSC(r){var search=document.getElementById('search-input');if(search)search.value=r.sc;showTab('listagem',document.getElementById('strip-list'),'al');applyFilters();}
 function renderReconciliation(){
+ renderImportSummary();
+ var buyerEl=document.getElementById('recon-buyer-summary');
+ if(buyerEl){var legacyOrders=ORDERS.filter(function(o){return !o.voidedAt&&['Aguarda aprovação','Pedido Aprovado','Pedido enviado'].includes(o.status)&&inactiveBuyer(o.owner);});buyerEl.textContent=legacyOrders.length?'PCs em andamento com responsável inativo: '+legacyOrders.map(function(o){return o.company+' / '+o.orderNumber+' ('+o.owner+')';}).join('; '):'';}
  var rows=reconciliationItems(),q=((document.getElementById('recon-search')||{}).value||'').toLowerCase(),type=((document.getElementById('recon-type')||{}).value||'');
- ['missing','rejected','closed'].forEach(function(k){var e=document.getElementById('recon-'+k);if(e)e.textContent=rows.filter(function(x){return x.type===k;}).length;});var total=document.getElementById('recon-total');if(total)total.textContent=rows.length;
+ ['missing','rejected','closed'].forEach(function(k){var e=document.getElementById('recon-'+k);if(e)e.textContent=rows.filter(function(x){return x.type===k;}).length;});var total=document.getElementById('recon-total');if(total)total.textContent=new Set(rows.map(function(x){return x.r;})).size;
  rows=rows.filter(function(x){return (!type||x.type===type)&&[x.r.empresa,x.r.sc,x.r.item,x.r.descricao,x.r.status].join(' ').toLowerCase().indexOf(q)>=0;});
  var body=document.getElementById('recon-body');if(!body)return;
- body.innerHTML=rows.length?rows.sort(function(a,b){return String(b.detected).localeCompare(String(a.detected));}).map(function(x){var r=x.r,cls=x.type==='missing'?'recon-missing':x.type==='rejected'?'recon-rejected':'recon-closed',action=x.type==='rejected'?'<button class="imp-btn primary" onclick="reactivateRejected('+DATA.indexOf(r)+')">Reativar</button>':'<button class="imp-btn" onclick="focusReconciliationSC(DATA['+DATA.indexOf(r)+'])">Ver registro</button>';return '<tr><td><span class="recon-badge '+cls+'">'+x.label+'</span></td><td>'+empTag(r.empresa)+'</td><td><span class="sc-num">'+esc(r.sc)+'</span><br>'+esc(r.item)+'</td><td>'+esc(r.status)+'</td><td class="desc">'+esc(r.descricao||'—')+'</td><td>'+fmtDateTime(x.detected)+'</td><td>'+action+'</td></tr>';}).join(''):'<tr><td colspan="7" class="priority-empty">Nenhuma divergência encontrada para os filtros selecionados.</td></tr>';
+ body.innerHTML=rows.length?rows.sort(function(a,b){return String(b.detected).localeCompare(String(a.detected));}).map(function(x){var r=x.r,cls=x.type==='missing'?'recon-missing':x.type==='rejected'?'recon-rejected':'recon-closed',action=x.type==='rejected'?'<button class="imp-btn primary" onclick="reactivateRejected('+DATA.indexOf(r)+')">Reativar</button>':'<button class="imp-btn" onclick="focusReconciliationSC(DATA['+DATA.indexOf(r)+'])">Ver registro</button>';return '<tr><td><span class="recon-badge '+cls+'">'+esc(x.label)+'</span></td><td>'+empTag(r.empresa)+'</td><td><span class="sc-num">'+esc(r.sc)+'</span><br>'+esc(r.item)+'</td><td>'+esc(r.status)+'</td><td class="desc">'+esc(r.descricao||'—')+'</td><td>'+fmtDateTime(x.detected)+'</td><td>'+action+'</td></tr>';}).join(''):'<tr><td colspan="7" class="priority-empty">Nenhuma divergência encontrada para os filtros selecionados.</td></tr>';
 }
 function marketplaceOrders(){return ORDERS.filter(function(o){return !o.voidedAt&&(o.channel==='Marketplace'||o.marketplace===true);});}
 function updateMarketplaceValue(id,value){try{var o=ORDERS.find(function(x){return x.id===id;});if(!o)return;o.totalValue=parseMoneyInput(value);o.clientMutationAt=new Date().toISOString();o.lastMovementAt=o.clientMutationAt;o.lastUpdatedBy=ACTIVE_USER;triggerSave();renderMarketplaceDashboard();}catch(e){toast(e.message,'err',4500);}}
@@ -1472,7 +1489,7 @@ function renderManagementDashboard(open){
 function assignDefaultBuyer(rows){
   var count=0;
   rows.forEach(function(r){if(isOpen(r)&&!String(r.resp||'').trim()){
-    r.resp='Aline Lima';r.clientMutationAt=new Date().toISOString();
+    r.resp=DEFAULT_BUYER;r.clientMutationAt=new Date().toISOString();
     logAudit(r,'resp','',r.resp);count++;
   }});return count;
 }
@@ -1841,7 +1858,6 @@ function importExcel(input){
         var ws=wb.Sheets[rawSN];
         var json=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});
         if(!json.length) return;
-        importedCompanies.add(empresa);
         var hdrs=Object.keys(json[0]);
         var cSC=findCol(hdrs,['numero','nº','num']),cIt=findCol(hdrs,['item']),cSt=findCol(hdrs,['status']);
         var cDs=findCol(hdrs,['descricao','descrição','descri']),cAp=findCol(hdrs,['aprovação','aprovacao','data aprov']);
@@ -1855,14 +1871,17 @@ function importExcel(input){
           if(stLow.indexOf('final')>=0||stLow.indexOf('rejeit')>=0) return;
           if(stLow.indexOf('cota')<0&&stLow.indexOf('aguarda')<0) return;
           var st=stLow.indexOf('aguarda')>=0?'Aguarda cotação':'Em cotação';
-          var sc=String(row[cSC]||'').trim().replace(/\D/g,'').padStart(6,'0');
+          var rawSC=String(row[cSC]||'').trim(),item=String(row[cIt]||'').trim();
+          if(!/^\d+$/.test(rawSC)||!item||!cSC||!cIt||!cSt)return;
+          var sc=rawSC.padStart(6,'0');
+          importedCompanies.add(empresa);
           var desc=String(row[cDs]||'');
           desc=desc.split('\r').join(' ').split('\n').join(' ').trim().substring(0,120);
           nr.push({empresa:empresa,sc:sc,item:String(row[cIt]||'').trim(),status:st,descricao:desc,
             codigoProduto:String(row[cProd]||'').trim(),quantidade:String(row[cQtd]||'').trim(),um:String(row[cUm]||'').trim(),
             aprovacao:fmtDate(row[cAp]),entrega:fmtDate(row[cEn]),solicitante:String(row[cSol]||'').trim(),
             limite:fmtDate(row[cLm]),obs:String(row[cObs]||'').trim()||[row[cF1],row[cF2],row[cF3]].filter(function(x){return x;}).join(' | '),
-            resp:'Aline Lima',reason:''});
+            resp:DEFAULT_BUYER,reason:''});
         });
       });
       if(!nr.length){ toast('Nenhuma SC aberta encontrada.','err',5000); input.value=''; return; }
@@ -1871,7 +1890,8 @@ function importExcel(input){
       var nowIso=now.toISOString(),existingMap=new Map(DATA.map(function(r){return [importKey(r),r];}));
       var fileMap=new Map();
       nr.forEach(function(r){if(r.sc&&r.item&&!fileMap.has(importKey(r)))fileMap.set(importKey(r),r);});
-      var included=0,preserved=0,updated=0,retained=0;
+      var included=0,preserved=0,updated=0,retained=0,stats=new Map();
+      importedCompanies.forEach(function(c){stats.set(c,{included:0,updated:0,missing:0,rejected:0,closed:0});});
       var reconciled=[];
       fileMap.forEach(function(r,key){
         var old=existingMap.get(key);
@@ -1880,21 +1900,20 @@ function importExcel(input){
           if(merged.reconciliationState||merged.reconciliationDetectedAt){delete merged.reconciliationState;delete merged.reconciliationDetectedAt;sourceChanged=true;}
           ['descricao','codigoProduto','quantidade','um','aprovacao','entrega','solicitante','limite'].forEach(function(field){if(r[field]&&r[field]!==old[field]){merged[field]=r[field];sourceChanged=true;}});
           if(!merged.obs&&r.obs){merged.obs=r.obs;sourceChanged=true;}
-          if(isOpen(merged)&&!String(merged.resp||'').trim()){merged.resp='Aline Lima';sourceChanged=true;}
-          if(sourceChanged){merged.clientMutationAt=nowIso;merged.lastMovementAt=nowIso;merged.lastUpdatedBy=ACTIVE_USER;updated++;}
+          if(isOpen(merged)&&!String(merged.resp||'').trim()){merged.resp=DEFAULT_BUYER;sourceChanged=true;}
+          if(sourceChanged){merged.clientMutationAt=nowIso;merged.lastMovementAt=nowIso;merged.lastUpdatedBy=ACTIVE_USER;updated++;stats.get(r.empresa).updated++;}
           reconciled.push(merged);
           preserved++;
         }else{
           r.firstSeenAt=nowIso;r.clientMutationAt=nowIso;r.lastMovementAt=nowIso;r.lastUpdatedBy=ACTIVE_USER;
-          reconciled.push(r);included++;
+          reconciled.push(r);included++;stats.get(r.empresa).included++;
         }
       });
       DATA.forEach(function(old){
         var key=importKey(old);
         if(fileMap.has(key))return;
         if(isOpen(old)){
-          retained++;
-          if(importedCompanies.has(old.empresa)){old.reconciliationState='missing';old.reconciliationDetectedAt=nowIso;old.clientMutationAt=nowIso;}
+          if(importedCompanies.has(old.empresa)){retained++;stats.get(old.empresa).missing++;if(old.reconciliationState!=='missing'){old=Object.assign({},old,{reconciliationState:'missing',reconciliationDetectedAt:nowIso,clientMutationAt:nowIso});}}
         }
         reconciled.push(old);
       });
@@ -1902,9 +1921,12 @@ function importExcel(input){
       assignDefaultBuyer(DATA);
       var sub=document.getElementById('hdr-sub');
       if(sub) sub.textContent='Grupo Emede · Somente SCs Abertas · '+String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
-      refreshAll(); triggerSave();
+      reconciliationItems().forEach(function(x){var stat=stats.get(x.r.empresa);if(stat&&(x.type==='closed'||x.type==='rejected'))stat[x.type]++;});
+      var summary=Array.from(stats.entries()).map(function(entry){var c=entry[0],n=entry[1];return c+': '+n.included+' incluídas · '+n.updated+' atualizadas · '+n.missing+' ausentes · '+n.rejected+' rejeitadas · '+n.closed+' finalizadas sem PC';}).join('\n');
+      AUDIT.unshift({ts:now.getTime(),user:ACTIVE_USER,empresa:'Todas',sc:'Importação',item:'Excel',field:'Resumo por empresa · importação',before:'—',after:summary});
       var missingCount=DATA.filter(function(r){return isOpen(r)&&r.reconciliationState==='missing';}).length;
       AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:'Todas',sc:'Importação',item:'Excel',field:'Importação incremental e conciliação',before:DATA.length-included+' registros',after:included+' novas · '+updated+' atualizadas · '+retained+' ausentes preservadas · '+missingCount+' divergências'});
+      triggerSave();refreshAll();
       toast('✅ Importação e conciliação concluídas: '+included+' novas · '+updated+' atualizadas · '+preserved+' preservadas · '+missingCount+' divergências para revisar.','ok',8000);
     }catch(err){ console.error(err); toast('Erro ao importar: '+err.message,'err',6000); }
     input.value='';
