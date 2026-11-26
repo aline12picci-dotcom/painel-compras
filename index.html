@@ -1123,6 +1123,11 @@ function matchesWorkFilter(o){var f=document.getElementById('order-work-filter')
 function openWorkOrders(type){ORDER_DASH_RANGE=MGMT_PERIOD;document.getElementById('order-work-filter').value=type;document.getElementById('order-status-filter').value='';document.getElementById('order-owner-filter').value='';document.getElementById('order-search').value='';document.getElementById('order-confirm-filter').value='';showTab('pedidos',document.getElementById('strip-pedidos'),'ap',true);renderOrders();}
 
 var SAVING_EXPORT_ROWS=[];
+var SAVING_TYPES={reduction:'Cost reduction · redução de custo',avoidance:'Cost avoidance · custo evitado',negotiation:'Desconto de negociação',qualitative:'Benefício não financeiro'};
+function orderClassifiedBenefit(o){
+ var v=orderSavingValues(o),type=(o.saving||{}).type||'',amount=type==='reduction'?v.referenceDifference:['avoidance','negotiation'].includes(type)?v.saving:null;
+ return {type:type,amount:amount,stage:(o.saving||{}).stage||'negotiated'};
+}
 function orderSavingValues(o){
  var v=o.saving||{},valid=function(n){return n!==null&&n!==undefined&&n!==''&&Number.isFinite(Number(n))&&Number(n)>=0?Number(n):null;};
  var ref=valid(v.reference),initial=valid(v.initial),final=valid(v.final);
@@ -1132,12 +1137,13 @@ function orderSavingValues(o){
 }
 function orderSavingControls(o){
  var v=orderSavingValues(o),input=function(k,title,value){return '<label>'+title+'<input inputmode="decimal" aria-label="'+title+' do pedido '+esc(o.orderNumber)+'" value="'+(value===null?'':esc(value.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})))+'" placeholder="Não informado" onchange="updateOrderSaving(\''+o.id+'\',\''+k+'\',this.value)"></label>';};
- return '<div class="order-saving"><strong>Saving · valores totais em R$</strong>'+input('reference','Valor de referência',v.reference)+input('initial','Proposta inicial',v.initial)+input('final','Valor final negociado',v.final)+'<small>Valor final usa o total do pedido quando não preenchido. Compare valores com a mesma composição de frete e impostos.</small><div>Saving: <strong>'+(v.saving===null?'—':moneyBR(v.saving))+'</strong>'+(v.percent===null?'':' ('+v.percent.toLocaleString('pt-BR',{maximumFractionDigits:2})+'%)')+'</div><label>Observação / base de comparação<input value="'+esc((o.saving||{}).note||'')+'" onchange="updateOrderSaving(\''+o.id+'\',\'note\',this.value)"></label></div>';
+ return '<div class="order-saving"><strong>Saving · valores totais em R$</strong><label>Classificação<select onchange="updateOrderSaving(\''+o.id+'\',\'type\',this.value)"><option value="">Não classificado</option>'+Object.keys(SAVING_TYPES).map(function(k){return '<option value="'+k+'" '+((o.saving||{}).type===k?'selected':'')+'>'+SAVING_TYPES[k]+'</option>';}).join('')+'</select></label><label>Reconhecimento<select onchange="updateOrderSaving(\''+o.id+'\',\'stage\',this.value)"><option value="negotiated">Negociado · ainda não comprovado como realizado</option><option value="realized" '+((o.saving||{}).stage==='realized'?'selected':'')+'>Realizado · comprovado por Compras</option></select></label>'+input('reference','Valor de referência',v.reference)+input('initial','Proposta inicial',v.initial)+input('final','Valor final negociado',v.final)+'<small>Valor final usa o total do pedido quando não preenchido. Compare valores com a mesma composição de frete e impostos. Referência para cost reduction: custo histórico comparável ajustado à quantidade deste pedido. Proposta inicial para avoidance: custo futuro documentado. Benefícios não financeiros não são somados em R$.</small><div>Desconto vs proposta: <strong>'+(v.saving===null?'—':moneyBR(v.saving))+'</strong>'+(v.percent===null?'':' ('+v.percent.toLocaleString('pt-BR',{maximumFractionDigits:2})+'%)')+'</div><label>Observação / base de comparação<input value="'+esc((o.saving||{}).note||'')+'" onchange="updateOrderSaving(\''+o.id+'\',\'note\',this.value)"></label></div>';
 }
 function updateOrderSaving(id,field,value){
- var o=ORDERS.find(function(x){return x.id===id;});if(!o||!['reference','initial','final','note'].includes(field))return;
+ var o=ORDERS.find(function(x){return x.id===id;});if(!o||!['reference','initial','final','note','type','stage'].includes(field))return;
+ if(field==='type'&&value&&!SAVING_TYPES[value])return;if(field==='stage'&&!['negotiated','realized'].includes(value))return;
  try{
-   var next=field==='note'?String(value).trim():parseMoneyInput(value),old=(o.saving||{})[field];
+   var next=['note','type','stage'].includes(field)?String(value).trim():parseMoneyInput(value),old=(o.saving||{})[field];
    o.saving=Object.assign({},o.saving||{});o.saving[field]=next;
    var now=new Date().toISOString();o.clientMutationAt=now;o.lastUpdatedBy=ACTIVE_USER;o.lastMovementAt=now;
    AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:'Saving · '+field,before:String(old??'Não informado'),after:String(next??'Não informado')});
@@ -1146,18 +1152,21 @@ function updateOrderSaving(id,field,value){
 }
 function exportOrderSavings(){
  if(typeof XLSX==='undefined')return toast('Excel ainda não carregou. Tente novamente.','err');
- var rows=SAVING_EXPORT_ROWS.map(function(o){var v=orderSavingValues(o);return {'Empresa':o.company,'Pedido':o.orderNumber,'Fornecedor':o.supplier,'Emissão':fmtDateTime(o.issuedAt),'Status':o.status,'Tipo':({cotacao:'Com cotação',direta:'Emissão direta',contrato:'Contrato / tabela negociada'})[orderWorkType(o)]||'Não classificado','Referência (R$)':v.reference,'Proposta inicial (R$)':v.initial,'Final negociado (R$)':v.final,'Saving negociação (R$)':v.saving,'Saving negociação (%)':v.percent===null?null:v.percent/100,'Diferença vs referência (R$)':v.referenceDifference,'Base / observação':(o.saving||{}).note||''};});
+ var rows=SAVING_EXPORT_ROWS.map(function(o){var v=orderSavingValues(o),benefit=orderClassifiedBenefit(o);return {'Empresa':o.company,'Pedido':o.orderNumber,'Fornecedor':o.supplier,'Emissão':fmtDateTime(o.issuedAt),'Status':o.status,'Tipo':({cotacao:'Com cotação',direta:'Emissão direta',contrato:'Contrato / tabela negociada'})[orderWorkType(o)]||'Não classificado','Referência (R$)':v.reference,'Proposta inicial (R$)':v.initial,'Final negociado (R$)':v.final,'Saving negociação (R$)':v.saving,'Saving negociação (%)':v.percent===null?null:v.percent/100,'Diferença vs referência (R$)':v.referenceDifference,'Base / observação':(o.saving||{}).note||'','Classificação do benefício':SAVING_TYPES[benefit.type]||'Não classificado','Reconhecimento':benefit.stage==='realized'?'Realizado · informado por Compras':'Negociado','Benefício classificado (R$)':benefit.amount};});
  if(!rows.length)return toast('Nenhum pedido nos filtros atuais.','info');
  var ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:18},{wch:14},{wch:25},{wch:22},{wch:30},{wch:30},{wch:19},{wch:22},{wch:22},{wch:24},{wch:25},{wch:29},{wch:50}];
- for(var r=2;r<=rows.length+1;r++){['G','H','I','J','L'].forEach(function(c){if(ws[c+r]&&ws[c+r].t==='n')ws[c+r].z='#,##0.00';});if(ws['K'+r]&&ws['K'+r].t==='n')ws['K'+r].z='0.00%';}
+ for(var r=2;r<=rows.length+1;r++){['G','H','I','J','L','P'].forEach(function(c){if(ws[c+r]&&ws[c+r].t==='n')ws[c+r].z='#,##0.00';});if(ws['K'+r]&&ws['K'+r].t==='n')ws['K'+r].z='0.00%';}
  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Savings dos pedidos');
- XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Critérios'],['Exportação dos pedidos visíveis nos filtros do Controle de Pedidos, sem pedidos com baixa desfeita.'],['Valores totais em reais; comparar a mesma composição comercial, incluindo frete e impostos.'],['Saving = proposta inicial menos valor final; negativo significa aumento. Percentual calculado sobre proposta inicial.'],['Diferença para referência é separada do saving de negociação. Campos ausentes ficam vazios.'],['Valor final pode usar o total registrado no pedido. Não altera automaticamente o valor total do pedido.']]),'Critérios');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Critérios'],['Exportação dos pedidos visíveis nos filtros do Controle de Pedidos, sem pedidos com baixa desfeita.'],['Valores totais em reais; comparar a mesma composição comercial, incluindo frete e impostos.'],['Saving = proposta inicial menos valor final; negativo significa aumento. Percentual calculado sobre proposta inicial.'],['Diferença para referência é separada do saving de negociação. Campos ausentes ficam vazios.'],['Valor final pode usar o total registrado no pedido. Não altera automaticamente o valor total do pedido.'],['Cost reduction = referência histórica comparável menos final. Cost avoidance = custo futuro proposto/documentado menos final. Desconto = proposta inicial menos final.'],['Uma classificação principal por pedido. Não somar diferença para referência, desconto e benefício classificado: são visões do mesmo processo.'],['Negociado e realizado são separados; realizado exige comprovação e escolha manual de Compras. Benefícios não financeiros não entram nos totais monetários.']]),'Critérios');
  XLSX.writeFile(wb,'Savings_Compras_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 function renderOrderSavingsSummary(rows){
  var el=document.getElementById('order-saving-summary');if(!el)return;
- var values=rows.map(orderSavingValues),valid=values.filter(function(v){return v.saving!==null;}),total=valid.reduce(function(n,v){return n+v.saving;},0);
- el.textContent='Saving de negociação nos filtros: '+moneyBR(total)+' · '+valid.length+' pedido(s) com proposta inicial e valor final · '+(rows.length-valid.length)+' sem base completa. Diferença para referência exportada separadamente.';
+ el.innerHTML=Object.keys(SAVING_TYPES).filter(function(t){return t!=='qualitative';}).map(function(t){
+  var entries=rows.map(orderClassifiedBenefit).filter(function(v){return v.type===t&&v.amount!==null;});
+  var sum=function(stage){return entries.filter(function(v){return v.stage===stage;}).reduce(function(n,v){return n+v.amount;},0);};
+  return '<div><strong>'+esc(SAVING_TYPES[t])+'</strong>: '+moneyBR(sum('negotiated'))+' negociados · '+moneyBR(sum('realized'))+' realizados</div>';
+ }).join('')+'<small>Uma classificação principal por pedido. Redução de custo: referência histórica comparável − final. Custo evitado: custo futuro documentado na proposta inicial − final. Desconto: proposta inicial − final. Não some estas bases entre si. Valores negativos indicam aumento. Registros sem classificação/base suficiente ficam fora dos totais. “Realizado” é informado por Compras com evidência na observação.</small>';
 }
 
 function renderOrders(){
