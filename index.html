@@ -435,6 +435,8 @@ main{padding:26px 32px}
 .volume-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0 20px}.volume-stat{background:#f2f7fc;border:1px solid var(--border);border-radius:10px;padding:15px}.volume-stat strong{display:block;font-size:28px;color:var(--navy)}.volume-stat span{font-size:11px}.volume-two{display:grid;grid-template-columns:1fr 1fr;gap:20px}.volume-two h3,#purchasing-volume h3{font-size:12px;margin:12px 0}.volume-requesters{max-height:300px;overflow:auto}#purchasing-volume td:not(:first-child){font-variant-numeric:tabular-nums}#volume-note{line-height:1.6;margin-top:14px}@media(max-width:850px){.volume-two{grid-template-columns:1fr}}
 
 #order-sla-overview{padding:16px}#order-sla-overview .volume-summary,#purchasing-volume .volume-summary{grid-template-columns:repeat(4,minmax(130px,1fr));overflow:auto}.volume-two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#purchasing-volume .volume-two>div{min-width:0}#order-sla-overview .mgmt-table td{white-space:nowrap}@media(max-width:850px){.volume-two{grid-template-columns:1fr}}
+
+.order-saving{display:grid;gap:7px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;min-width:240px}.order-saving label{display:grid;gap:3px;font-size:10px}.order-saving input{padding:6px;width:100%}.order-saving small{max-width:280px;white-space:normal;font-size:9px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -755,7 +757,7 @@ main{padding:26px 32px}
     <div class="order-alert danger"><strong id="oa-rejected">0</strong><span>Rejeitados sem observação</span></div>
   </div>
   <div class="order-mgmt-card" style="margin:12px 0"><strong id="oc-approval-avg">—</strong><span>Tempo médio emissão → aprovação · período do Controle de Pedidos</span><small id="oc-approval-sample" class="quote-muted"></small></div><div class="order-alert-note">As linhas destacadas indicam pedidos que exigem acompanhamento do comprador responsável.</div>
-  <div class="card" id="order-sla-overview"></div>
+  <div class="card" id="order-sla-overview"></div><div class="card" style="padding:14px"><button class="ctrl-btn" type="button" onclick="exportOrderSavings()">Exportar savings · Excel</button><p id="order-saving-summary" class="quote-muted"></p></div>
   <div class="filter-bar"><input id="order-search" placeholder="Buscar pedido, fornecedor ou empresa..." oninput="renderOrders()"><select id="order-month" class="order-filter-select" onchange="ORDER_DASH_RANGE='';ORDER_MONTH_FILTER=this.value;renderOrders()"></select><select id="order-company-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todas as empresas</option><option>Phal Ind</option><option>Phal SPO</option><option>Pharmabag</option><option>Nutriente</option><option>Clinutri</option></select><select id="order-status-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os status</option><option>Aguarda aprovação</option><option>Pedido Aprovado</option><option>Pedido Rejeitado</option><option>Pedido enviado</option><option>Pedido confirmado pelo fornecedor</option></select><select id="order-confirm-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todas as confirmações</option><option value="required">Exigem confirmação</option><option value="waived">Confirmação dispensada</option></select><select id="order-work-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os tipos</option><option value="cotacao">Com cotação</option><option value="direta">Emissão direta</option><option value="contrato">Contrato / tabela negociada</option><option value="urgent">Urgentes</option><option value="unknown">Não classificados</option></select><select id="order-owner-filter" class="order-filter-select" onchange="renderOrders()"><option value="">Todos os compradores</option><option>Aline Lima</option><option>Robert Santos</option><option>Jaqueline Paulino</option></select></div>
   <div class="order-color-legend" aria-label="Legenda de status"><span style="background:#fff0f5">Aguardando aprovação</span><span style="background:#effaf2">Aprovado</span><span style="background:#edf5ff">Confirmado / dispensado</span></div>
   <div class="tbl-wrap"><table><thead><tr><th>Pedido</th><th>Empresa / Origem</th><th>Fornecedor</th><th>Status</th><th>Emissão</th><th>Aprovação</th><th>Envio</th><th>Confirmação</th><th>Responsável</th><th>Observação</th><th>Ações</th></tr></thead><tbody id="orders-body"></tbody></table></div>
@@ -1119,6 +1121,45 @@ function renderOrderManagement(base){
 }
 function matchesWorkFilter(o){var f=document.getElementById('order-work-filter')?.value||'';return !f||(f==='urgent'?o.urgent===true:f==='unknown'?!orderWorkType(o):orderWorkType(o)===f);}
 function openWorkOrders(type){ORDER_DASH_RANGE=MGMT_PERIOD;document.getElementById('order-work-filter').value=type;document.getElementById('order-status-filter').value='';document.getElementById('order-owner-filter').value='';document.getElementById('order-search').value='';document.getElementById('order-confirm-filter').value='';showTab('pedidos',document.getElementById('strip-pedidos'),'ap',true);renderOrders();}
+
+var SAVING_EXPORT_ROWS=[];
+function orderSavingValues(o){
+ var v=o.saving||{},valid=function(n){return n!==null&&n!==undefined&&n!==''&&Number.isFinite(Number(n))&&Number(n)>=0?Number(n):null;};
+ var ref=valid(v.reference),initial=valid(v.initial),final=valid(v.final);
+ if(final===null)final=valid(o.totalValue);
+ var saving=initial!==null&&final!==null?Math.round((initial-final)*100)/100:null;
+ return {reference:ref,initial:initial,final:final,saving:saving,percent:saving!==null&&initial>0?saving/initial*100:null,referenceDifference:ref!==null&&final!==null?Math.round((ref-final)*100)/100:null};
+}
+function orderSavingControls(o){
+ var v=orderSavingValues(o),input=function(k,title,value){return '<label>'+title+'<input inputmode="decimal" aria-label="'+title+' do pedido '+esc(o.orderNumber)+'" value="'+(value===null?'':esc(value.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})))+'" placeholder="Não informado" onchange="updateOrderSaving(\''+o.id+'\',\''+k+'\',this.value)"></label>';};
+ return '<div class="order-saving"><strong>Saving · valores totais em R$</strong>'+input('reference','Valor de referência',v.reference)+input('initial','Proposta inicial',v.initial)+input('final','Valor final negociado',v.final)+'<small>Valor final usa o total do pedido quando não preenchido. Compare valores com a mesma composição de frete e impostos.</small><div>Saving: <strong>'+(v.saving===null?'—':moneyBR(v.saving))+'</strong>'+(v.percent===null?'':' ('+v.percent.toLocaleString('pt-BR',{maximumFractionDigits:2})+'%)')+'</div><label>Observação / base de comparação<input value="'+esc((o.saving||{}).note||'')+'" onchange="updateOrderSaving(\''+o.id+'\',\'note\',this.value)"></label></div>';
+}
+function updateOrderSaving(id,field,value){
+ var o=ORDERS.find(function(x){return x.id===id;});if(!o||!['reference','initial','final','note'].includes(field))return;
+ try{
+   var next=field==='note'?String(value).trim():parseMoneyInput(value),old=(o.saving||{})[field];
+   o.saving=Object.assign({},o.saving||{});o.saving[field]=next;
+   var now=new Date().toISOString();o.clientMutationAt=now;o.lastUpdatedBy=ACTIVE_USER;o.lastMovementAt=now;
+   AUDIT.unshift({ts:Date.now(),user:ACTIVE_USER,empresa:o.company,sc:o.orderNumber,item:'Pedido',field:'Saving · '+field,before:String(old??'Não informado'),after:String(next??'Não informado')});
+   triggerSave();renderOrders();
+ }catch(e){toast(e.message,'err');renderOrders();}
+}
+function exportOrderSavings(){
+ if(typeof XLSX==='undefined')return toast('Excel ainda não carregou. Tente novamente.','err');
+ var rows=SAVING_EXPORT_ROWS.map(function(o){var v=orderSavingValues(o);return {'Empresa':o.company,'Pedido':o.orderNumber,'Fornecedor':o.supplier,'Emissão':fmtDateTime(o.issuedAt),'Status':o.status,'Tipo':({cotacao:'Com cotação',direta:'Emissão direta',contrato:'Contrato / tabela negociada'})[orderWorkType(o)]||'Não classificado','Referência (R$)':v.reference,'Proposta inicial (R$)':v.initial,'Final negociado (R$)':v.final,'Saving negociação (R$)':v.saving,'Saving negociação (%)':v.percent===null?null:v.percent/100,'Diferença vs referência (R$)':v.referenceDifference,'Base / observação':(o.saving||{}).note||''};});
+ if(!rows.length)return toast('Nenhum pedido nos filtros atuais.','info');
+ var ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:18},{wch:14},{wch:25},{wch:22},{wch:30},{wch:30},{wch:19},{wch:22},{wch:22},{wch:24},{wch:25},{wch:29},{wch:50}];
+ for(var r=2;r<=rows.length+1;r++){['G','H','I','J','L'].forEach(function(c){if(ws[c+r]&&ws[c+r].t==='n')ws[c+r].z='#,##0.00';});if(ws['K'+r]&&ws['K'+r].t==='n')ws['K'+r].z='0.00%';}
+ var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Savings dos pedidos');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Critérios'],['Exportação dos pedidos visíveis nos filtros do Controle de Pedidos, sem pedidos com baixa desfeita.'],['Valores totais em reais; comparar a mesma composição comercial, incluindo frete e impostos.'],['Saving = proposta inicial menos valor final; negativo significa aumento. Percentual calculado sobre proposta inicial.'],['Diferença para referência é separada do saving de negociação. Campos ausentes ficam vazios.'],['Valor final pode usar o total registrado no pedido. Não altera automaticamente o valor total do pedido.']]),'Critérios');
+ XLSX.writeFile(wb,'Savings_Compras_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+function renderOrderSavingsSummary(rows){
+ var el=document.getElementById('order-saving-summary');if(!el)return;
+ var values=rows.map(orderSavingValues),valid=values.filter(function(v){return v.saving!==null;}),total=valid.reduce(function(n,v){return n+v.saving;},0);
+ el.textContent='Saving de negociação nos filtros: '+moneyBR(total)+' · '+valid.length+' pedido(s) com proposta inicial e valor final · '+(rows.length-valid.length)+' sem base completa. Diferença para referência exportada separadamente.';
+}
+
 function renderOrders(){
   setupMonthlyPeriods();
   var normalized={'Aprovado':'Pedido Aprovado','Aguardando aprovação':'Aguarda aprovação','Aguardando envio':'Aguarda aprovação','Enviado':'Pedido enviado','Rejeitado':'Pedido Rejeitado','Confirmado':'Pedido confirmado pelo fornecedor','Marketplace':'Aguarda aprovação','Dispensado':'Aguarda aprovação'};
@@ -1138,10 +1179,12 @@ function renderOrders(){
   var ownerSelect=document.getElementById('order-owner-filter');if(ownerSelect){var selectedOwner=ownerSelect.value;var historical=rangeSpec?!['portfolio','current'].includes(rangeSpec.key):(ORDER_MONTH_FILTER==='all'||ORDER_MONTH_FILTER!==orderMonthKey(new Date()));var ownerNames=Array.from(new Set(USERS.filter(isCurrentBuyer).map(function(u){return u.name;}).concat(historical?monthBase.map(function(o){return o.owner;}).filter(Boolean):[])));ownerSelect.innerHTML='<option value="">Todos os compradores</option>'+ownerNames.map(function(n){return '<option>'+esc(n)+'</option>';}).join('');ownerSelect.value=ownerNames.includes(selectedOwner)?selectedOwner:'';}
   var q=((document.getElementById('order-search')||{}).value||'').toLowerCase(),st=((document.getElementById('order-status-filter')||{}).value||''),owner=((document.getElementById('order-owner-filter')||{}).value||'');
   var rows=monthBase.filter(function(o){return matchesWorkFilter(o)&&((document.getElementById('order-confirm-filter')||{}).value!=='required'||orderRequiresConfirmation(o))&&((document.getElementById('order-confirm-filter')||{}).value!=='waived'||!orderRequiresConfirmation(o))&&(!st||o.status===st)&&(!owner||o.owner===owner)&&[o.orderNumber,o.company,o.supplier,o.owner,o.status,o.observation,o.sourceDescription,orderItemsText(o)].join(' ').toLowerCase().indexOf(q)>=0;}).sort(function(a,b){var rank={'Aguarda aprovação':0,'Pedido Aprovado':1,'Pedido Rejeitado':2,'Pedido enviado':3,'Pedido confirmado pelo fornecedor':4};return (rank[a.status]||0)-(rank[b.status]||0)||new Date(b.issuedAt)-new Date(a.issuedAt);});
+  SAVING_EXPORT_ROWS=Array.from(new Map(rows.map(function(o){return [o.company+'|'+(o.orderNumber||o.id),o];})).values());
+  renderOrderSavingsSummary(SAVING_EXPORT_ROWS);
   var body=document.getElementById('orders-body');if(!body)return;body.innerHTML=rows.length?rows.map(function(o){
     var opts=['Aguarda aprovação','Pedido Aprovado','Pedido Rejeitado','Pedido enviado','Pedido confirmado pelo fornecedor'].map(function(x){return '<option'+(o.status===x?' selected':'')+'>'+x+'</option>';}).join('');
     var actions='<select class="reason-sel" onchange="changeOrderAction(\''+o.id+'\',this.value)">'+opts+'</select>',a=orderAlertInfo(o),flag=a.label?'<div class="order-flag '+(a.critical?'danger':'')+'">⚠ '+esc(a.label)+'</div>':'';
-    return '<tr class="'+(orderRowVisualClass(o)||(a.critical?'order-row-danger':a.alert?'order-row-alert':''))+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td><div class="order-supplier-short" title="'+esc(o.supplier)+'">'+esc(o.supplier)+'</div></td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+orderApprovalInput(o)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+(orderRequiresConfirmation(o)?fmtDateTime(o.confirmedAt):'<span class="order-waived">Dispensada</span>')+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'<details class="order-more"><summary>Ajustes do pedido</summary>'+orderWorkControls(o)+(undoOrderItems(o).length?'<button type="button" class="ctrl-btn" onclick="openUndoOrder(\''+o.id+'\')">Desfazer ação</button>':'')+'</details></div></td></tr>';
+    return '<tr class="'+(orderRowVisualClass(o)||(a.critical?'order-row-danger':a.alert?'order-row-alert':''))+'"><td><span class="sc-num">'+esc(o.orderNumber)+'</span></td><td>'+empTag(o.company)+orderItemsHTML(o)+'</td><td><div class="order-supplier-short" title="'+esc(o.supplier)+'">'+esc(o.supplier)+'</div></td><td><span class="order-status '+orderStatusClass(o.status)+'">'+esc(o.status)+'</span><div class="move-meta">'+esc(o.channel||'')+'</div>'+flag+'</td><td>'+fmtDateTime(o.issuedAt)+'</td><td>'+orderApprovalInput(o)+'</td><td>'+fmtDateTime(o.sentAt)+'</td><td>'+(orderRequiresConfirmation(o)?fmtDateTime(o.confirmedAt):'<span class="order-waived">Dispensada</span>')+'</td><td>'+esc(o.owner)+'</td><td><input class="order-obs" value="'+esc(o.observation||'')+'" placeholder="Observação do pedido..." oninput="updateOrderObs(\''+o.id+'\',this.value)" onchange="renderOrders()"><div class="move-meta">'+movementLabel(o)+'</div></td><td><div class="order-actions">'+actions+'<details class="order-more"><summary>Ajustes do pedido</summary>'+orderWorkControls(o)+orderSavingControls(o)+(undoOrderItems(o).length?'<button type="button" class="ctrl-btn" onclick="openUndoOrder(\''+o.id+'\')">Desfazer ação</button>':'')+'</details></div></td></tr>';
   }).join(''):'<tr><td colspan="11" class="priority-empty">Nenhum pedido encontrado para os filtros selecionados.</td></tr>';
 }
 
